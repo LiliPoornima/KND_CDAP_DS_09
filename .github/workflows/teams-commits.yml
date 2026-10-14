@@ -1,0 +1,64 @@
+name: GitHub Activity to Teams
+
+on:
+  push:
+    branches:
+      - '**'
+
+jobs:
+  notify-teams:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send Commit Alert to Teams
+        env:
+          TEAMS_WEBHOOK: ${{ secrets.TEAMS_WEBHOOK_URL }}
+          REPO: ${{ github.repository }}
+          BRANCH: ${{ github.ref_name }}
+          AUTHOR: ${{ github.actor }}
+          COMMIT_MSG: ${{ github.event.head_commit.message }}
+          COMMIT_URL: ${{ github.event.head_commit.url }}
+        run: |
+          PAYLOAD=$(jq -n \
+            --arg repo "$REPO" \
+            --arg branch "$BRANCH" \
+            --arg author "$AUTHOR" \
+            --arg msg "$COMMIT_MSG" \
+            --arg url "$COMMIT_URL" \
+            '{
+              "type": "message",
+              "attachments": [
+                {
+                  "contentType": "application/vnd.microsoft.card.adaptive",
+                  "content": {
+                    "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
+                    "type": "AdaptiveCard",
+                    "version": "1.4",
+                    "body": [
+                      {
+                        "type": "TextBlock",
+                        "size": "Medium",
+                        "weight": "Bolder",
+                        "text": "🐙 GitHub Commit: \($repo)"
+                      },
+                      {
+                        "type": "FactSet",
+                        "facts": [
+                          {"title": "Branch:", "value": $branch},
+                          {"title": "Author:", "value": $author},
+                          {"title": "Message:", "value": $msg}
+                        ]
+                      }
+                    ],
+                    "actions": [
+                      {
+                        "type": "Action.OpenUrl",
+                        "title": "View in GitHub",
+                        "url": $url
+                      }
+                    ]
+                  }
+                }
+              ]
+            }')
+
+          curl -H "Content-Type: application/json" -d "$PAYLOAD" "$TEAMS_WEBHOOK"
