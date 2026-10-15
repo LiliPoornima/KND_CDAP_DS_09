@@ -1,0 +1,19 @@
+
+# Python environments and caches
+.venv/
+__pycache__/
+*.py[cod]
+
+# Local environment variables and secrets
+.env
+
+# Raw and processed datasets - never commit by default
+data/raw/*
+!data/raw/.gitkeep
+
+data/processed/*
+!data/processed/.gitkeep
+
+# Generated reports - regenerate locally
+reports/generated/*
+!reports/generated/.gitkeep
