@@ -19,3 +19,6 @@ __pycache__/
 
 /outputs/financial_inclusion/metrics/*
 !/outputs/financial_inclusion/metrics/.gitkeep
+
+# Component 02 - locally generated trained model artifacts
+/models/financial_inclusion/*.joblib
