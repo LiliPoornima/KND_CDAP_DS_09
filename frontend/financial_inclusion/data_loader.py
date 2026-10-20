@@ -1,122 +1,151 @@
 
-"""Load existing Component 02 research outputs for Streamlit."""
+"""Load the final analytical dataset for the Component 02 dashboard."""
 
-import json
 from pathlib import Path
 
 import pandas as pd
 
 
-# frontend/financial_inclusion/data_loader.py -> project root
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 
-REPORTS_DIR = PROJECT_ROOT / "outputs" / "financial_inclusion" / "reports"
-METRICS_DIR = PROJECT_ROOT / "outputs" / "financial_inclusion" / "metrics"
+DATASET_PATH = (
+    PROJECT_ROOT
+    / "data"
+    / "financial_inclusion"
+    / "processed"
+    / "fi_final_analytical_dataset.csv"
+)
 
-DIMENSION_DIR = REPORTS_DIR / "02_dimension_creation"
-CLUSTERING_DIR = REPORTS_DIR / "03_clustering"
-SUPERVISED_DIR = REPORTS_DIR / "04_supervised_learning"
+CONTEXT_COLUMNS = [
+    "wpid_random",
+    "economy",
+    "economycode",
+    "regionwb",
+    "wgt",
+    "female",
+    "age",
+    "educ",
+    "inc_q",
+    "emp_in",
+    "urbanicity",
+]
 
+DIMENSION_COLUMNS = [
+    "score_connectivity",
+    "score_financial_access",
+    "score_digital_financial_usage",
+    "score_digital_safety",
+    "score_financial_resilience",
+]
 
-def load_csv(path: Path) -> pd.DataFrame:
-    """Load an existing CSV research output."""
-    if not path.is_file():
-        raise FileNotFoundError(f"Research CSV not found: {path}")
-
-    return pd.read_csv(path, low_memory=False)
-
-
-def load_json(path: Path) -> dict:
-    """Load an existing JSON research output."""
-    if not path.is_file():
-        raise FileNotFoundError(f"Research JSON not found: {path}")
-
-    with path.open("r", encoding="utf-8") as file:
-        return json.load(file)
-
-
-def load_dimension_summary() -> dict:
-    """Load the dimension creation summary."""
-    return load_json(
-        DIMENSION_DIR / "fi_dimension_creation_report.json"
-    )
-
-
-def load_dimension_distributions() -> pd.DataFrame:
-    """Load the dimension score distribution report."""
-    return load_csv(
-        DIMENSION_DIR / "fi_dimension_score_distributions.csv"
-    )
+REQUIRED_COLUMNS = (
+    CONTEXT_COLUMNS
+    + DIMENSION_COLUMNS
+    + ["cluster_id"]
+)
 
 
-def load_dimension_coverage() -> dict:
-    """Load dimension availability and missingness information."""
-    return load_json(
-        DIMENSION_DIR / "fi_dimension_availability_summary.json"
-    )
-
-
-def load_clustering_summary() -> dict:
-    """Load the clustering summary."""
-    return load_json(
-        CLUSTERING_DIR / "fi_clustering_summary.json"
-    )
-
-
-def load_cluster_profiles() -> pd.DataFrame:
-    """Load interpretable cluster profiles."""
-    return load_csv(
-        CLUSTERING_DIR / "fi_clustering_interpretable_profiles.csv"
-    )
-
-
-def load_cluster_labels() -> dict:
-    """Load final cluster profile labels for the selected 5D_k5 model."""
-    return load_json(
-        CLUSTERING_DIR / "fi_clustering_profile_labels_5D_k5.json"
-    )
-
-
-def load_clustering_coverage() -> pd.DataFrame:
-    """Load cluster/economy coverage checks."""
-    return load_csv(
-        CLUSTERING_DIR / "fi_clustering_profile_economy_check.csv"
-    )
-
-
-def load_supervised_target_audit() -> pd.DataFrame:
-    """Load the supervised target audit."""
-    return load_csv(
-        SUPERVISED_DIR / "fi_supervised_target_audit.csv"
-    )
-
-
-def load_model_metrics() -> pd.DataFrame:
-    """Load saved model evaluation metrics."""
-    return load_csv(
-        METRICS_DIR / "fi_supervised_baseline_metrics.csv"
-    )
-
-
-def load_classification_reports() -> str:
-    """Load saved classification reports."""
-    path = METRICS_DIR / "fi_supervised_classification_reports.txt"
-
-    if not path.is_file():
+def load_final_dataset() -> pd.DataFrame:
+    """Load and validate the final respondent-level analytical dataset."""
+    if not DATASET_PATH.is_file():
         raise FileNotFoundError(
-            f"Classification reports not found: {path}"
+            f"Final analytical dataset not found: {DATASET_PATH}. "
+            "Run the Component 02 final dataset preparation script first."
         )
 
-    return path.read_text(encoding="utf-8")
+    df = pd.read_csv(DATASET_PATH, low_memory=False)
 
-
-def load_confusion_matrices() -> str:
-    """Load saved confusion matrices."""
-    path = METRICS_DIR / "fi_supervised_confusion_matrices.txt"
-
-    if not path.is_file():
-        raise FileNotFoundError(
-            f"Confusion matrices not found: {path}"
+    missing_columns = [
+        column for column in REQUIRED_COLUMNS if column not in df.columns
+    ]
+    if missing_columns:
+        raise ValueError(
+            f"Final analytical dataset is missing columns: {missing_columns}"
         )
 
-    return path.read_text(encoding="utf-8")
+    if df["wpid_random"].isna().any():
+        raise ValueError("The dataset contains missing respondent IDs.")
+
+    if df["wpid_random"].duplicated().any():
+        raise ValueError("The dataset contains duplicate respondent IDs.")
+
+    if df["cluster_id"].isna().any():
+        raise ValueError("The dataset contains missing cluster labels.")
+
+    observed_clusters = set(df["cluster_id"].unique())
+    expected_clusters = {0, 1, 2, 3, 4}
+
+    if observed_clusters != expected_clusters:
+        raise ValueError(
+            "Expected the final 5D_k5 cluster IDs {0, 1, 2, 3, 4}; "
+            f"found {sorted(observed_clusters)}."
+        )
+
+    return df
+
+
+def calculate_dimension_summary(df: pd.DataFrame) -> pd.DataFrame:
+    """Calculate dimension statistics directly from respondent data."""
+    rows = []
+
+    for column in DIMENSION_COLUMNS:
+        values = pd.to_numeric(df[column], errors="coerce")
+
+        rows.append(
+            {
+                "variable": column,
+                "mean": values.mean(),
+                "median": values.median(),
+                "distinct_nonmissing_values": values.nunique(),
+                "missing_percent": values.isna().mean() * 100,
+            }
+        )
+
+    return pd.DataFrame(rows)
+
+
+def calculate_cluster_profiles(df: pd.DataFrame) -> pd.DataFrame:
+    """Calculate final cluster sizes and dimension means from the dataset."""
+    profile = (
+        df.groupby("cluster_id")
+        .agg(
+            respondents=("wpid_random", "nunique"),
+            economies_represented=("economy", "nunique"),
+            **{
+                f"{column}_mean": (column, "mean")
+                for column in DIMENSION_COLUMNS
+            },
+        )
+        .reset_index()
+    )
+
+    total = profile["respondents"].sum()
+    profile["percent_of_candidate"] = (
+        profile["respondents"] / total * 100
+    )
+
+    return profile
+
+
+def calculate_cluster_demographics(
+    df: pd.DataFrame,
+    column: str,
+) -> pd.DataFrame:
+    """Calculate demographic composition by cluster, excluding missing values."""
+    if column not in df.columns:
+        raise ValueError(f"Unknown demographic column: {column}")
+
+    result = (
+        df.dropna(subset=[column])
+        .groupby(["cluster_id", column])
+        .size()
+        .rename("respondents")
+        .reset_index()
+    )
+
+    denominators = result.groupby("cluster_id")["respondents"].transform("sum")
+    result["percent_within_cluster"] = (
+        result["respondents"] / denominators * 100
+    )
+
+    return result
