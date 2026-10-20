@@ -1,0 +1,21 @@
+
+# Python cache files
+__pycache__/
+*.py[cod]
+
+# Component 02: private/raw and generated data
+/data/financial_inclusion/raw/*
+!/data/financial_inclusion/raw/.gitkeep
+
+/data/financial_inclusion/processed/*
+!/data/financial_inclusion/processed/.gitkeep
+
+# Component 02: generated analysis outputs
+/outputs/financial_inclusion/reports/*
+!/outputs/financial_inclusion/reports/.gitkeep
+
+/outputs/financial_inclusion/figures/*
+!/outputs/financial_inclusion/figures/.gitkeep
+
+/outputs/financial_inclusion/metrics/*
+!/outputs/financial_inclusion/metrics/.gitkeep
