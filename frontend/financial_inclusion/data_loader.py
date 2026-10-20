@@ -1,6 +1,8 @@
 
-"""Load the final analytical dataset for the Component 02 dashboard."""
+"""Load the final analytical dataset and supervised-model outputs."""
 
+import ast
+import re
 from pathlib import Path
 
 import pandas as pd
@@ -14,6 +16,30 @@ DATASET_PATH = (
     / "financial_inclusion"
     / "processed"
     / "fi_final_analytical_dataset.csv"
+)
+
+SUPERVISED_METRICS_PATH = (
+    PROJECT_ROOT
+    / "outputs"
+    / "financial_inclusion"
+    / "metrics"
+    / "fi_supervised_baseline_metrics.csv"
+)
+
+SUPERVISED_REPORT_PATH = (
+    PROJECT_ROOT
+    / "outputs"
+    / "financial_inclusion"
+    / "metrics"
+    / "fi_supervised_classification_reports.txt"
+)
+
+SUPERVISED_MATRIX_PATH = (
+    PROJECT_ROOT
+    / "outputs"
+    / "financial_inclusion"
+    / "metrics"
+    / "fi_supervised_confusion_matrices.txt"
 )
 
 CONTEXT_COLUMNS = [
@@ -149,3 +175,106 @@ def calculate_cluster_demographics(
     )
 
     return result
+
+
+def load_supervised_metrics() -> pd.DataFrame:
+    """Load the saved supervised evaluation metrics from the reproducible pipeline."""
+    if not SUPERVISED_METRICS_PATH.is_file():
+        raise FileNotFoundError(
+            "Supervised metrics file not found: "
+            f"{SUPERVISED_METRICS_PATH}. Run the supervised evaluation pipeline first."
+        )
+
+    metrics = pd.read_csv(SUPERVISED_METRICS_PATH)
+
+    required_columns = {
+        "model",
+        "accuracy",
+        "balanced_accuracy",
+        "macro_f1",
+        "weighted_f1",
+    }
+    missing = required_columns.difference(metrics.columns)
+    if missing:
+        raise ValueError(
+            "Supervised metrics file is missing columns: "
+            f"{sorted(missing)}"
+        )
+
+    renamed = metrics.rename(
+        columns={
+            "model": "Model",
+            "accuracy": "Accuracy",
+            "balanced_accuracy": "Balanced Accuracy",
+            "macro_f1": "Macro-F1",
+            "weighted_f1": "Weighted-F1",
+        }
+    )
+
+    return renamed[["Model", "Accuracy", "Balanced Accuracy", "Macro-F1", "Weighted-F1"]]
+
+
+def load_supervised_classification_reports() -> dict:
+    """Load per-model classification reports from the saved text output."""
+    reports = {}
+    if not SUPERVISED_REPORT_PATH.is_file():
+        raise FileNotFoundError(
+            "Supervised classification report file not found: "
+            f"{SUPERVISED_REPORT_PATH}"
+        )
+
+    content = SUPERVISED_REPORT_PATH.read_text(encoding="utf-8")
+    sections = re.split(r"\n===\s*", content)
+    for section in sections:
+        if not section.strip():
+            continue
+        label, _, body = section.partition("===")
+        name = (label or section).strip()
+        if "precision" in body.lower() or "accuracy" in body.lower():
+            reports[name.strip()] = body.strip()
+
+    return reports
+
+
+def load_supervised_confusion_matrices() -> dict:
+    """Parse confusion matrix blocks from the saved evaluation output."""
+    matrices = {}
+    if not SUPERVISED_MATRIX_PATH.is_file():
+        raise FileNotFoundError(
+            "Supervised confusion matrices file not found: "
+            f"{SUPERVISED_MATRIX_PATH}"
+        )
+
+    text = SUPERVISED_MATRIX_PATH.read_text(encoding="utf-8")
+    sections = re.split(r"\n===\s*", text)
+
+    for section in sections:
+        if not section.strip():
+            continue
+
+        header, _, body = section.partition("===")
+        name = (header or body).strip()
+        if "Rows = actual clusters" not in body:
+            continue
+
+        lines = [line.strip() for line in body.splitlines() if line.strip()]
+        row_texts = []
+        for line in lines:
+            if line.startswith("Cluster order:"):
+                continue
+            if line.startswith("["):
+                row_texts.append(line)
+
+        if not row_texts:
+            continue
+
+        matrix = []
+        for row in row_texts:
+            values = [int(value) for value in re.findall(r"-?\d+", row)]
+            if values:
+                matrix.append(values)
+
+        if matrix:
+            matrices[name] = matrix
+
+    return matrices
