@@ -71,9 +71,9 @@ def load_cluster_profiles() -> pd.DataFrame:
 
 
 def load_cluster_labels() -> dict:
-    """Load proposed cluster profile labels and descriptions."""
+    """Load final cluster profile labels for the selected 5D_k5 model."""
     return load_json(
-        CLUSTERING_DIR / "fi_clustering_profile_labels_5D_k4.json"
+        CLUSTERING_DIR / "fi_clustering_profile_labels_5D_k5.json"
     )
 
 
