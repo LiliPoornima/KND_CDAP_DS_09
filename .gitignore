@@ -3,6 +3,32 @@
 __pycache__/
 *.py[cod]
 
+# Python cache files
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Virtual environments and environment variables
+.venv/
+venv/
+.env
+
+# Component 01: Credit Risk raw datasets
+data/credit_risk/*/raw/*.csv
+data/credit_risk/*/raw/*.xls
+data/credit_risk/*/raw/*.xlsx
+data/credit_risk/*/raw/*.zip
+
+# Component 01: Credit Risk processed datasets
+data/credit_risk/*/processed/*.csv
+data/credit_risk/*/processed/*.xls
+data/credit_risk/*/processed/*.xlsx
+data/credit_risk/*/processed/*.parquet
+
+# Component 01: Home Credit generated features
+data/credit_risk/home_credit/features/*.csv
+data/credit_risk/home_credit/features/*.parquet
+
 # Component 02: private/raw and generated data
 /data/financial_inclusion/raw/*
 !/data/financial_inclusion/raw/.gitkeep
@@ -26,6 +52,19 @@ __pycache__/
 /outputs/financial_inclusion/metrics/*
 !/outputs/financial_inclusion/metrics/.gitkeep
 
-
 # Component 02 - locally generated trained model artifacts
 /models/financial_inclusion/*.joblib
+
+# Generated model files
+models/**/*.joblib
+models/**/*.pkl
+*.joblib
+*.pkl
+
+# Generated plots and JSON outputs
+outputs/**/*.png
+outputs/**/*.json
+
+# Python test coverage
+.coverage
+htmlcov/
