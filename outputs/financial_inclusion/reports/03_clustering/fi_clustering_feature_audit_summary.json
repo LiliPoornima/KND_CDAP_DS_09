@@ -1,0 +1,107 @@
+{
+  "input_file": "data\\financial_inclusion\\processed\\fi_clustering_input.csv",
+  "respondents": 56503,
+  "feature_count": 5,
+  "features": [
+    "score_connectivity",
+    "score_financial_access",
+    "score_digital_financial_usage",
+    "score_digital_safety",
+    "score_financial_resilience"
+  ],
+  "missing_feature_values": 0,
+  "all_scores_within_zero_one": true,
+  "feature_statistics": {
+    "score_connectivity": {
+      "mean": 0.8628,
+      "std": 0.2231,
+      "min": 0.5,
+      "median": 1.0,
+      "max": 1.0,
+      "unique_values": 2,
+      "variance": 0.049788,
+      "skewness": -1.0107
+    },
+    "score_financial_access": {
+      "mean": 0.6852,
+      "std": 0.4644,
+      "min": 0.0,
+      "median": 1.0,
+      "max": 1.0,
+      "unique_values": 2,
+      "variance": 0.215697,
+      "skewness": -0.7976
+    },
+    "score_digital_financial_usage": {
+      "mean": 0.5961,
+      "std": 0.4907,
+      "min": 0.0,
+      "median": 1.0,
+      "max": 1.0,
+      "unique_values": 2,
+      "variance": 0.240771,
+      "skewness": -0.3917
+    },
+    "score_digital_safety": {
+      "mean": 0.624,
+      "std": 0.4844,
+      "min": 0.0,
+      "median": 1.0,
+      "max": 1.0,
+      "unique_values": 2,
+      "variance": 0.234623,
+      "skewness": -0.5121
+    },
+    "score_financial_resilience": {
+      "mean": 0.5108,
+      "std": 0.2593,
+      "min": 0.0,
+      "median": 0.5,
+      "max": 1.0,
+      "unique_values": 17,
+      "variance": 0.067214,
+      "skewness": -0.0686
+    }
+  },
+  "correlation_matrix": {
+    "score_connectivity": {
+      "score_connectivity": 1.0,
+      "score_financial_access": 0.1671,
+      "score_digital_financial_usage": 0.1816,
+      "score_digital_safety": 0.4399,
+      "score_financial_resilience": 0.1545
+    },
+    "score_financial_access": {
+      "score_connectivity": 0.1671,
+      "score_financial_access": 1.0,
+      "score_digital_financial_usage": 0.8234,
+      "score_digital_safety": 0.1647,
+      "score_financial_resilience": 0.2682
+    },
+    "score_digital_financial_usage": {
+      "score_connectivity": 0.1816,
+      "score_financial_access": 0.8234,
+      "score_digital_financial_usage": 1.0,
+      "score_digital_safety": 0.1904,
+      "score_financial_resilience": 0.3017
+    },
+    "score_digital_safety": {
+      "score_connectivity": 0.4399,
+      "score_financial_access": 0.1647,
+      "score_digital_financial_usage": 0.1904,
+      "score_digital_safety": 1.0,
+      "score_financial_resilience": 0.1487
+    },
+    "score_financial_resilience": {
+      "score_connectivity": 0.1545,
+      "score_financial_access": 0.2682,
+      "score_digital_financial_usage": 0.3017,
+      "score_digital_safety": 0.1487,
+      "score_financial_resilience": 1.0
+    }
+  },
+  "distribution_report": "outputs\\financial_inclusion\\reports\\fi_clustering_feature_distributions.csv",
+  "frequency_report": "outputs\\financial_inclusion\\reports\\fi_clustering_feature_frequencies.csv",
+  "standardisation_applied": false,
+  "input_data_modified": false
+}

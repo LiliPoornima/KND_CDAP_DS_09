@@ -1,0 +1,27 @@
+{
+  "candidate": "5D_k4",
+  "algorithm": "KMeans",
+  "k": 4,
+  "random_state": 42,
+  "status": "provisional",
+  "labels_are_final": false,
+  "warning": "Cluster IDs are specific to this fitted model. Names describe observed cluster averages, not causal effects or definitive classifications of individuals or economies.",
+  "cluster_profiles": {
+    "0": {
+      "name": "High Usage, Lower Phone Protection",
+      "description": "High account access and digital payment usage, with a low phone-protection score."
+    },
+    "1": {
+      "name": "Broad Digital-Financial Inclusion",
+      "description": "High connectivity, account access, digital payment usage, and phone-protection scores."
+    },
+    "2": {
+      "name": "Connected but Financially Underserved",
+      "description": "High connectivity and phone-protection scores, but low account access and digital payment usage."
+    },
+    "3": {
+      "name": "Lower Digital-Financial Inclusion",
+      "description": "Relatively low connectivity, account access, digital payment usage, and phone-protection scores."
+    }
+  }
+}

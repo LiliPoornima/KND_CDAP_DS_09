@@ -1,1 +1,19 @@
 /* Shared frontend styles. */
+
+
+/* Shared styles for the research dashboard */
+
+.block-container {
+    padding-top: 2rem;
+    padding-bottom: 3rem;
+}
+
+h1, h2, h3 {
+    letter-spacing: -0.02em;
+}
+
+[data-testid="stMetric"] {
+    border: 1px solid rgba(128, 128, 128, 0.25);
+    padding: 1rem;
+    border-radius: 0.75rem;
+}
