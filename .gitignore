@@ -1,0 +1,22 @@
+# Python cache
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Virtual environments
+.venv/
+venv/
+
+# Environment variables
+.env
+
+# Generated model files
+*.joblib
+*.pkl
+
+# Raw research datasets - do not upload to GitHub
+data/**/*.csv
+data/**/*.xls
+data/**/*.xlsx
+data/**/*.zip
+data/**/*.parquet
