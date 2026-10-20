@@ -66,7 +66,7 @@ NUMERIC_FEATURES = ["age"]
 
 FEATURES = CATEGORICAL_FEATURES + NUMERIC_FEATURES
 
-CLUSTER_LABELS = [0, 1, 2, 3]
+CLUSTER_LABELS = [0, 1, 2, 3, 4]
 
 # Persist the complete preprocessing + classifier pipeline.
 MODEL_FILENAMES = {
@@ -164,7 +164,7 @@ def main():
 
         "XGBoost": XGBClassifier(
             objective="multi:softprob",
-            num_class=4,
+            num_class=5,
             n_estimators=300,
             max_depth=6,
             learning_rate=0.05,

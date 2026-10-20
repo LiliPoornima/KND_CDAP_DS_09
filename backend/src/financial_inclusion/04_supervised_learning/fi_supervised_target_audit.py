@@ -11,7 +11,7 @@ DATA_PATH = (
 
 LABEL_PATH = (
     ROOT / "outputs" / "financial_inclusion"
-    / "metrics" / "fi_clustering_labels_5D_k4.csv"
+    / "metrics" / "fi_clustering_labels_5D_k5.csv"
 )
 
 OUTPUT_PATH = (
