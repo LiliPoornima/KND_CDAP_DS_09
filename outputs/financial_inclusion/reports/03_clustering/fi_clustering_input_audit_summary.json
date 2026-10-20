@@ -1,0 +1,29 @@
+{
+  "input_file": "data\\financial_inclusion\\processed\\fi_dimension_dataset.csv",
+  "total_respondents": 144090,
+  "total_economies": 140,
+  "score_columns": [
+    "score_connectivity",
+    "score_financial_access",
+    "score_digital_financial_usage",
+    "score_digital_safety",
+    "score_financial_resilience"
+  ],
+  "respondents_with_all_five_scores": 56503,
+  "respondents_missing_one_or_more_scores": 87587,
+  "complete_case_percent": 39.21,
+  "incomplete_case_percent": 60.79,
+  "missing_percent_by_score": {
+    "score_connectivity": 0.0,
+    "score_financial_access": 0.0,
+    "score_digital_financial_usage": 28.55,
+    "score_digital_safety": 55.38,
+    "score_financial_resilience": 39.15
+  },
+  "economies_with_zero_complete_cases": 65,
+  "rows_dropped": 0,
+  "imputation_performed": false,
+  "input_data_modified": false,
+  "economy_report": "outputs\\financial_inclusion\\reports\\fi_clustering_input_by_economy.csv",
+  "note": "Audit only. No rows were removed and no values were imputed. Complete-case counts are descriptive and do not determine the final clustering missing-data strategy."
+}

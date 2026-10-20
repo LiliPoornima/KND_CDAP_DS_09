@@ -10,15 +10,22 @@ __pycache__/
 /data/financial_inclusion/processed/*
 !/data/financial_inclusion/processed/.gitkeep
 
+
 # Component 02: generated analysis outputs
+
+# Ignore generated reports by default; allow reviewed research findings
 /outputs/financial_inclusion/reports/*
 !/outputs/financial_inclusion/reports/.gitkeep
+!/outputs/financial_inclusion/reports/03_clustering/
+!/outputs/financial_inclusion/reports/04_supervised_learning/
 
 /outputs/financial_inclusion/figures/*
 !/outputs/financial_inclusion/figures/.gitkeep
 
+# Ignore generated metrics by default; allow reviewed findings
 /outputs/financial_inclusion/metrics/*
 !/outputs/financial_inclusion/metrics/.gitkeep
+
 
 # Component 02 - locally generated trained model artifacts
 /models/financial_inclusion/*.joblib

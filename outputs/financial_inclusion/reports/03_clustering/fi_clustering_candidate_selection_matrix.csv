@@ -1,0 +1,4 @@
+algorithm,scaling,k,sample_size,cluster_count,silhouette_score,davies_bouldin_score,calinski_harabasz_score,bic,aic,candidate,seed_runs,pairwise_comparisons,mean_pairwise_ari,min_pairwise_ari,smallest_cluster_n,smallest_cluster_percent,largest_cluster_percent,economies,economies_spread_across_multiple_clusters,kmeans_gmm_ari
+KMeans,raw,6,56503,6,0.6540567701292325,0.6350344717897419,79986.62596039897,,,5D_k6,10,45,1.0,1.0,2356,4.17,41.72,75,75,0.8855155223550539
+KMeans,raw,5,56503,5,0.6312848397256119,0.8045740068687077,78662.37990375534,,,5D_k5,10,45,1.0,1.0,5036,8.91,41.72,75,75,1.0
+KMeans,raw,4,56503,4,0.5823641183780006,0.7796198164410137,70914.23974806377,,,5D_k4,10,45,1.0,1.0,10107,17.89,41.72,75,75,1.0
