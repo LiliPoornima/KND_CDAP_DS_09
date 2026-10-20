@@ -1,0 +1,11 @@
+ backend/__pycache__/__init__.cpython-311.pyc       |    Bin [31m217[m -> [32m0[m bytes
+ .../give_me_some_credit/raw/Data Dictionary.xls    |    Bin [31m14848[m -> [32m0[m bytes
+ .../give_me_some_credit/raw/cs-test.csv            | 101504 [31m------------[m
+ .../give_me_some_credit/raw/cs-training.csv        | 150001 [31m------------------[m
+ .../give_me_some_credit/raw/sampleEntry.csv        | 101504 [31m------------[m
+ tests/__pycache__/__init__.cpython-311.pyc         |    Bin [31m218[m -> [32m0[m bytes
+ ...est_cr_data_loader.cpython-311-pytest-9.1.1.pyc |    Bin [31m5327[m -> [32m0[m bytes
+ ...test_cr_prediction.cpython-311-pytest-9.1.1.pyc |    Bin [31m392[m -> [32m0[m bytes
+ ...t_cr_preprocessing.cpython-311-pytest-9.1.1.pyc |    Bin [31m398[m -> [32m0[m bytes
+ .../test_cr_training.cpython-311-pytest-9.1.1.pyc  |    Bin [31m388[m -> [32m0[m bytes
+ 10 files changed, 353009 deletions(-)
