@@ -43,6 +43,17 @@ INPUTS = {
         ],
         "k": 5,
     },
+        "5D_k6": {
+        "path": ROOT / "data/financial_inclusion/processed/fi_clustering_input.csv",
+        "features": [
+            "score_connectivity",
+            "score_financial_access",
+            "score_digital_financial_usage",
+            "score_digital_safety",
+            "score_financial_resilience",
+        ],
+        "k": 6,
+    },
 }
 
 REPORT_DIR = ROOT / "outputs/financial_inclusion/reports/03_clustering"

@@ -1,0 +1,14 @@
+{
+  "input_file": "data\\financial_inclusion\\processed\\fi_clustering_input_3d.csv",
+  "respondents": 102954,
+  "economies": 98,
+  "features": [
+    "score_connectivity",
+    "score_financial_access",
+    "score_digital_financial_usage"
+  ],
+  "feature_statistics_file": "outputs\\financial_inclusion\\reports\\fi_clustering_3d_feature_statistics.csv",
+  "feature_correlations_file": "outputs\\financial_inclusion\\reports\\fi_clustering_3d_feature_correlations.csv",
+  "missing_values": 0,
+  "source_data_modified": false
+}
