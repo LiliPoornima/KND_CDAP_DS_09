@@ -1,0 +1,4 @@
+candidate_a,candidate_b,respondents_compared,adjusted_rand_index
+5D_k4,5D_k5,56503,0.9198314933905993
+5D_k4,5D_k6,56503,0.9294338537697231
+5D_k5,5D_k6,56503,0.9897607442295642

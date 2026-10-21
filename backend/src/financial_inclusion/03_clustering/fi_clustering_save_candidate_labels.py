@@ -8,6 +8,7 @@ from sklearn.cluster import KMeans
 
 ROOT = Path(__file__).resolve().parents[4]
 
+
 CANDIDATES = {
     "5D_k4": {
         "input": ROOT / "data/financial_inclusion/processed/fi_clustering_input.csv",
@@ -20,6 +21,28 @@ CANDIDATES = {
         ],
         "k": 4,
     },
+    "5D_k5": {
+        "input": ROOT / "data/financial_inclusion/processed/fi_clustering_input.csv",
+        "features": [
+            "score_connectivity",
+            "score_financial_access",
+            "score_digital_financial_usage",
+            "score_digital_safety",
+            "score_financial_resilience",
+        ],
+        "k": 5,
+    },
+    "5D_k6": {
+        "input": ROOT / "data/financial_inclusion/processed/fi_clustering_input.csv",
+        "features": [
+            "score_connectivity",
+            "score_financial_access",
+            "score_digital_financial_usage",
+            "score_digital_safety",
+            "score_financial_resilience",
+        ],
+        "k": 6,
+    },
     "3D_k5": {
         "input": ROOT / "data/financial_inclusion/processed/fi_clustering_input_3d.csv",
         "features": [
@@ -30,6 +53,7 @@ CANDIDATES = {
         "k": 5,
     },
 }
+
 
 OUTPUT_DIR = ROOT / "outputs/financial_inclusion/metrics"
 RANDOM_STATE = 42

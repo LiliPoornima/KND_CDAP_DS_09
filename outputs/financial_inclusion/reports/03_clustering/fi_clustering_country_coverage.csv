@@ -1,0 +1,141 @@
+economy,total_respondents,eligible_respondents,excluded_respondents,eligible_percent
+Albania,1000,0,1000,0.0
+Algeria,1007,0,1007,0.0
+Armenia,1000,0,1000,0.0
+Australia,1000,0,1000,0.0
+Azerbaijan,1000,0,1000,0.0
+Austria,1000,0,1000,0.0
+Bahrain,1015,0,1015,0.0
+Belgium,1002,0,1002,0.0
+Bosnia and Herzegovina,1000,0,1000,0.0
+Chile,1000,0,1000,0.0
+Croatia,1000,0,1000,0.0
+Cyprus,1010,0,1010,0.0
+Canada,1024,0,1024,0.0
+Bulgaria,1000,0,1000,0.0
+China,4020,0,4020,0.0
+Czechia,1003,0,1003,0.0
+Greece,1004,0,1004,0.0
+Iceland,500,0,500,0.0
+Hungary,1006,0,1006,0.0
+"Hong Kong SAR, China",1006,0,1006,0.0
+Israel,1001,0,1001,0.0
+Italy,1001,0,1001,0.0
+Ireland,1000,0,1000,0.0
+"Iran, Islamic Rep.",1008,0,1008,0.0
+Japan,1008,0,1008,0.0
+France,1000,0,1000,0.0
+Germany,1000,0,1000,0.0
+Georgia,1000,0,1000,0.0
+Finland,1000,0,1000,0.0
+Estonia,1006,0,1006,0.0
+Denmark,1005,0,1005,0.0
+Kazakhstan,1000,0,1000,0.0
+Switzerland,1000,0,1000,0.0
+Norway,1007,0,1007,0.0
+North Macedonia,1000,0,1000,0.0
+Serbia,1000,0,1000,0.0
+Russian Federation,1000,0,1000,0.0
+Romania,1000,0,1000,0.0
+Portugal,1001,0,1001,0.0
+Poland,1003,0,1003,0.0
+Saudi Arabia,1018,0,1018,0.0
+"Taiwan, China",1000,0,1000,0.0
+Trinidad and Tobago,502,0,502,0.0
+Sweden,1004,0,1004,0.0
+Spain,1000,0,1000,0.0
+Slovenia,1001,0,1001,0.0
+Slovak Republic,1001,0,1001,0.0
+Singapore,1000,0,1000,0.0
+Malta,1006,0,1006,0.0
+Lithuania,1012,0,1012,0.0
+Oman,1000,0,1000,0.0
+Mauritius,1000,0,1000,0.0
+Netherlands,1004,0,1004,0.0
+New Zealand,1000,0,1000,0.0
+Montenegro,1000,0,1000,0.0
+Moldova,1000,0,1000,0.0
+Kuwait,1003,0,1003,0.0
+Kosovo,1000,0,1000,0.0
+Libya,1000,0,1000,0.0
+Latvia,1001,0,1001,0.0
+"Korea, Rep.",1003,0,1003,0.0
+Uruguay,1000,0,1000,0.0
+Ukraine,1000,0,1000,0.0
+United Kingdom,1000,0,1000,0.0
+United States,1000,0,1000,0.0
+Madagascar,1000,485,515,48.5
+Sierra Leone,1001,530,471,52.95
+Niger,1000,559,441,55.9
+South Africa,1000,566,434,56.6
+Eswatini,1051,625,426,59.47
+Pakistan,1000,599,401,59.9
+Chad,1000,605,395,60.5
+Comoros,1000,610,390,61.0
+Sri Lanka,1000,617,383,61.7
+Ethiopia,1001,626,375,62.54
+Morocco,1014,635,379,62.62
+Malawi,1000,627,373,62.7
+Lesotho,1020,644,376,63.14
+"Congo, Dem. Rep.",1000,639,361,63.9
+Nigeria,1000,646,354,64.6
+"Gambia, The",1008,655,353,64.98
+"Egypt, Arab Rep.",1001,658,343,65.73
+Uzbekistan,1000,669,331,66.9
+Guatemala,1000,677,323,67.7
+Cambodia,1000,678,322,67.8
+Thailand,1000,682,318,68.2
+Panama,1010,696,314,68.91
+India,3000,2090,910,69.67
+Honduras,1004,700,304,69.72
+El Salvador,1000,700,300,70.0
+Liberia,1001,714,287,71.33
+Mozambique,1008,721,287,71.53
+"Congo, Rep.",1000,716,284,71.6
+Lao PDR,1000,721,279,72.1
+Mexico,1050,760,290,72.38
+Paraguay,1000,724,276,72.4
+Dominican Republic,1000,725,275,72.5
+Colombia,1000,728,272,72.8
+Kyrgyz Republic,1000,728,272,72.8
+Bangladesh,1000,729,271,72.9
+Costa Rica,1003,734,269,73.18
+Botswana,1000,732,268,73.2
+Tajikistan,1000,743,257,74.3
+Philippines,1000,746,254,74.6
+Zimbabwe,1001,750,251,74.93
+Indonesia,1068,802,266,75.09
+Jordan,1006,756,250,75.15
+Brazil,1000,758,242,75.8
+Malaysia,1000,763,237,76.3
+Peru,1000,763,237,76.3
+Tanzania,1000,764,236,76.4
+Ghana,1000,764,236,76.4
+Cameroon,1000,767,233,76.7
+Belize,509,392,117,77.01
+Bolivia,1000,774,226,77.4
+Tunisia,1000,774,226,77.4
+Lebanon,1010,784,226,77.62
+Guinea,1000,783,217,78.3
+Nepal,1000,786,214,78.6
+Nicaragua,1130,893,237,79.03
+Benin,1000,794,206,79.4
+Namibia,1000,794,206,79.4
+Cote d'Ivoire,1000,797,203,79.7
+Togo,1000,799,201,79.9
+Argentina,1000,813,187,81.3
+Zambia,1000,815,185,81.5
+Uganda,1000,817,183,81.7
+Mali,1002,834,168,83.23
+Ecuador,1000,833,167,83.3
+Mauritania,1000,841,159,84.1
+Gabon,1000,842,158,84.2
+Burkina Faso,1000,856,144,85.6
+Senegal,1000,860,140,86.0
+Iraq,1000,861,139,86.1
+West Bank and Gaza,1000,875,125,87.5
+Turkiye,1000,890,110,89.0
+Viet Nam,1000,905,95,90.5
+Kenya,1000,908,92,90.8
+"Venezuela, RB",1000,917,83,91.7
+Mongolia,1000,940,60,94.0
