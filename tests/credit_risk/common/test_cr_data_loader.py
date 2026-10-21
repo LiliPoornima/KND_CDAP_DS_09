@@ -3,7 +3,7 @@ import pandas as pd
 import pytest
 
 # Import the data loader function being tested.
-from backend.src.credit_risk.cr_data_loader import cr_load_data
+from backend.src.credit_risk.common.cr_data_loader import cr_load_data
 
 
 def test_cr_load_data_reads_csv(tmp_path):
