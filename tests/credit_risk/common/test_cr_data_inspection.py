@@ -2,7 +2,7 @@ import pandas as pd
 import pytest
 
 # Import the inspection function being tested.
-from backend.src.credit_risk.cr_data_inspection import cr_inspect_data
+from backend.src.credit_risk.common.cr_data_inspection import cr_inspect_data
 
 
 def test_cr_inspect_data_returns_summary():
