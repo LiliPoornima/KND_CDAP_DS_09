@@ -28,10 +28,10 @@ def test_cr_fit_imputation_uses_numeric_median_and_categorical_mode():
 
 
 def test_cr_fit_imputation_handles_entirely_missing_features():
-    # Entirely missing columns need deterministic, usable replacement values.
+    # Specify the numeric dtype because an all-None column has no numeric type.
     df = pd.DataFrame(
         {
-            "numeric_feature": [None, None],
+            "numeric_feature": pd.Series([None, None], dtype="float64"),
             "category_feature": [None, None],
         }
     )
