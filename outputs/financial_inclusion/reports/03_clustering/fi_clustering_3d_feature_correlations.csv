@@ -1,0 +1,4 @@
+,score_connectivity,score_financial_access,score_digital_financial_usage
+score_connectivity,1.0,0.30975289838312486,0.3285588580884489
+score_financial_access,0.30975289838312486,1.0,0.8181180405975446
+score_digital_financial_usage,0.3285588580884489,0.8181180405975446,1.0

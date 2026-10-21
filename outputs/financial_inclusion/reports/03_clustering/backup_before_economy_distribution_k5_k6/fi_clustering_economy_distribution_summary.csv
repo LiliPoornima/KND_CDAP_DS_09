@@ -1,0 +1,3 @@
+candidate,respondents,economies,economies_spread_across_multiple_clusters,economies_in_one_cluster_only,smallest_economy_sample,median_economy_sample,largest_economy_sample
+3D_k5,102954,98,98,0,509,1000.0,4020
+5D_k4,56503,75,75,0,392,746.0,2090

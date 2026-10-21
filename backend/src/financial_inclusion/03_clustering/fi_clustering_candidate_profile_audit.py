@@ -1,5 +1,5 @@
 
-"""Audit cluster sizes and profiles for raw KMeans/GMM k=6 candidates."""
+"""Audit cluster sizes and profiles for selected clustering candidates."""
 
 import json
 from pathlib import Path
@@ -11,24 +11,37 @@ from sklearn.mixture import GaussianMixture
 
 ROOT = Path(__file__).resolve().parents[4]
 
-INPUTS = {
-    "3D": {
+FEATURES_3D = [
+    "score_connectivity",
+    "score_financial_access",
+    "score_digital_financial_usage",
+]
+
+FEATURES_5D = FEATURES_3D + [
+    "score_digital_safety",
+    "score_financial_resilience",
+]
+
+CANDIDATES = {
+    "3D_k5": {
         "path": ROOT / "data/financial_inclusion/processed/fi_clustering_input_3d.csv",
-        "features": [
-            "score_connectivity",
-            "score_financial_access",
-            "score_digital_financial_usage",
-        ],
+        "features": FEATURES_3D,
+        "k": 5,
     },
-    "5D": {
+    "5D_k4": {
         "path": ROOT / "data/financial_inclusion/processed/fi_clustering_input.csv",
-        "features": [
-            "score_connectivity",
-            "score_financial_access",
-            "score_digital_financial_usage",
-            "score_digital_safety",
-            "score_financial_resilience",
-        ],
+        "features": FEATURES_5D,
+        "k": 4,
+    },
+    "5D_k5": {
+        "path": ROOT / "data/financial_inclusion/processed/fi_clustering_input.csv",
+        "features": FEATURES_5D,
+        "k": 5,
+    },
+    "5D_k6": {
+        "path": ROOT / "data/financial_inclusion/processed/fi_clustering_input.csv",
+        "features": FEATURES_5D,
+        "k": 6,
     },
 }
 
@@ -36,7 +49,6 @@ REPORT_DIR = ROOT / "outputs/financial_inclusion/reports/03_clustering"
 METRICS_DIR = ROOT / "outputs/financial_inclusion/metrics"
 
 RANDOM_STATE = 42
-K = 6
 
 
 def main():
@@ -47,7 +59,7 @@ def main():
     profile_tables = []
     agreement = {}
 
-    for dataset_name, config in INPUTS.items():
+    for candidate_name, config in CANDIDATES.items():
         path = config["path"]
 
         if not path.exists():
@@ -55,20 +67,30 @@ def main():
 
         df = pd.read_csv(path, low_memory=False)
         features = config["features"]
-        X = df[features].to_numpy(dtype=float)
+        k = config["k"]
 
+        missing_columns = [
+            col for col in ["economy", *features]
+            if col not in df.columns
+        ]
+        if missing_columns:
+            raise ValueError(
+                f"{candidate_name}: missing columns {missing_columns}"
+            )
+
+        X = df[features].to_numpy(dtype=float)
         if not pd.notna(X).all():
-            raise ValueError(f"{dataset_name}: missing feature values.")
+            raise ValueError(f"{candidate_name}: missing feature values.")
 
         kmeans = KMeans(
-            n_clusters=K,
+            n_clusters=k,
             n_init=10,
             random_state=RANDOM_STATE,
         )
         kmeans_labels = kmeans.fit_predict(X)
 
         gmm = GaussianMixture(
-            n_components=K,
+            n_components=k,
             covariance_type="full",
             reg_covar=1e-5,
             n_init=2,
@@ -76,7 +98,8 @@ def main():
         )
         gmm_labels = gmm.fit_predict(X)
 
-        agreement[dataset_name] = {
+        agreement[candidate_name] = {
+            "k": k,
             "adjusted_rand_index_kmeans_vs_gmm": float(
                 adjusted_rand_score(kmeans_labels, gmm_labels)
             ),
@@ -95,26 +118,35 @@ def main():
 
             sizes = (
                 temp.groupby("cluster")
-                .size()
-                .rename("respondents")
+                .agg(
+                    respondents=("economy", "size"),
+                    economies_represented=("economy", "nunique"),
+                )
                 .reset_index()
             )
-            sizes["dataset"] = dataset_name
+            sizes["candidate"] = candidate_name
             sizes["algorithm"] = algorithm
             sizes["percent_of_dataset"] = (
                 100 * sizes["respondents"] / len(df)
             ).round(2)
-            sizes["economies_represented"] = sizes["cluster"].map(
-                temp.groupby("cluster")["economy"].nunique()
-            )
             size_tables.append(sizes)
 
             profile = df[features].copy()
             profile["cluster"] = labels
 
-            means = profile.groupby("cluster")[features].mean().reset_index()
-            means["dataset"] = dataset_name
+            means = (
+                profile.groupby("cluster")[features]
+                .mean()
+                .reset_index()
+            )
+            means["candidate"] = candidate_name
             means["algorithm"] = algorithm
+            means["respondents"] = (
+                profile.groupby("cluster").size().reindex(means["cluster"]).to_numpy()
+            )
+            means["percent_of_dataset"] = (
+                100 * means["respondents"] / len(df)
+            ).round(2)
             profile_tables.append(means)
 
     sizes_df = pd.concat(size_tables, ignore_index=True)
@@ -136,7 +168,7 @@ def main():
     print(
         sizes_df[
             [
-                "dataset", "algorithm", "cluster",
+                "candidate", "algorithm", "cluster",
                 "respondents", "percent_of_dataset",
                 "economies_represented",
             ]
@@ -157,4 +189,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

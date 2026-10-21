@@ -1,1 +1,4 @@
 # Add project dependencies here.
+streamlit==1.50.0
+pandas
+plotly
