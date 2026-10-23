@@ -1,0 +1,3 @@
+attribute,min_group_size,min_class_count,selection_rate_groups,true_positive_rate_groups,false_positive_rate_groups,selection_rate_difference,true_positive_rate_difference,false_positive_rate_difference,equalized_odds_difference
+CODE_GENDER,30,5,2,2,2,0.09293064366340392,0.07100647184657305,0.08131613276061034,0.08131613276061034
+AGE_YEARS,30,5,6,6,6,0.5109146650450999,0.5119249394673124,0.4878459326133745,0.5119249394673124
