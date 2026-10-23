@@ -33,6 +33,9 @@ from sklearn.metrics import (
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 
+from backend.src.credit_risk.common.cr_calibration import (
+    cr_calibration_summary,
+)
 
 TARGET_COLUMN = "SeriousDlqin2yrs"
 
@@ -158,12 +161,17 @@ def cr_evaluate_model(
     test_df: pd.DataFrame,
     target_column: str = TARGET_COLUMN,
     output_dir: str | Path | None = None,
+    threshold: float | None = None,
 ) -> dict[str, Any]:
     """
     Evaluate a trained classifier on held-out test data.
 
     Returns classification metrics, ROC-AUC, average precision,
     the confusion matrix, and the classification report.
+
+    If threshold is supplied, it is applied to positive-class probabilities
+    using ``probability >= threshold``. If omitted, the model's existing
+    ``predict()`` policy is preserved and 0.5 is recorded as its threshold.
 
     If output_dir is supplied, scalar metrics are saved to CSV.
     """
@@ -173,6 +181,13 @@ def cr_evaluate_model(
 
     if test_df.empty:
         raise ValueError("Test data must not be empty.")
+
+    if threshold is not None and (
+        not isinstance(threshold, (int, float))
+        or isinstance(threshold, bool)
+        or not 0.0 < threshold < 1.0
+    ):
+        raise ValueError("threshold must be a number strictly between 0 and 1.")
 
     if not test_df.columns.is_unique:
         raise ValueError("Test data must have unique column names.")
@@ -216,10 +231,17 @@ def cr_evaluate_model(
         )
 
     # Generate predictions without fitting on test data.
-    y_pred = model.predict(X_test)
     y_probability = model.predict_proba(X_test)[:, 1]
+    effective_threshold = 0.5 if threshold is None else float(threshold)
+    y_pred = (
+        model.predict(X_test)
+        if threshold is None
+        else (y_probability >= effective_threshold).astype(int)
+    )
+    calibration = cr_calibration_summary(y_test, y_probability)
 
     metrics = {
+        "threshold": effective_threshold,
         "accuracy": float(
             accuracy_score(y_test, y_pred)
         ),
@@ -237,6 +259,14 @@ def cr_evaluate_model(
         ),
         "pr_auc_average_precision": float(
             average_precision_score(y_test, y_probability)
+        ),
+        "brier_score": calibration["brier_score"],
+        "log_loss": calibration["log_loss"],
+        "expected_calibration_error": calibration[
+            "expected_calibration_error"
+        ],
+        "calibration_bins": calibration["calibration_bins"].to_dict(
+            orient="records"
         ),
         "confusion_matrix": confusion_matrix(
             y_test,
@@ -264,10 +294,8 @@ def cr_evaluate_model(
         scalar_metrics = {
             key: value
             for key, value in metrics.items()
-            if key not in {
-                "confusion_matrix",
-                "classification_report",
-            }
+            if isinstance(value, (int, float))
+            and not isinstance(value, bool)
         }
 
         pd.DataFrame([scalar_metrics]).to_csv(
