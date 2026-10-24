@@ -505,11 +505,12 @@ with st.expander("Clustering interpretation"):
 with st.expander("Supervised modelling status"):
     st.markdown(
         """
-        Supervised model metrics are intentionally not displayed in this
-        version of the dashboard. The previous implementation read saved
-        metrics from generated report files. A reproducible model-evaluation
-        workflow should be implemented separately before showing those
-        results here.
+        This dashboard displays saved outputs from the existing supervised
+        evaluation workflow. The workflow evaluates the full 56,503-respondent
+        cohort using a stratified 80/20 split with random_state=42 (45,202
+        training and 11,301 test respondents). It retains respondents with
+        missing predictors and fits its imputers on the training partition
+        before applying them to the test partition.
 
         Cluster classification predicts the cluster labels created by
         unsupervised learning. It does not directly predict a financial
@@ -554,9 +555,12 @@ st.code(
 )
 
 st.info(
-    "The supervised audit confirms 56,503 respondents in the target dataset with 991 rows "
-    "excluded from modelling because predictor values were incomplete; the complete-case "
-    "sample used for evaluation contains 55,512 respondents."
+    "The evaluation uses all 56,503 respondents in a stratified 80/20 split: "
+    "45,202 training and 11,301 test respondents. A total of 991 respondents "
+    "have one or more missing predictor values; they were retained and handled "
+    "by the training pipeline's imputers. Imputation parameters are fitted on "
+    "the training partition and applied to the test partition. The 55,512 "
+    "complete-case count is not the evaluation sample size."
 )
 
 st.subheader("7.2 Model Performance Comparison")
@@ -703,8 +707,11 @@ st.markdown("""
   clustering model rather than an independently observed financial-inclusion outcome.
 - Predictive performance does not establish causality or validate the substantive
   meaning of the clusters.
-- The evaluation uses the complete-case sample after excluding 991 respondents with
-  incomplete predictor values; the reported metrics apply to that subset only.
+- The evaluation retains the full cohort, including 991 respondents with one or
+  more missing predictors. Imputers are fitted on the training partition and then
+  applied to the held-out test partition. This avoids excluding those respondents,
+  but the missingness pattern and imputation assumptions may still affect model
+  performance and should be considered when interpreting results.
 - Aggregate metrics can mask poor performance for some clusters; the per-cluster report
   and confusion matrix should be interpreted alongside the summary metrics.
 - These values are loaded from the reproducible evaluation outputs rather than being
