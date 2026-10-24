@@ -63,6 +63,18 @@ DEFAULT_DRIFT_ONSET_D7: int = 105
 DEFAULT_DRIFT_ONSET_OTHER: int = 112
 TERMINAL_RISK_WINDOW: int = 28
 
+# --------------------------------------------------------------------------- drift scenarios
+SCENARIO_CONTROL = "control"
+SCENARIO_S1 = "S1"
+SCENARIO_S2 = "S2"
+SCENARIO_S3 = "S3"
+DRIFT_SCENARIOS: Tuple[str, ...] = (
+    SCENARIO_CONTROL,
+    SCENARIO_S1,
+    SCENARIO_S2,
+    SCENARIO_S3,
+)
+
 # --------------------------------------------------------------------------- data expectations
 @dataclass(frozen=True)
 class HandbookExpectations:
