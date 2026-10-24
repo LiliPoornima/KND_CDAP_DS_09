@@ -87,16 +87,12 @@ def run_b0(
     from .fd_preprocessing import build_splits
     from .fd_training import predict_scores, save_model, train_model
 
-    cache = PROCESSED_DIR / f"features_default_d{delay}.parquet"
+    from .fd_feature_engineering import load_or_build_features
+
     if df is None:
-        if use_feature_cache and cache.is_file():
-            logger.info("Loading cached features %s", cache)
-            df = pd.read_parquet(cache)
-        else:
-            df = build_features(load_handbook(), delay)
-            if use_feature_cache:
-                cache.parent.mkdir(parents=True, exist_ok=True)
-                df.to_parquet(cache, index=False)
+        raw = load_handbook()
+        df = (load_or_build_features(raw, delay) if use_feature_cache
+              else build_features(raw, delay))
 
     sp = build_splits(df, delay)
     cfg = sp["config"]

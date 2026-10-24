@@ -15,14 +15,16 @@ calling :func:`build_features` again on the modified frame.
 
 from __future__ import annotations
 
-from typing import Sequence
+import hashlib
+from pathlib import Path
+from typing import Optional, Sequence
 
 import numpy as np
 import pandas as pd
 
 from .fd_config import (
     COL_AMOUNT, COL_CUSTOMER, COL_DAY, COL_DATETIME, COL_FRAUD, COL_TERMINAL,
-    CUSTOMER_WINDOWS, MODEL_FEATURES, TERMINAL_RISK_WINDOW, get_logger,
+    CUSTOMER_WINDOWS, MODEL_FEATURES, PROCESSED_DIR, TERMINAL_RISK_WINDOW, get_logger,
 )
 
 logger = get_logger(__name__)
@@ -115,4 +117,47 @@ def build_features(
     missing = [c for c in MODEL_FEATURES if c not in out.columns]
     if missing:  # pragma: no cover - defensive
         raise RuntimeError(f"Feature build incomplete, missing: {missing}")
+    return out
+
+
+def features_fingerprint(
+    df: pd.DataFrame, delay: int, terminal_window: int = TERMINAL_RISK_WINDOW
+) -> str:
+    """Hash of everything the feature values depend on.
+
+    Covers the input columns (amounts, timestamps, ids, labels, days), the delay, the terminal
+    window, the customer windows and the source code of this module, so a cache can never be
+    reused after drift injection or after a feature-code change.
+    """
+    h = hashlib.sha1()
+    for col in (COL_CUSTOMER, COL_TERMINAL, COL_AMOUNT, COL_DAY, COL_FRAUD):
+        h.update(np.ascontiguousarray(df[col].to_numpy()).tobytes())
+    h.update(np.ascontiguousarray(df[COL_DATETIME].to_numpy().astype("datetime64[ns]")).tobytes())
+    h.update(f"|{len(df)}|{delay}|{terminal_window}|{','.join(CUSTOMER_WINDOWS)}|".encode())
+    h.update(Path(__file__).read_bytes())
+    return h.hexdigest()[:16]
+
+
+def load_or_build_features(
+    df: pd.DataFrame,
+    delay: int,
+    cache_dir: Optional[Path] = None,
+    tag: str = "default",
+    terminal_window: int = TERMINAL_RISK_WINDOW,
+) -> pd.DataFrame:
+    """Return features for ``df``, using a parquet cache keyed by :func:`features_fingerprint`.
+
+    ``df`` is always the RAW (possibly drift-injected) frame. If any input value or the feature
+    code changed, the fingerprint changes and features are rebuilt.
+    """
+    cache_dir = PROCESSED_DIR if cache_dir is None else Path(cache_dir)
+    fp = features_fingerprint(df, delay, terminal_window)
+    path = cache_dir / f"features_{tag}_d{delay}_{fp}.parquet"
+    if path.is_file():
+        logger.info("Loading cached features %s", path.name)
+        return pd.read_parquet(path)
+    out = build_features(df, delay, terminal_window)
+    cache_dir.mkdir(parents=True, exist_ok=True)
+    out.to_parquet(path, index=False)
+    logger.info("Built and cached features %s", path.name)
     return out
