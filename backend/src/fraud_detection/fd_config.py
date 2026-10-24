@@ -123,6 +123,28 @@ def build_split_config(delay: int, drift_onset: Optional[int] = None) -> SplitCo
     )
 
 
+# --------------------------------------------------------------------------- model / metrics
+TARGET_FPR: float = 0.01          # primary metric: recall at 1% FPR
+CUSTOMER_WINDOWS: Tuple[str, ...] = ("1D", "7D", "30D")
+
+
+@dataclass(frozen=True)
+class ModelParams:
+    """LightGBM hyper-parameters (spec section 7)."""
+
+    learning_rate: float = 0.05
+    num_leaves: int = 31
+    n_estimators: int = 200
+    subsample: float = 0.8
+    subsample_freq: int = 1
+    colsample_bytree: float = 0.8
+    scale_pos_weight: float = 20.0
+    n_jobs: int = -1
+
+
+MODEL_PARAMS = ModelParams()
+
+
 def get_logger(name: str) -> logging.Logger:
     """Return a module logger (configuration is left to the entry point)."""
     return logging.getLogger(name)
