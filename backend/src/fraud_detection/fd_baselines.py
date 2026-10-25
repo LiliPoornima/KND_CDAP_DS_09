@@ -316,11 +316,14 @@ def run_benchmark_method(
                         forced = CANDIDATE_RECENCY
 
                     sel_mode = "psi" if method == METHOD_P1_NO_SHAP else "shap"
+                    feature_signals = {}
+                    feature_signals.update(mon)
+                    feature_signals.update(exp)
                     aga_res = run_aga(
                         df=df,
                         decision_day=decision_day,
                         delay=delay,
-                        deltas=exp,
+                        deltas=feature_signals,
                         selection_mode=sel_mode,
                         seed=seed,
                         forced_candidate=forced,
