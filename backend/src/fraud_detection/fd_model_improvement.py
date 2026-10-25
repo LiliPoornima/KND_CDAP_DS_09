@@ -1,4 +1,9 @@
-"""Phase 4: Comparative model improvement and temporal validation.
+"""Phase 4: Comparative model improvement and temporal validation (Exploratory Module).
+
+NOTE: This module contains exploratory model comparison experiments outside the primary
+benchmark protocol (Phases 5-7). The primary benchmark protocol uses LightGBM with MODEL_FEATURES
+to isolate the contribution of delay-aware attribution and early-warning adaptation under
+delayed feedback (Spec Sections 1-13).
 
 Compares candidate algorithms (Logistic Regression, LightGBM default, LightGBM tuned,
 XGBoost, CatBoost) across standard and extended feature sets using strict chronological validation:

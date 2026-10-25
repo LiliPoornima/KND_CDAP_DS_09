@@ -215,6 +215,7 @@ def run_benchmark_method(
     # Pre-drift baseline recall
     base_scores = predict_scores(base_model, test_df[test_df[COL_DAY] < onset_day])
     base_recall = recall_at_fpr(test_df[test_df[COL_DAY] < onset_day][COL_FRAUD].to_numpy(), base_scores)
+    base_est_rec = cbpe.estimate_recall(base_scores)
 
     for i, win in enumerate(windows):
         w_start, w_end = win
@@ -270,9 +271,10 @@ def run_benchmark_method(
                     current_model = retrain_on_matured_data(df, decision_day=decision_day, delay=delay, seed=seed)
 
             elif method == METHOD_B3:
-                # CBPE-style: estimated recall drops >= 20%
+                # CBPE-style: estimated recall drops >= 20% relative to CBPE baseline estimate
                 est_rec = cbpe.estimate_recall(scores)
-                if est_rec <= 0.80 * base_recall:
+                cbpe_thresh = 0.80 * base_est_rec if base_est_rec > 0 else 0.80 * base_recall
+                if est_rec <= cbpe_thresh:
                     retrain_triggered = True
                     action_name = "CBPE_TRIGGERED_RETRAIN"
                     current_model = retrain_on_matured_data(df, decision_day=decision_day, delay=delay, seed=seed)
@@ -359,6 +361,7 @@ def run_benchmark_method(
 
     # True degradation definition (Spec Section 7): first window where recall falls < 80% of baseline
     degraded_windows = post_df[post_df["recall_at_1fpr"] < 0.80 * base_recall]
+    recov_day = None
     if len(degraded_windows) == 0:
         degrade_day = None
         recovery_days = None  # No degradation occurred -> N/A
@@ -380,6 +383,13 @@ def run_benchmark_method(
     if degrade_day is not None and first_retrain_day is not None:
         lead_time_days = degrade_day - first_retrain_day
 
+    # Post-adaptation recovery time (Spec Section 13 metric: recov_day - first_retrain_day)
+    recovery_post_adapt_days = None
+    if first_retrain_day is not None and recov_day is not None and recov_day >= first_retrain_day:
+        recovery_post_adapt_days = recov_day - first_retrain_day
+    elif first_retrain_day is not None and recovery_days == -1:
+        recovery_post_adapt_days = -1
+
     summary = {
         "method": method,
         "base_recall": float(base_recall),
@@ -391,6 +401,7 @@ def run_benchmark_method(
         "retrain_count": retrain_count,
         "lead_time_days": lead_time_days,
         "recovery_time_days": recovery_days,
+        "recovery_post_adapt_days": recovery_post_adapt_days,
         "elapsed_seconds": float(elapsed),
     }
     return res_df, summary
