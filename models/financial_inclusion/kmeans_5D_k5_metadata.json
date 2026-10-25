@@ -1,0 +1,22 @@
+{
+  "candidate": "5D_k5",
+  "algorithm": "KMeans",
+  "n_clusters": 5,
+  "n_init": 10,
+  "random_state": 42,
+  "scaling": "raw dimension scores in [0, 1]",
+  "features": [
+    "score_connectivity",
+    "score_financial_access",
+    "score_digital_financial_usage",
+    "score_digital_safety",
+    "score_financial_resilience"
+  ],
+  "training_rows": 56503,
+  "exact_saved_label_matches": 56503,
+  "label_mismatches": 0,
+  "adjusted_rand_index": 1.0,
+  "profile_metadata_file": "outputs\\financial_inclusion\\reports\\03_clustering\\fi_clustering_profile_labels_5D_k5.json",
+  "validated": true,
+  "intended_use": "Assign inclusion profiles from the five validated dimension scores; not a creditworthiness or default model."
+}
