@@ -42,6 +42,32 @@ SUPERVISED_MATRIX_PATH = (
     / "fi_supervised_confusion_matrices.txt"
 )
 
+
+SHAP_OUTPUT_DIR = (
+    PROJECT_ROOT
+    / "outputs"
+    / "financial_inclusion"
+    / "reports"
+    / "05_shap_explainability"
+)
+
+SHAP_GLOBAL_IMPORTANCE_PATH = (
+    SHAP_OUTPUT_DIR / "fi_shap_global_importance.csv"
+)
+
+SHAP_LOCAL_EXPLANATIONS_PATH = (
+    SHAP_OUTPUT_DIR / "fi_shap_local_explanations.csv"
+)
+
+SHAP_PREDICTIONS_PATH = (
+    SHAP_OUTPUT_DIR / "fi_shap_predictions.csv"
+)
+
+SHAP_VALIDATION_SUMMARY_PATH = (
+    SHAP_OUTPUT_DIR / "fi_shap_validation_summary.json"
+)
+
+
 CONTEXT_COLUMNS = [
     "wpid_random",
     "economy",
@@ -278,3 +304,135 @@ def load_supervised_confusion_matrices() -> dict:
             matrices[name] = matrix
 
     return matrices
+
+
+def load_shap_global_importance() -> pd.DataFrame:
+    """Load saved global SHAP importance results."""
+    required = {
+        "cluster_id",
+        "cluster_label",
+        "feature",
+        "mean_absolute_shap_decision_score",
+        "rank_within_cluster",
+    }
+
+    if not SHAP_GLOBAL_IMPORTANCE_PATH.is_file():
+        raise FileNotFoundError(
+            f"SHAP global importance file not found: "
+            f"{SHAP_GLOBAL_IMPORTANCE_PATH}"
+        )
+
+    df = pd.read_csv(SHAP_GLOBAL_IMPORTANCE_PATH)
+    missing = required.difference(df.columns)
+
+    if missing:
+        raise ValueError(
+            f"SHAP global importance file is missing columns: "
+            f"{sorted(missing)}"
+        )
+
+    if df[list(required)].isna().any().any():
+        raise ValueError("SHAP global importance contains missing values.")
+
+    if not df["cluster_id"].isin([0, 1, 2, 3, 4]).all():
+        raise ValueError("SHAP global importance has unexpected cluster IDs.")
+
+    return df
+
+
+def load_shap_local_explanations() -> pd.DataFrame:
+    """Load saved per-respondent SHAP contributions."""
+    required = {
+        "row_index",
+        "predicted_cluster_id",
+        "predicted_cluster_label",
+        "explained_class_id",
+        "feature",
+        "shap_decision_score_contribution",
+        "source_row_index",
+    }
+
+    if not SHAP_LOCAL_EXPLANATIONS_PATH.is_file():
+        raise FileNotFoundError(
+            f"SHAP local explanations file not found: "
+            f"{SHAP_LOCAL_EXPLANATIONS_PATH}"
+        )
+
+    df = pd.read_csv(SHAP_LOCAL_EXPLANATIONS_PATH)
+    missing = required.difference(df.columns)
+
+    if missing:
+        raise ValueError(
+            f"SHAP local explanations file is missing columns: "
+            f"{sorted(missing)}"
+        )
+
+    if df[list(required)].isna().any().any():
+        raise ValueError("SHAP local explanations contain missing values.")
+
+    if not df["predicted_cluster_id"].isin([0, 1, 2, 3, 4]).all():
+        raise ValueError("SHAP local explanations have unexpected cluster IDs.")
+
+    return df
+
+
+def load_shap_predictions() -> pd.DataFrame:
+    """Load saved classifier predictions for the explained sample."""
+    required = {
+        "row_index",
+        "predicted_cluster_id",
+        "predicted_cluster_label",
+        "predicted_cluster_probability",
+        "source_row_index",
+    }
+
+    if not SHAP_PREDICTIONS_PATH.is_file():
+        raise FileNotFoundError(
+            f"SHAP predictions file not found: {SHAP_PREDICTIONS_PATH}"
+        )
+
+    df = pd.read_csv(SHAP_PREDICTIONS_PATH)
+    missing = required.difference(df.columns)
+
+    if missing:
+        raise ValueError(
+            f"SHAP predictions file is missing columns: {sorted(missing)}"
+        )
+
+    if df[list(required)].isna().any().any():
+        raise ValueError("SHAP predictions contain missing values.")
+
+    if not df["predicted_cluster_id"].isin([0, 1, 2, 3, 4]).all():
+        raise ValueError("SHAP predictions have unexpected cluster IDs.")
+
+    probability = df["predicted_cluster_probability"]
+
+    if not probability.between(0, 1).all():
+        raise ValueError("Predicted probabilities must be between 0 and 1.")
+
+    return df
+
+
+def load_shap_validation_summary() -> dict:
+    """Load metadata describing the saved SHAP validation run."""
+    import json
+
+    if not SHAP_VALIDATION_SUMMARY_PATH.is_file():
+        raise FileNotFoundError(
+            f"SHAP validation summary not found: "
+            f"{SHAP_VALIDATION_SUMMARY_PATH}"
+        )
+
+    with SHAP_VALIDATION_SUMMARY_PATH.open(
+        "r", encoding="utf-8"
+    ) as file:
+        summary = json.load(file)
+
+    if not summary.get("checks_passed"):
+        raise ValueError("SHAP validation summary has no passed checks.")
+
+    if not all(summary["checks_passed"].values()):
+        raise ValueError("One or more SHAP validation checks failed.")
+
+    return summary
+

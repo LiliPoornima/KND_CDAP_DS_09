@@ -719,6 +719,195 @@ st.markdown("""
 """)
 
 
+st.subheader("7.7 Explainability with SHAP")
+
+st.markdown("""
+This section explains the saved Logistic Regression classifier's
+predictions of the previously derived financial-inclusion clusters.
+SHAP contributions describe changes in the model's decision scores;
+they do not establish causal explanations for financial exclusion.
+""")
+
+try:
+    shap_global = loader.load_shap_global_importance()
+    shap_local = loader.load_shap_local_explanations()
+    shap_predictions = loader.load_shap_predictions()
+    shap_summary = loader.load_shap_validation_summary()
+
+    st.caption(
+        f"Explained sample: {len(shap_predictions):,} respondents | "
+        f"Background sample: {shap_summary['background_rows']:,} respondents"
+    )
+
+    cluster_options = (
+        shap_global[["cluster_id", "cluster_label"]]
+        .drop_duplicates()
+        .sort_values("cluster_id")
+    )
+
+    selected_shap_cluster = st.selectbox(
+        "Select a predicted cluster for global explanation",
+        options=cluster_options["cluster_id"].tolist(),
+        format_func=lambda cid: (
+            f"{cid} — "
+            f"{cluster_options.loc[
+                cluster_options['cluster_id'] == cid, 'cluster_label'
+            ].iloc[0]}"
+        ),
+        key="shap_global_cluster",
+    )
+
+    selected_global = shap_global[
+        shap_global["cluster_id"] == selected_shap_cluster
+    ].sort_values("mean_absolute_shap_decision_score", ascending=True)
+
+    fig_global = px.bar(
+        selected_global,
+        x="mean_absolute_shap_decision_score",
+        y="feature",
+        orientation="h",
+        labels={
+            "mean_absolute_shap_decision_score": "Mean absolute SHAP contribution",
+            "feature": "Predictor",
+        },
+        title="Global feature importance for the selected cluster",
+        hover_data=["rank_within_cluster"],
+    )
+    st.plotly_chart(fig_global, use_container_width=True)
+
+    st.caption(
+        "Larger mean absolute SHAP values indicate greater average influence "
+        "on the selected class's decision score within this explained sample. "
+        "They do not indicate whether a feature increases or decreases the score."
+    )
+
+    st.divider()
+    st.markdown("#### Individual prediction explanation")
+
+    prediction_options = shap_predictions["row_index"].tolist()
+
+    selected_row = st.selectbox(
+        "Select an explained respondent",
+        options=prediction_options,
+        format_func=lambda row_id: (
+            f"Sample {row_id} — source row "
+            f"{int(shap_predictions.loc[
+                shap_predictions['row_index'] == row_id,
+                'source_row_index'
+            ].iloc[0])}"
+        ),
+        key="shap_local_row",
+    )
+
+    prediction = shap_predictions.loc[
+        shap_predictions["row_index"] == selected_row
+    ].iloc[0]
+
+    predicted_cluster_id = int(prediction["predicted_cluster_id"])
+    predicted_cluster_label = prediction["predicted_cluster_label"]
+    predicted_probability = float(
+        prediction["predicted_cluster_probability"]
+    )
+
+    metric1, metric2 = st.columns(2)
+
+    with metric1:
+        st.metric(
+            "Predicted cluster",
+            f"{predicted_cluster_id} — {predicted_cluster_label}",
+        )
+
+    with metric2:
+        st.metric(
+            "Probability assigned to predicted cluster",
+            f"{predicted_probability:.1%}",
+        )
+
+    selected_local = shap_local[
+        (shap_local["row_index"] == selected_row)
+        & (shap_local["explained_class_id"] == predicted_cluster_id)
+    ].copy()
+
+    if selected_local.empty:
+        st.warning(
+            "No local SHAP contributions were found for this prediction."
+        )
+    else:
+        selected_local["contribution_direction"] = (
+            selected_local["shap_decision_score_contribution"]
+            .apply(lambda value: "Positive" if value >= 0 else "Negative")
+        )
+
+        selected_local = selected_local.sort_values(
+            "shap_decision_score_contribution"
+        )
+
+        fig_local = px.bar(
+            selected_local,
+            x="shap_decision_score_contribution",
+            y="feature",
+            orientation="h",
+            color="contribution_direction",
+            color_discrete_map={
+                "Positive": "#2E8B57",
+                "Negative": "#D95F59",
+            },
+            labels={
+                "shap_decision_score_contribution": (
+                    "SHAP contribution to decision score"
+                ),
+                "feature": "Predictor",
+                "contribution_direction": "Direction",
+            },
+            title="Contributions to the predicted class decision score",
+        )
+
+        fig_local.add_vline(x=0, line_dash="dash", line_color="gray")
+        st.plotly_chart(fig_local, use_container_width=True)
+
+        st.markdown("""
+        **How to read this chart**
+
+        - Positive contributions push the selected class's decision score upward.
+        - Negative contributions push that class's decision score downward.
+        - The values are contributions to the Logistic Regression decision score,
+          not direct changes in predicted probability.
+        - These contributions explain the model prediction, not the respondent's
+          actual financial-inclusion status or its causes.
+        """)
+
+    with st.expander("SHAP validation and limitations"):
+        st.write(
+            f"SHAP version: {shap_summary['shap_version']}"
+        )
+        st.write(
+            f"Background rows: {shap_summary['background_rows']}"
+        )
+        st.write(
+            f"Explained rows: {shap_summary['explained_rows']}"
+        )
+        st.write(
+            f"Maximum additivity error: "
+            f"{shap_summary['max_additivity_error']:.3e}"
+        )
+        st.write(
+            f"Maximum grouped contribution error: "
+            f"{shap_summary['max_grouped_sum_error']:.3e}"
+        )
+        st.json(shap_summary["checks_passed"])
+
+        st.warning(
+            "Global importance is currently based on a sample of 100 test "
+            "respondents. It may change when SHAP is computed for the full "
+            "11,301-row test partition. The classifier predicts cluster labels, "
+            "not an independently observed outcome."
+        )
+
+except (FileNotFoundError, ValueError, KeyError) as exc:
+    st.warning(f"SHAP explainability results are unavailable: {exc}")
+
+
+
 st.divider()
 st.caption(
     "Component 02 | Global Findex 2025 individual microdata "
