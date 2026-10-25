@@ -16,30 +16,30 @@
 
 ## 1. Executive Summary & Contributions
 
-In production credit card fraud detection, transaction labels arrive with significant latency (7 to 28 days). During this "blind period," conventional performance metrics cannot detect silent model degradation. This project implements and rigorously validates an end-to-end framework combining **label-free drift monitoring**, a calibrated **Early-Warning Score (EWS)** decision policy, and **Attribution-Guided Adaptation (AGA)** under strict temporal and label-maturity constraints ($\text{label\_day} \le t - d$).
+In production credit card fraud detection, transaction labels arrive with significant latency (7 to 28 days). During this "blind period," conventional performance metrics cannot detect silent model degradation. This project implements and evaluates a framework combining **label-free drift monitoring**, a calibrated **Early-Warning Score (EWS)** decision policy, and **Attribution-Guided Adaptation (AGA)** under temporal label-maturity constraints ($\text{label\_day} \le t - d$).
 
-### Key Scientific Findings:
+### Key Empirical Findings:
 1. **Suppression of False Alarms on Benign Covariate Shift ($S_3$):**
-   Conventional drift monitoring triggers like feature PSI ($B_2$) and confidence estimation ($B_3$) trigger **11.0 wasteful retrains** under benign 6-hour transaction time shifts ($S_3$). By integrating multidimensional signals (Feature PSI, Model-Score JS Divergence, Binary Prediction Entropy, and TreeSHAP Profile Shift) into a calibrated logistic EWS, **$P_1$ completely suppresses false alarms (0 retrains, 0 false alarms)**, matching unperturbed baseline performance.
+   Conventional drift monitoring triggers like feature PSI ($B_2$) and confidence estimation ($B_3$) trigger **11.0 wasteful retrains** under benign 6-hour transaction time shifts ($S_3$). By integrating multidimensional signals (Feature PSI, Model-Score JS Divergence, Binary Prediction Entropy, and TreeSHAP Profile Shift) into a calibrated logistic EWS, **$P_1$ suppresses false alarms (0 retrains, 0 false alarms)**, matching unperturbed baseline performance.
 2. **Early-Warning Lead Time on Mixed Drift ($S_2$):**
-   When compromised terminals inject fraudulent transaction spikes ($S_2$), $P_1$ issues an early warning alert at Day 112, achieving a positive lead time across all seeds (**$+8.4\text{d} \pm 3.1\text{d}$**, with $+14\text{d}$ in Seed 1 and $+7\text{d}$ in Seeds 2–5 due to weekly discretization) before true degradation manifests.
-3. **Delayed-Feedback Reality on Pure Concept Drift ($S_1$):**
-   Consistent with established drift detection literature (e.g., Solozobov et al.), label-free monitoring signals cannot directly observe pure concept drift ($P(Y|X)$ shifting while $P(X)$ is identical) until delayed labels mature. $P_1$ successfully detects $S_1$ once delayed terminal-risk features mature, triggering adaptation at Day 133 and restoring recall to **$92.7\%$ relative retention** using only **$3.6 \pm 0.5$ retrains** (vs. 11.0 for weekly periodic retraining $B_1$).
-4. **Attribution-Guided Ablation & Candidate Selection:**
-   Ablation studies demonstrate that dropping drifted features ($P_1\text{-b}$ `DROP_D`) severely degrades recall in fraud detection ($75.3\%$ retention in $S_1$), because drifted features often contain critical fraud signals. AGA's holdout validation selection automatically identifies this failure mode, dynamically deploying `FULL` or exponential `RECENCY` weighting to restore performance.
-5. **Ablation Insight on TreeSHAP Profile Shift ($P_1$ vs. $P_1\text{-noSHAP}$):**
-   In 58 of 60 evaluation streams, candidate model selection was identical between $P_1$ and $P_1\text{-noSHAP}$ (`DROP_D` was chosen 0 times by $P_1$). SHAP attributions act as an interpretability aid and diagnostic indicator rather than a driver of candidate selection under delayed feedback.
+   On Scenario $S_2$ (Mixed Drift) under delay $d=7$ days, $P_1$ achieves a positive lead time across all 5 evaluation seeds of **$+8.4\text{d} \pm 3.1\text{d}$** (recomputed directly from `grid_results_summary.csv`: Seed 1: degrade day 119, alarm day 105 $\to +14.0\text{d}$; Seeds 2–5: degrade day 119, alarm day 112 $\to +7.0\text{d}$). This metric is subject to 7-day evaluation window discretization error.
+3. **Retrain Count Reduction vs. Periodic Retraining ($B_1$):**
+   $P_1$ substantially reduces retrain count ($3.6 \pm 0.5$ in $S_1$, $5.0 \pm 0.0$ in $S_2$ vs. 11.0 for weekly periodic retraining $B_1$), but **$P_1$ does NOT beat periodic retraining ($B_1$) on post-onset recall**. When matured labels are available, periodic retraining consistently maintains higher raw recall (in $S_1$: $B_1$ 0.7849 vs. $P_1$ 0.6940; in $S_2$: $B_1$ 0.7719 vs. $P_1$ 0.7326). $P_1$'s primary benefit is maintenance reduction on benign shifts ($S_3$ and Control), not higher recall under active drift.
+4. **TreeSHAP Candidate Selection Null Result ($P_1$ vs. $P_1\text{-noSHAP}$):**
+   In 58 of 60 evaluation streams, candidate model selection was identical between $P_1$ and $P_1\text{-noSHAP}$, and `DROP_D` was chosen 0 times by $P_1$. **TreeSHAP profile shift showed no measurable benefit for candidate model selection in this benchmark.** Dropping drifted features ($P_1\text{-b}$ `DROP_D`) severely degraded recall ($75.3\%$ retention in $S_1$), confirming that drifted features contain essential fraud patterns.
+5. **Delayed-Feedback Reality on Pure Concept Drift ($S_1$) & $d=28$ Limitations:**
+   Label-free signals cannot observe pure concept drift ($P(Y|X)$ shifting while $P(X)$ is identical) without matured labels. In our framework, $S_1$ detection is mediated through the label-derived terminal-risk feature ($t_{\text{risk}}$). Under $d=28$, feature lookback truncation during days 35..55 collapses $t_{\text{risk}}$ feature importance by $97\%$, reducing base recall from $0.748$ ($d=7$) to $0.354$ ($d=28$), and delayed label arrival prevents EWS from reaching the adaptation threshold (0 retrains).
 
 ---
 
-## 2. Methodology & Strict Non-Leakage Enforcement
+## 2. Methodology & Non-Leakage Enforcement
 
 ### 2.1 The Non-Negotiable Leakage Rule
 At any decision time $t$ with label delay $d \in \{7, 14, 28\}$:
 $$\text{Available Labels} \iff \text{label\_day} \le t - d$$
-- **Feature Engineering:** Terminal risk features $t_{\text{risk}}$ and $t_{\text{vol}}$ strictly aggregate transaction labels from window $[D - d - 28, \, D - d]$. Customer rolling features ($c_{\text{mean}}$, $c_{\text{cnt}}$) use strictly closed-left historical intervals.
+- **Feature Engineering:** Terminal risk features $t_{\text{risk}}$ and $t_{\text{vol}}$ aggregate transaction labels strictly from window $[D - d - 28, \, D - d]$. Customer rolling features ($c_{\text{mean}}$, $c_{\text{cnt}}$) use strictly closed-left historical intervals.
 - **Candidate Retraining:** Partitioned across the last 28 matured days $[t - d - 27, \, t - d]$ into a 21-day candidate training set $[t - d - 27, \, t - d - 7]$ and a 7-day holdout validation set $[t - d - 6, \, t - d]$.
-- **Zero Future Exposure:** Non-leakage is formally proven by test `test_aga_strictly_obeys_matured_label_boundary`, verifying that arbitrary alterations to unmatured labels have zero impact on candidate models or selection scores.
+- **Zero Future Exposure:** Non-leakage is tested by unit test `test_aga_strictly_obeys_matured_label_boundary`, verifying that arbitrary alterations to unmatured labels have zero impact on candidate models or selection scores.
 
 ### 2.2 Locked Thresholds & Decision Policy
 Thresholds were calibrated on independent calibration streams and locked in [`backend/src/fraud_detection/locked_thresholds.json`](file:///d:/project/KND_CDAP_DS_09/backend/src/fraud_detection/locked_thresholds.json):
@@ -103,7 +103,7 @@ Aggregated across Seeds 1–5 on Delay $d=7$ (Drift Onset Day 105):
 | | **$P_1\text{-b}$ (DROP_D)**| 0.7484 | 0.7317 ± 0.0024 | 97.77% ± 0.40% | 0.5623 ± 0.0067 | 63.19 ± 0.74 | **0.0** | N/A | N/A | N/A (No degr.) | 0.6s ± 0.0s |
 | | **$P_1\text{-c}$ (RECENCY)**| 0.7484 | 0.7317 ± 0.0024 | 97.77% ± 0.40% | 0.5623 ± 0.0067 | 63.19 ± 0.74 | **0.0** | N/A | N/A | N/A (No degr.) | 0.6s ± 0.0s |
 
-*Note on Timing Signs & Discretization:* `Lead Time to Alarm` $= t_{\text{degrade}} - t_{\text{first\_alarm}}$ (positive indicates early warning); `Adaptation Lag` $= t_{\text{first\_adapt}} - t_{\text{degrade}}$ (positive indicates elapsed delay before retraining); `Recovery Time` $= t_{\text{recovered}} - t_{\text{degrade}}$. In $S_2$, early warning alarm fired uniformly at Day 112 across all seeds, while ground-truth degradation manifested at Day 126 in Seed 1 and Day 119 in Seeds 2–5, producing a mean lead time of $+8.4\text{d} \pm 3.1\text{d}$ due to weekly boundary discretization.
+*Note on Timing Signs & Discretization:* `Lead Time to Alarm` $= t_{\text{degrade}} - t_{\text{first\_alarm}}$ (positive indicates early warning); `Adaptation Lag` $= t_{\text{first\_adapt}} - t_{\text{degrade}}$ (positive indicates elapsed delay before retraining); `Recovery Time` $= t_{\text{recovered}} - t_{\text{degrade}}$. In $S_2$ ($d=7\text{d}$), ground-truth degradation manifested uniformly at Day 119 across all 5 seeds in `grid_results_summary.csv`, while the early warning alarm fired at Day 105 in Seed 1 ($+14.0\text{d}$ lead time) and Day 112 in Seeds 2–5 ($+7.0\text{d}$ lead time), producing an empirical sample mean lead time of $+8.4\text{d} \pm 3.1\text{d}$ subject to 7-day evaluation window discretization.
 
 ---
 
@@ -144,12 +144,12 @@ As label delay increases, delayed feedback directly impacts model recovery dynam
 
 ## 5. Diagnostic Figures & Visualizations
 
-All publication-ready charts were generated by `fd_experiments.py` and are stored under [`outputs/fraud_detection/figures/`](file:///d:/project/KND_CDAP_DS_09/outputs/fraud_detection/figures/):
+Diagnostic charts were generated by `fd_experiments.py` and are stored under [`outputs/fraud_detection/figures/`](file:///d:/project/KND_CDAP_DS_09/outputs/fraud_detection/figures/):
 
 1. **`recall_trajectory_S1_d7.png` & `recall_trajectory_S2_d7.png`**:
    Plots Recall@1%FPR trajectories across all 16 test weeks for $B_0, B_1, B_2, B_4, P_1,$ and $P_1\text{-b}$, with vertical markers showing drift onset (Day 105) and subsequent model recovery.
 2. **`retrain_counts_by_scenario.png`**:
-   Categorical bar chart showing total retrain counts across methods by scenario, highlighting the complete suppression of wasteful retrains by $P_1$ in $S_3$ and Control.
+   Categorical bar chart showing total retrain counts across methods by scenario, showing retrain suppression by $P_1$ on $S_3$ and Control.
 3. **`delay_sensitivity_s1.png`**:
    Comparative line chart illustrating retention stability across Delays 7, 14, and 28.
 4. **Per-Delay Recall Trajectories (`recall_trajectory_{scenario}_d{14,28}.png`)**:
@@ -157,22 +157,18 @@ All publication-ready charts were generated by `fd_experiments.py` and are store
 
 ---
 
----
-
-## 6. Real-World Validation & Empirical Stream Check (IEEE-CIS & Sparkov Fallback)
+## 6. Empirical Stream Evaluation (IEEE-CIS Status & Sparkov Fallback)
 
 ### 6.1 IEEE-CIS Protocol Check (Spec Section 14)
-Executed via [`backend/src/fraud_detection/fd_ieee_check.py`](file:///d:/project/KND_CDAP_DS_09/backend/src/fraud_detection/fd_ieee_check.py) in accordance with **Spec Section 14**:
-- **Dataset Location:** `data/fraud_detection/raw/ieee_cis/train_transaction.csv`
-- **Execution Status:** **DATA_MISSING**
-- **Verdict:** **DATA_NOT_FOUND**
-- **Scientific Audit Finding:** As specified in Section 3.2, IEEE-CIS transaction data requires manual user authentication and Kaggle competition rules acceptance (`RulesAcceptanceRequired`). In the absence of `train_transaction.csv`, the check cleanly halts without error and issues the mandatory scientific disclaimer:
-  > *"IEEE-CIS data is absent; cannot serve as real-degradation validation. Handbook simulated drift streams remain the primary benchmark."*
+- **Phase 9 Status:** **IEEE-CIS check not performed (data unavailable); Sparkov fallback only**
+- **Dataset File:** `data/fraud_detection/raw/ieee_cis/train_transaction.csv`
+- **Execution Status:** `DATA_MISSING` / `DATA_NOT_FOUND`
+- **Honesty Disclosure:** Real-data validation was **NOT performed** because `train_transaction.csv` was unavailable (requires manual user authentication and Kaggle competition rules acceptance). As specified in Section 3.2 and Section 14 of the specification, IEEE-CIS cannot serve as real-degradation validation in this project.
 
 ### 6.2 Sparkov Dataset Fallback Evaluation (Spec §14 & §17)
-To provide empirical cross-dataset validation without blocked competition rules, we acquired and evaluated the open Sparkov Credit Card Transactions Fraud Dataset ([Kaggle `kartik2112/fraud-detection`](https://www.kaggle.com/datasets/kartik2112/fraud-detection)):
-- **File Location:** [`data/fraud_detection/raw/sparkov/fraudTest.csv`](file:///d:/project/KND_CDAP_DS_09/data/fraud_detection/raw/sparkov/fraudTest.csv) (150.3 MB, 555,719 transactions, 2,145 frauds, prevalence $0.386\%$, spanning 194 days).
-- **Execution Protocol:** Trained base LightGBM on days $< 42$ (119,597 transactions, 466 frauds). Evaluated 10 rolling 14-day evaluation windows spanning days 49..188 (31,445 to 63,388 transactions and 87 to 232 frauds per window).
+- **Dataset Classification:** **SYNTHETIC DATA** (NOT real data, and NOT part of the original specification).
+- **Origin & Acquisition:** Acquired as a practical fallback from Kaggle ([`kartik2112/fraud-detection`](https://www.kaggle.com/datasets/kartik2112/fraud-detection)) as provided by the user. The file [`data/fraud_detection/raw/sparkov/fraudTest.csv`](file:///d:/project/KND_CDAP_DS_09/data/fraud_detection/raw/sparkov/fraudTest.csv) (150.3 MB, 555,719 rows, 2,145 frauds, $0.386\%$ fraud prevalence, spanning 194 days) was generated using the open-source Sparkov synthetic credit card transaction simulator.
+- **Evaluation Protocol:** Base LightGBM trained on days $< 42$ (119,597 transactions, 466 frauds). Evaluated across 10 rolling 14-day evaluation windows spanning days 49..188.
 
 #### Rolling 14-Day Performance Check (`sparkov_degradation_check.csv`):
 
@@ -189,7 +185,7 @@ To provide empirical cross-dataset validation without blocked competition rules,
 | 8 | Days 161..174 | 62,192 | 171 | 0.275% | 0.7602 | 107.2% |
 | 9 | Days 175..188 | 63,388 | 87 | 0.137% | 0.8851 | 124.8% |
 
-- **Empirical Degradation Verdict:** **`False`** (Recall@1% FPR remained between $70.9\%$ and $91.5\%$, mean $81.98\%$; 0 windows dropped below $80\%$ of baseline).
+- **Degradation Verdict:** **`False`** (Recall@1% FPR remained between $70.9\%$ and $91.5\%$, mean $81.98\%$; zero windows dropped below $80\%$ of baseline). The dataset contains **no real performance degradation**.
 
 #### Label-Free Monitoring Signals on Sparkov Stream (`sparkov_signals_check.csv`):
 
@@ -206,8 +202,7 @@ To provide empirical cross-dataset validation without blocked competition rules,
 | 8 | Days 161..174 | 0.0008 | 0.0015 | 0.0118 | 0.0301 | 0.1680 | **WAIT** |
 | 9 | Days 175..188 | 0.0004 | 0.0008 | 0.0089 | 0.0618 | 0.1626 | **WAIT** |
 
-- **Detector Performance:** Across all 10 windows, EWS remained between $0.140$ and $0.174$ (below locked alert threshold $\theta_1 = 0.22$), producing **$100\%$ WAIT decisions (0 false alarms, 0 false retrains)**.
-- **Scientific Conclusion:** Consistent with Spec §14 item 3, because degradation is not present in this stream, we do not perform artificial adaptation comparisons. The Sparkov stream serves as an independent cross-dataset demonstration of **false alarm immunity on unperturbed real-world credit card transaction distributions**.
+- **Critical Limitation on False Alarms:** Across all 10 windows, EWS remained between $0.140$ and $0.174$ ($< \theta_1 = 0.22$), producing $100\%$ WAIT decisions (0 false alarms, 0 retrains). **However, "0 false alarms" is NOT evidence of robustness because no degradation exists in this synthetic stream.** On a stationary synthetic stream without drift, a detector staying quiet does not prove it can handle real-world distribution shifts or maintain adequate sensitivity under complex non-stationary environments.
 
 ---
 
@@ -231,15 +226,25 @@ In compliance with the mandatory honesty rules in **Spec Section 17**:
 
 ---
 
-## 8. Final Verification Checklist
+## 8. What is NOT Validated
 
-- [x] All 101 Component 04 unit tests passing (`pytest tests/fraud_detection -v`).
-- [x] Full factorial grid (660 runs) completed and verified in `grid_results_summary.csv`.
-- [x] Both timing conventions (`Lead Time to First Alarm` and `Adaptation Lag`) rigorously separated and reported.
+To maintain complete scientific honesty and prevent overinterpretation, the following aspects were **NOT validated** in this study:
+1. **Real Data:** No evaluation on genuine, unanonymized real-world banking telemetry or unperturbed real-world concept drift was performed. Both the Fraud Detection Handbook and the Sparkov fallback are synthetic datasets.
+2. **Human-Reviewed Alerts:** No operational simulation of alert triage capacity, investigator review fatigue, alert queue backlog, or financial costs of false alarms under production volumes was conducted.
+3. **Production Deployment:** No live streaming infrastructure, distributed latency testing, online asynchronous inference, concurrent drift handling, or database lock performance was tested.
+4. **Significance Tests:** Formal statistical significance testing (e.g., paired t-tests or Wilcoxon signed-rank tests across evaluation streams) was not conducted; all reported values represent empirical sample means and sample standard deviations across 5 random seeds.
+
+---
+
+## 9. Final Verification Checklist
+
+- [x] All 101 Component 04 unit tests passing (`pytest tests/fraud_detection -q`).
+- [x] Full factorial grid (660 runs) completed and checked in `grid_results_summary.csv`.
+- [x] Both timing conventions (`Lead Time to First Alarm` and `Adaptation Lag`) separated and reported.
 - [x] Fixed PSI ablation interface ensuring feature PSI is passed and logged.
-- [x] IEEE-CIS degradation check implemented and tested per Spec §14 (`DATA_MISSING` gracefully handled).
-- [x] Sparkov real-data fallback acquired, verified (555,719 rows), and evaluated across 10 rolling windows with 0 false alarms.
+- [x] IEEE-CIS data access restrictions handled per Spec §14 (`DATA_MISSING` reported plainly).
+- [x] Sparkov fallback acquired, evaluated, and clearly labeled as synthetic data without degradation.
 - [x] Diagnostic visualization plots saved under `outputs/fraud_detection/figures/`.
-- [x] Honesty rules, null results, and negative ablation findings documented without overclaiming.
-- [x] All repo scope and non-leakage boundaries strictly upheld.
+- [x] Honesty rules, null results, and "What is NOT Validated" limitations fully documented without overclaiming.
+- [x] Repository scope boundaries and non-leakage temporal constraints tested by unit assertions.
 
