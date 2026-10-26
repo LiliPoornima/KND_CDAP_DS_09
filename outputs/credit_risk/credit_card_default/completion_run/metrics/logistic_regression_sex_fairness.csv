@@ -1,0 +1,3 @@
+attribute,group,n,positive_support,negative_support,outcome_rate,selection_rate,true_positive_rate,false_positive_rate,precision,sample_sufficient,positive_support_sufficient,negative_support_sufficient,true_positives,false_positives,true_negatives,false_negatives
+SEX,1,2402,561,1841,0.23355537052456288,0.3193172356369692,0.6078431372549019,0.2313959804454101,0.4445893089960887,True,True,True,341,426,1415,220
+SEX,2,3598,766,2832,0.21289605336297943,0.31017231795441913,0.6174934725848564,0.22704802259887005,0.42383512544802865,True,True,True,473,643,2189,293
