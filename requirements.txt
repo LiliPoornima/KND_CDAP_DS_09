@@ -1,4 +1,8 @@
 # Add project dependencies here.
 streamlit==1.50.0
+numpy
 pandas
 plotly
+scikit-learn>=1.2
+xlrd>=2.0
+shap
