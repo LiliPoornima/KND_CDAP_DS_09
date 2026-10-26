@@ -1,0 +1,15 @@
+feature,mean_absolute_shap
+RevolvingUtilizationOfUnsecuredLines,0.03629448908064951
+TotalDelinquencyCount,0.029177564026992862
+age,0.0157478909598083
+DebtRatio,0.015562681789194519
+SevereDelinquencyCount,0.012997826985252063
+MonthlyIncome,0.01042729833291
+TotalOpenCreditAccounts,0.01036580962246911
+NumberRealEstateLoansOrLines,0.00804812001677425
+NumberOfTime30-59DaysPastDueNotWorse,0.0075344666410858555
+NumberOfOpenCreditLinesAndLoans,0.0056916194465107236
+NumberOfDependents,0.004141608818119308
+NumberOfTimes90DaysLate,0.003870945805176829
+HasDependents,0.003475909930829571
+NumberOfTime60-89DaysPastDueNotWorse,0.002992221293351996
