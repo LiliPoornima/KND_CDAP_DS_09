@@ -15,6 +15,7 @@ Features must be rebuilt after any drift injection.
 
 from __future__ import annotations
 
+from pathlib import Path
 from typing import Callable, Dict, Optional
 
 import numpy as np
@@ -192,7 +193,6 @@ def run_drift_experiment(
     Evaluates Recall@1%FPR, AP, prevalence, and relative degradation pre- vs post-onset.
     Saves results to outputs/fraud_detection/drift_reproduction/.
     """
-    from pathlib import Path
     from .fd_config import OUTPUT_DIR
     from .fd_data_loader import load_handbook
     from .fd_evaluation import evaluate_weekly

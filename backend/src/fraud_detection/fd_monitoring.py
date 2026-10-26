@@ -10,7 +10,7 @@ Computed per window against a trusted REFERENCE window without labels:
 
 from __future__ import annotations
 
-from typing import Dict, Optional, Sequence
+from typing import Any, Dict, Optional, Sequence
 
 import numpy as np
 import pandas as pd

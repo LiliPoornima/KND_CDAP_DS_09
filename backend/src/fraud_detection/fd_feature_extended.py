@@ -16,7 +16,7 @@ from __future__ import annotations
 
 import hashlib
 from pathlib import Path
-from typing import List, Optional, Sequence, Tuple
+from typing import List, Optional, Sequence, Tuple, Union
 
 import numpy as np
 import pandas as pd
