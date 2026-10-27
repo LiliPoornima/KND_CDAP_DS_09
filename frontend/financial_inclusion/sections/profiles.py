@@ -14,7 +14,7 @@ from .. import data_loader as loader
 
 
 def render(df: pd.DataFrame) -> None:
-    st.header("Profile explorer")
+    
 
     # ---------------------------------------------------------
     # 1. Load saved profile summaries
@@ -163,74 +163,9 @@ def render(df: pd.DataFrame) -> None:
 
     valid_values = values.dropna(subset=["Mean score"]).copy()
 
-    st.subheader(f"Selected Profile: {CLUSTER_LABELS[selected]}")
+    
 
-    st.metric(
-        "Respondents in this profile",
-        f"{int(row['respondents']):,}",
-        f"{row['percent_of_candidate']:.1f}% of sample",
-    )
-
-    # ---------------------------------------------------------
-    # 5. Five-dimension radar chart
-    # ---------------------------------------------------------
-    st.subheader("Five-Dimension Profile Radar")
-
-    if len(valid_values) >= 3:
-        radar_dimensions = valid_values["Dimension"].tolist()
-        radar_scores = valid_values["Mean score"].astype(float).tolist()
-
-        # Close the polygon by repeating the first dimension.
-        radar_dimensions_closed = radar_dimensions + [radar_dimensions[0]]
-        radar_scores_closed = radar_scores + [radar_scores[0]]
-
-        radar_fig = go.Figure()
-
-        radar_fig.add_trace(
-            go.Scatterpolar(
-                r=radar_scores_closed,
-                theta=radar_dimensions_closed,
-                fill="toself",
-                name=CLUSTER_LABELS[selected],
-                mode="lines+markers",
-                hovertemplate=(
-                    "%{theta}<br>"
-                    "Mean score: %{r:.3f}"
-                    "<extra></extra>"
-                ),
-            )
-        )
-
-        radar_fig.update_layout(
-            polar={
-                "radialaxis": {
-                    "visible": True,
-                    "range": [0, 1],
-                    "tickvals": [0, 0.25, 0.5, 0.75, 1],
-                }
-            },
-            showlegend=False,
-            margin=dict(l=50, r=50, t=35, b=35),
-            height=450,
-        )
-
-        st.plotly_chart(
-            radar_fig,
-            use_container_width=True,
-            config={"responsive": True},
-        )
-    else:
-        st.info(
-            "The radar chart requires at least three available "
-            "dimension means for the selected profile."
-        )
-
-    st.caption(
-        "Each axis shows the saved profile's mean score on a 0-to-1 "
-        "scale. A larger value indicates a higher score for that "
-        "dimension; it does not represent a probability or a "
-        "percentage of people included."
-    )
+    
 
     # ---------------------------------------------------------
     # 6. Horizontal dimension-mean bar chart
@@ -263,33 +198,7 @@ def render(df: pd.DataFrame) -> None:
             config={"responsive": True},
         )
 
-        st.dataframe(
-            values.round(3),
-            hide_index=True,
-            use_container_width=True,
-        )
-
-        # Relative strengths and gaps are descriptive, not thresholds.
-        highest_row = valid_values.loc[
-            valid_values["Mean score"].idxmax()
-        ]
-        lowest_row = valid_values.loc[
-            valid_values["Mean score"].idxmin()
-        ]
-
-        st.markdown(
-            f"**Relative pattern:** within this profile, "
-            f"{highest_row['Dimension']} has the highest mean "
-            f"({highest_row['Mean score']:.3f}), while "
-            f"{lowest_row['Dimension']} has the lowest mean "
-            f"({lowest_row['Mean score']:.3f})."
-        )
-
-        st.caption(
-            "These comparisons describe the profile's relative "
-            "dimension pattern. They are not validated policy "
-            "thresholds or evidence of causal relationships."
-        )
+       
     else:
         st.warning("Dimension means are unavailable for this profile.")
 

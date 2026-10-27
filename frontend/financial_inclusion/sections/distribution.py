@@ -121,7 +121,7 @@ def make_cluster_label(cluster_id) -> str:
 
 
 def render(df: pd.DataFrame) -> None:
-    st.header("Global cluster distribution")
+    
 
     st.caption(
         "Explore how the five inclusion profiles are distributed across "
@@ -271,7 +271,7 @@ def render(df: pd.DataFrame) -> None:
     # ---------------------------------------------------------
     # 4. World map at the top of the section
     # ---------------------------------------------------------
-    st.subheader("World map: dominant inclusion profile")
+    st.subheader("World Map: Dominant Inclusion Profile")
 
     st.caption(
         "Each country is colored by the profile with the largest observed "
@@ -365,7 +365,6 @@ def render(df: pd.DataFrame) -> None:
                 "responsive": True,
                 "displayModeBar": True,
             },
-            width="stretch",
         )
 
         # When a new map point is selected, update the economy selector.
@@ -453,7 +452,8 @@ def render(df: pd.DataFrame) -> None:
     )
 
     # Three compact headline metrics.
-    metric1, metric2, metric3 = st.columns(3)
+    
+    metric1, metric2, metric3 = st.columns([1, 2.5, 1])
 
     with metric1:
         st.metric("Sample size", f"{sample:,}")

@@ -64,57 +64,41 @@ def render(df: pd.DataFrame) -> None:
             value=f"{int(largest['respondents']):,}"
         )
 
+        
     # --------------------------------------------------
     # Understanding the Five Dimensions
     # --------------------------------------------------
     st.subheader("Understanding the Five Dimensions")
 
     st.caption(
-        "Financial inclusion is multidimensional. These five dimensions "
-        "capture different aspects of people's access to and use of "
-        "digital financial services."
+        "Five dimensions capture key aspects of digital financial inclusion."
     )
 
     dimension_cards = [
         {
             "icon": "📶",
             "title": "Connectivity",
-            "description": (
-                "Access to a mobile phone and use of the internet. "
-                "Connectivity helps people access digital services."
-            ),
+            "description": "Mobile phone access and internet use.",
         },
         {
             "icon": "🏦",
             "title": "Financial Access",
-            "description": (
-                "Access to a financial account. Account ownership "
-                "is an important starting point for financial inclusion."
-            ),
+            "description": "Access to a formal financial account.",
         },
         {
             "icon": "💳",
             "title": "Digital Financial Usage",
-            "description": (
-                "Use of digital financial services, including "
-                "digital payments."
-            ),
+            "description": "Use of digital financial services and payments.",
         },
         {
             "icon": "🛡️",
             "title": "Digital Safety",
-            "description": (
-                "Phone-protection practices represented by the "
-                "study's operational safety indicator."
-            ),
+            "description": "Phone-protection practices captured by the study.",
         },
         {
             "icon": "💰",
             "title": "Financial Resilience",
-            "description": (
-                "Financial coping capacity, represented by the "
-                "study's selected saving and financial-buffer indicators."
-            ),
+            "description": "Savings and capacity to manage financial shocks.",
         },
     ]
 
@@ -124,23 +108,25 @@ def render(df: pd.DataFrame) -> None:
         with column:
             with st.container(border=True):
                 st.markdown(
-                    f"<div style='font-size: 30px; text-align: center;'>"
+                    f"<div style='font-size: 28px; text-align: center;'>"
                     f"{dimension['icon']}</div>",
                     unsafe_allow_html=True,
                 )
 
                 st.markdown(
                     f"<div style='text-align: center; font-weight: 600; "
-                    f"min-height: 48px;'>"
+                    f"min-height: 42px;'>"
                     f"{dimension['title']}</div>",
                     unsafe_allow_html=True,
                 )
 
                 st.markdown(
-                    f"<div style='font-size: 13px; line-height: 1.5;'>"
+                    f"<div style='font-size: 13px; line-height: 1.4; "
+                    f"min-height: 55px;'>"
                     f"{dimension['description']}</div>",
                     unsafe_allow_html=True,
                 )
+
 
     # --------------------------------------------------
     # 3. Five dimension means
