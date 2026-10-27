@@ -61,7 +61,6 @@ def render(df: pd.DataFrame) -> None:
             "It does not directly predict financial inclusion success or establish causes of exclusion."
         )
         explainability.render(df)
-        st.warning("Country-held-out validation is pending; current evaluation does not establish generalisation to unseen countries.")
     elif section == WORKFLOW[3]:
         st.title("Explore Population Gaps")
         st.caption("Compare descriptive sample patterns. These summaries are unweighted and do not estimate national prevalence.")
