@@ -68,3 +68,7 @@ outputs/**/*.json
 # Python test coverage
 .coverage
 htmlcov/
+
+# CatBoost runtime training logs
+catboost_info/
+**/catboost_info/
