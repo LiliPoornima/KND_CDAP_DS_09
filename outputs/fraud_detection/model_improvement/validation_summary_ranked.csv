@@ -1,0 +1,11 @@
+model,feature_set,recall_at_1fpr_mean,recall_at_1fpr_std,ap_mean,ap_std,precision_at_1fpr_mean,precision_at_1fpr_std,actual_fpr_mean,actual_fpr_std
+xgboost,extended,0.7569,0.0045,0.5699,0.0038,0.3871,0.0014,0.01,0.0
+lightgbm_tuned,extended,0.7569,0.0045,0.5711,0.0133,0.3871,0.0014,0.01,0.0
+logistic_regression,extended,0.7455,0.0,0.2717,0.0,0.3835,0.0,0.01,0.0
+lightgbm_default,extended,0.7449,0.0028,0.5576,0.0115,0.3833,0.0009,0.01,0.0
+catboost,extended,0.7389,0.0038,0.5266,0.0142,0.3814,0.0012,0.01,0.0
+lightgbm_tuned,standard,0.7383,0.0,0.5346,0.0028,0.3812,0.0,0.01,0.0
+xgboost,standard,0.7335,0.0038,0.5334,0.0068,0.3796,0.0012,0.01,0.0
+lightgbm_default,standard,0.7329,0.0101,0.5227,0.0054,0.3794,0.0032,0.01,0.0
+catboost,standard,0.7256,0.0,0.4933,0.0065,0.3771,0.0,0.01,0.0
+logistic_regression,standard,0.7004,0.0,0.2494,0.0,0.3688,0.0,0.01,0.0

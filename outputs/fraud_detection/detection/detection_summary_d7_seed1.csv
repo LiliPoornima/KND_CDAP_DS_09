@@ -1,0 +1,5 @@
+true_degrade_day,first_alarm_day,first_adapt_day,lead_time_days,false_alarms,miss,total_adapts,scenario,delay,seed
+,,,,0,False,0,control,7,1
+105.0,119.0,133.0,-14.0,0,False,4,S1,7,1
+119.0,112.0,119.0,7.0,0,False,5,S2,7,1
+,,,,0,False,0,S3,7,1
