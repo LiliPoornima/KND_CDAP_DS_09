@@ -280,8 +280,24 @@ def explain_inclusion_profile(
         key=lambda item: item["individual_score"],
     )
 
+    def include_boundary_ties(limit: int) -> list[dict[str, Any]]:
+        selected = lowest_dimensions[:limit]
+        if not selected:
+            return selected
+        boundary_score = selected[-1]["individual_score"]
+        selected.extend(
+            item
+            for item in lowest_dimensions[limit:]
+            if np.isclose(
+                item["individual_score"], boundary_score, rtol=0, atol=1e-9
+            )
+        )
+        return selected
+
+    priority_dimensions = include_boundary_ties(3)
+    lowest_scoring = include_boundary_ties(2)
     suggested_actions = []
-    for item in lowest_dimensions:
+    for item in priority_dimensions:
         guidance = ACTION_GUIDANCE[item["feature"]]
         suggested_actions.append(
             {
@@ -299,10 +315,8 @@ def explain_inclusion_profile(
         "profile_name": profile["name"],
         "profile_description": profile["description"],
         "dimension_evidence": dimension_evidence,
-        "lowest_scoring_dimensions": [
-            item["dimension"] for item in lowest_dimensions[:2]
-        ],
-        "suggested_actions": suggested_actions[:3],
+        "lowest_scoring_dimensions": [item["dimension"] for item in lowest_scoring],
+        "suggested_actions": suggested_actions,
         "interpretation_limits": [
             "Cluster assignment is descriptive, not causal.",
             "Cluster means describe the saved analytical sample.",

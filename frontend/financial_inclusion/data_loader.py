@@ -838,10 +838,10 @@ def load_shap_validation_summary() -> dict:
     ) as file:
         summary = json.load(file)
 
-    if not summary.get("checks_passed"):
-        raise ValueError("SHAP validation summary has no passed checks.")
+    if not isinstance(summary, dict):
+        raise ValueError("SHAP validation summary must contain a JSON object.")
 
-    if not all(summary["checks_passed"].values()):
-        raise ValueError("One or more SHAP validation checks failed.")
+    # Keep failed or incomplete diagnostics available for the UI to report;
+    # a failed audit is not the same as a missing artifact.
 
     return summary
