@@ -10,9 +10,9 @@ from .sections import (
     distribution,
     explainability,
     gaps,
+    individual_assessment,
     overview,
     profiles,
-    recommendations,
     subgroups,
 )
 
@@ -20,7 +20,7 @@ from .sections import (
 WORKFLOW = (
     "Executive Overview",
     "Discover Inclusion Profiles",
-    "Explain the Profiles",
+    "Profiles Explanation",
     "Explore Population Gaps",
     "Decision Support & Action Planning",
 )
@@ -29,22 +29,17 @@ WORKFLOW = (
 def render(df: pd.DataFrame) -> None:
     """Render existing verified Component 02 analyses in a five-step flow."""
     section = st.radio(
-        "Decision workflow",
+        "Financial Inclusion sections",
         WORKFLOW,
         horizontal=True,
+        label_visibility="collapsed",
         key="fi_dss_workflow",
     )
     st.divider()
 
     if section == WORKFLOW[0]:
-        st.title("Global Digital Financial Inclusion Gap Profiler")
-        st.caption("Explainable Digital Financial Inclusion Decision Support System (EDFI-DSS)")
-        st.write(
-            "This system identifies multidimensional digital financial inclusion profiles, "
-            "explains their observed characteristics, compares population groups, and "
-            "supports evidence-informed decisions about where further investigation or "
-            "targeted support may be needed."
-        )
+        
+        
         _workflow_status()
         overview.render(df)
     elif section == WORKFLOW[1]:
@@ -55,7 +50,7 @@ def render(df: pd.DataFrame) -> None:
         with st.expander("View profile distribution by economy"):
             distribution.render(df)
     elif section == WORKFLOW[2]:
-        st.title("Explain the Profiles")
+        st.title("Profiles Explanation") 
         st.info(
             "The supervised model predicts membership in previously discovered profiles. "
             "It does not directly predict financial inclusion success or establish causes of exclusion."
@@ -74,12 +69,7 @@ def render(df: pd.DataFrame) -> None:
             subgroups.render_demographics(df)
     else:
         st.title("Decision Support & Action Planning")
-        st.caption("Potential follow-up categories are hypotheses for stakeholder review, not proven interventions or automated policy decisions.")
-        recommendations.render(df)
-        st.info(
-            "Individual profile assessment remains available in the existing Financial Inclusion dashboard. "
-            "This new page preserves that destination and its saved-model inference workflow."
-        )
+        individual_assessment.render()
 
     st.divider()
     st.caption(

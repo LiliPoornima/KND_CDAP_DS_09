@@ -202,7 +202,7 @@ def _show_validation(
     predictions: pd.DataFrame,
     validation: dict,
 ) -> None:
-    st.subheader("SHAP validation")
+    st.subheader("SHAP Validation")
     checks, details = _shap_artifact_checks(global_imp, local, predictions, validation)
     all_passed = all(value is True for value in checks.values())
     if all_passed:
@@ -276,7 +276,7 @@ def render(df: pd.DataFrame) -> None:
         st.warning(f"Saved model comparison is unavailable or inconsistent: {exc}")
 
     if metrics is not None:
-        st.subheader("Saved model evaluation")
+        st.subheader("Saved Model Evaluation")
         issues = []
         try:
             matrices = loader.load_supervised_confusion_matrices()
@@ -346,7 +346,7 @@ def render(df: pd.DataFrame) -> None:
         validation = {}
         st.warning(f"Saved SHAP validation metadata is unavailable or invalid: {exc}")
 
-    st.subheader("Global SHAP importance")
+    st.subheader("Global SHAP Importance")
     st.caption("The saved global results aggregate one-hot contributions by the seven original predictors.")
     cls = st.selectbox(
         "Profile class explained",
@@ -377,7 +377,7 @@ def render(df: pd.DataFrame) -> None:
         fig.update_traces(texttemplate="%{x:.3f}", textposition="outside", cliponaxis=False)
         fig.update_layout(height=390, margin=dict(l=10, r=70, t=55, b=35), showlegend=False)
         st.plotly_chart(fig, config={"responsive": True})
-        st.markdown("### What this tells us")
+        st.markdown("### Global Importance Findings")
         st.write(
             "Mean absolute SHAP values summarize the average magnitude of each predictor's "
             "contribution to this class's decision score across the saved explained sample. "
@@ -399,7 +399,7 @@ def render(df: pd.DataFrame) -> None:
             "Global absolute importance has no direction. It does not establish causality, "
             "explain why exclusion occurs, or show that changing a predictor changes a person's circumstances."
         )
-    st.subheader("Local SHAP explanation")
+    st.subheader("Local SHAP Explanation")
     valid_rows = sorted(set(local.row_index).intersection(set(predictions.row_index)))
     if not valid_rows:
         st.warning("No saved local explanations align with the saved validation predictions.")
@@ -448,7 +448,7 @@ def render(df: pd.DataFrame) -> None:
                 fig_local.add_vline(x=0, line_dash="dash", line_color="#475569")
                 fig_local.update_layout(height=390, margin=dict(l=10, r=25, t=55, b=35), legend_title_text="Effect on decision score")
                 st.plotly_chart(fig_local, config={"responsive": True})
-                st.markdown("### Understanding this prediction")
+                st.markdown("### Prediction Findings")
                 positive = detail.loc[
                     detail["shap_decision_score_contribution"] > 0
                 ].nlargest(3, "shap_decision_score_contribution")

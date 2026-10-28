@@ -27,4 +27,14 @@ except (FileNotFoundError, ValueError, KeyError) as exc:
     st.info(str(exc))
     st.stop()
 
+st.title("🌐 Component 02: Financial Inclusion Decision Support")
+st.subheader("Explainable Profiling of Digital Financial Inclusion Gaps")
+st.markdown(
+    "This research component identifies distinct financial inclusion profiles, "
+    "explores observed differences across populations, and provides explainable "
+    "individual assessments to support stakeholder investigation. Results describe "
+    "patterns in the available analytical sample and do not establish causal relationships."
+)
+
+
 render(analytical_df)

@@ -50,20 +50,10 @@ def render(df: pd.DataFrame) -> None:
         value="5 (5D_k5)"
     )
 
-    # Display the longest profile name separately from its count.
-    # This avoids truncating the name inside st.metric().
     with columns[3]:
-        st.markdown("**Largest Observed Profile**")
-
-        st.markdown(
-            f"**{largest['Profile']}**"
-        )
-
-        st.metric(
-            label="Respondents",
-            value=f"{int(largest['respondents']):,}"
-        )
-
+        with st.container(border=True):
+            st.markdown("**Largest Observed Profile**")
+            st.markdown(f"**{largest['Profile']}**")
         
     # --------------------------------------------------
     # Understanding the Five Dimensions
