@@ -557,7 +557,6 @@ def render(df: pd.DataFrame) -> None:
         fig_bar,
         key="global_cluster_composition_bar",
         config={"responsive": True},
-        width="stretch",
     )
 
     st.caption(

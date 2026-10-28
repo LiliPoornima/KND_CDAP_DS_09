@@ -158,7 +158,6 @@ def render(df: pd.DataFrame) -> None:
 
     st.plotly_chart(
         dimension_chart,
-        use_container_width=True,
         config={"responsive": True},
     )
 
@@ -214,7 +213,6 @@ def render(df: pd.DataFrame) -> None:
 
     st.plotly_chart(
         heat_chart,
-        use_container_width=True,
         config={"responsive": True},
     )
 

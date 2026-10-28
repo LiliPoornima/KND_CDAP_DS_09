@@ -219,8 +219,8 @@ def _show_validation(
             + ". Review the technical details before relying on these explanations."
         )
     st.warning(
-        "The saved random split does not establish generalisation to unseen "
-        "countries; country-held-out validation remains pending."
+        "Evaluation uses the existing random validation split. Generalization to unseen countries "
+        "has not been established; country-held-out validation is a future evaluation requirement."
     )
 
     cols = st.columns(4)
@@ -288,10 +288,15 @@ def render(df: pd.DataFrame) -> None:
 
         st.dataframe(metrics.style.format({column: "{:.3f}" for column in loader.SUPERVISED_METRIC_COLUMNS}), hide_index=True, width="stretch")
         st.caption(
-            "Performance is modest. On the saved random validation split, XGBoost has the highest accuracy; Logistic Regression was selected for SHAP based on interpretability and its class-balanced evaluation. No model is best on every metric."
+            "Performance is modest and varies by metric. XGBoost has the highest saved accuracy; "
+            "Logistic Regression was selected for SHAP based on interpretability and its class-balanced "
+            "evaluation. No model is best on every metric."
+        )
+        st.caption(
+            "Accuracy is overall correctness; balanced accuracy averages recall across classes; "
+            "macro-F1 averages class F1 equally; weighted-F1 weights each class F1 by its support."
         )
         st.markdown("**Model explained below: Logistic Regression**")
-        st.caption("The saved evaluation used a stratified random 80/20 train/test split.")
 
         try:
             reports = loader.load_supervised_classification_reports()
@@ -309,6 +314,13 @@ def render(df: pd.DataFrame) -> None:
                 class_table = _class_report_table(report)
                 if len(class_table) == len(CLUSTER_IDS):
                     st.dataframe(class_table.style.format({"Precision": "{:.2f}", "Recall": "{:.2f}", "F1-score": "{:.2f}"}), hide_index=True, width="stretch")
+                    lowest_recall = class_table.loc[class_table["Recall"].idxmin()]
+                    highest_recall = class_table.loc[class_table["Recall"].idxmax()]
+                    st.caption(
+                        "Profile recall varies: it is lowest for "
+                        f"{lowest_recall['Profile']} ({lowest_recall['Recall']:.2f}) and "
+                        f"highest for {highest_recall['Profile']} ({highest_recall['Recall']:.2f})."
+                    )
                 else:
                     st.warning("The saved report does not contain results for all five profile classes.")
             else:
@@ -360,13 +372,33 @@ def render(df: pd.DataFrame) -> None:
                 "display_feature": "Predictor",
                 "feature": "Saved feature name",
             },
-            title="Global feature importance for the selected profile",
+            title=f"Global feature contributions · {CLUSTER_LABELS[cls]}",
         )
         fig.update_traces(texttemplate="%{x:.3f}", textposition="outside", cliponaxis=False)
         fig.update_layout(height=390, margin=dict(l=10, r=70, t=55, b=35), showlegend=False)
-        st.plotly_chart(fig, config={"responsive": True}, use_container_width=True)
-    st.caption("Larger mean absolute SHAP values indicate a greater average contribution to the selected class's decision score in the saved sample. They do not establish causality.")
-
+        st.plotly_chart(fig, config={"responsive": True})
+        st.markdown("### What this tells us")
+        st.write(
+            "Mean absolute SHAP values summarize the average magnitude of each predictor's "
+            "contribution to this class's decision score across the saved explained sample. "
+            "Larger values indicate greater average contribution magnitude."
+        )
+        leaders = shown.nlargest(3, "mean_absolute_shap_decision_score")
+        leader_text = ", ".join(
+            f"{FEATURE_LABELS.get(row.feature, row.feature)} "
+            f"({row.mean_absolute_shap_decision_score:.3f})"
+            for row in leaders.itertuples(index=False)
+        )
+        if not leaders.empty:
+            st.markdown(f"**Leading predictors in this saved sample:** {leader_text}.")
+            st.write(
+                "The classifier relies more heavily on these predictors when distinguishing "
+                f"{CLUSTER_LABELS[cls]} in the saved sample."
+            )
+        st.caption(
+            "Global absolute importance has no direction. It does not establish causality, "
+            "explain why exclusion occurs, or show that changing a predictor changes a person's circumstances."
+        )
     st.subheader("Local SHAP explanation")
     valid_rows = sorted(set(local.row_index).intersection(set(predictions.row_index)))
     if not valid_rows:
@@ -415,7 +447,41 @@ def render(df: pd.DataFrame) -> None:
                 )
                 fig_local.add_vline(x=0, line_dash="dash", line_color="#475569")
                 fig_local.update_layout(height=390, margin=dict(l=10, r=25, t=55, b=35), legend_title_text="Effect on decision score")
-                st.plotly_chart(fig_local, config={"responsive": True}, use_container_width=True)
-                st.caption("Positive contributions move this class's decision score up; negative contributions move it down. This is a saved validation example, not a live individual assessment, and the contributions are not causal effects.")
+                st.plotly_chart(fig_local, config={"responsive": True})
+                st.markdown("### Understanding this prediction")
+                positive = detail.loc[
+                    detail["shap_decision_score_contribution"] > 0
+                ].nlargest(3, "shap_decision_score_contribution")
+                negative = detail.loc[
+                    detail["shap_decision_score_contribution"] < 0
+                ].nsmallest(3, "shap_decision_score_contribution")
+
+                def contribution_list(rows: pd.DataFrame) -> str:
+                    return ", ".join(
+                        f"{FEATURE_LABELS.get(item.feature, item.feature)} "
+                        f"({item.shap_decision_score_contribution:+.3f})"
+                        for item in rows.itertuples(index=False)
+                    )
+
+                if not positive.empty:
+                    st.markdown(
+                        "**Strongest positive contributions:** "
+                        f"{contribution_list(positive)}. These raised the decision score for "
+                        f"{CLUSTER_LABELS[predicted_class]}."
+                    )
+                else:
+                    st.caption("No positive feature contributions were present in this saved explanation.")
+                if not negative.empty:
+                    st.markdown(
+                        "**Strongest negative contributions:** "
+                        f"{contribution_list(negative)}. These lowered the decision score for "
+                        f"{CLUSTER_LABELS[predicted_class]}."
+                    )
+                else:
+                    st.caption("No negative feature contributions were present in this saved explanation.")
+                st.caption(
+                    "This is a saved validation example, not a live individual assessment. "
+                    "The contributions describe classifier behavior, not causes."
+                )
 
     _show_validation(global_imp, local, predictions, validation)
