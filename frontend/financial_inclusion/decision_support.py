@@ -63,18 +63,15 @@ def render(df: pd.DataFrame) -> None:
         explainability.render(df)
     elif section == WORKFLOW[3]:
         st.title("Explore Population Gaps")
-        st.caption("Compare descriptive sample patterns. These summaries are unweighted and do not estimate national prevalence.")
-        gap_tab, demographic_tab, income_tab, region_tab = st.tabs(
-            ["Gap detector", "Demographics", "Income group", "Region"]
+        st.caption(
+            "Compare dimension scores across populations and review saved profile "
+            "mixes by demographic."
         )
+        gap_tab, demographic_tab = st.tabs(["Gap detector", "Demographics"])
         with gap_tab:
             gaps.render(df)
         with demographic_tab:
             subgroups.render_demographics(df)
-        with income_tab:
-            subgroups.render_income(df)
-        with region_tab:
-            subgroups.render_region(df)
     else:
         st.title("Decision Support & Action Planning")
         st.caption("Potential follow-up categories are hypotheses for stakeholder review, not proven interventions or automated policy decisions.")
