@@ -7,6 +7,7 @@ import pandas as pd
 
 from backend.src.credit_risk.common.cr_evaluation import (
     cr_analyze_probability_thresholds,
+    cr_bootstrap_binary_performance,
     cr_evaluate_binary_probabilities,
 )
 from backend.src.credit_risk.fairness.cr_fairness import (
@@ -136,6 +137,7 @@ def cr_run_home_credit_baselines(
     validation_X = validation_df[predictor_columns]
     test_X = test_df[predictor_columns]
     model_metrics: dict[str, dict[str, Any]] = {}
+    performance_intervals: dict[str, pd.DataFrame] = {}
     training_diagnostics: list[dict[str, Any]] = []
     threshold_tables = []
     comparison_rows = []
@@ -177,6 +179,12 @@ def cr_run_home_credit_baselines(
             test_probability,
             threshold=selected_threshold,
             target_names=("No payment difficulty", "Payment difficulty"),
+        )
+        performance_intervals[model_name] = cr_bootstrap_binary_performance(
+            test_truth,
+            test_probability,
+            threshold=selected_threshold,
+            random_state=42,
         )
         model_metrics[model_name] = metrics
         comparison_rows.append(
@@ -259,6 +267,10 @@ def cr_run_home_credit_baselines(
             safe_name = model_name.lower().replace(" ", "_")
             pd.DataFrame(metrics["calibration_bins"]).to_csv(
                 destination / f"{safe_name}_calibration_bins.csv",
+                index=False,
+            )
+            performance_intervals[model_name].to_csv(
+                destination / f"{safe_name}_performance_confidence_intervals.csv",
                 index=False,
             )
             if "fairness" in result:
