@@ -9,6 +9,7 @@ from sklearn.base import clone
 
 from backend.src.credit_risk.common.cr_evaluation import (
     cr_analyze_probability_thresholds,
+    cr_bootstrap_binary_performance,
 )
 from backend.src.credit_risk.credit_card_default.experiment import (
     cr_prepare_credit_card_dataset_from_file,
@@ -20,6 +21,7 @@ from backend.src.credit_risk.credit_card_default.feature_engineering import (
     PAYMENT_STATUS_COLUMNS,
 )
 from backend.src.credit_risk.credit_card_default.training import (
+    cr_train_credit_card_logistic_regression,
     cr_train_credit_card_random_forest,
 )
 from backend.src.credit_risk.experiments.cr_ablation import (
@@ -27,6 +29,7 @@ from backend.src.credit_risk.experiments.cr_ablation import (
 )
 from backend.src.credit_risk.fairness.cr_fairness import (
     cr_analyze_group_fairness,
+    cr_build_subgroup_support_coverage,
     cr_bootstrap_group_fairness,
     cr_bin_age_groups,
 )
@@ -54,6 +57,7 @@ from backend.src.credit_risk.home_credit.preprocessing import (
 )
 from backend.src.credit_risk.home_credit.training import (
     cr_create_home_credit_random_forest,
+    cr_train_home_credit_logistic_regression,
     cr_train_home_credit_random_forest,
 )
 from backend.src.credit_risk.credit_card_default.preprocessing import (
@@ -118,6 +122,16 @@ def cr_run_give_me_some_credit(
             test.drop(columns=[GIVE_ME_SOME_CREDIT_TARGET])
         )[:, positive_index]
         test_predictions = (test_probabilities >= threshold).astype(int)
+        cr_bootstrap_binary_performance(
+            test[GIVE_ME_SOME_CREDIT_TARGET],
+            test_probabilities,
+            threshold=threshold,
+            random_state=random_state,
+        ).to_csv(
+            output
+            / f"{model_name.lower().replace(' ', '_')}_performance_confidence_intervals.csv",
+            index=False,
+        )
         model_metrics[model_name] = metrics
         comparisons.append(
             {
@@ -370,6 +384,84 @@ def cr_run_extended_dataset_analyses(
     return results
 
 
+def cr_run_saved_performance_uncertainty(
+    output_root: str | Path = "outputs/credit_risk",
+    *,
+    random_state: int = 42,
+) -> dict[str, pd.DataFrame]:
+    """Refit baselines on saved training splits and write test metric intervals.
+
+    Validation splits select the threshold anew; test splits are used only for
+    metric estimation and the stratified bootstrap intervals.
+    """
+    root = Path(output_root)
+    specifications = {
+        "give_me_some_credit": (
+            GIVE_ME_SOME_CREDIT_TARGET,
+            cr_train_logistic_regression,
+            cr_train_random_forest,
+            False,
+        ),
+        "credit_card_default": (
+            CREDIT_CARD_TARGET,
+            cr_train_credit_card_logistic_regression,
+            cr_train_credit_card_random_forest,
+            False,
+        ),
+        "home_credit": (
+            HOME_CREDIT_TARGET,
+            cr_train_home_credit_logistic_regression,
+            cr_train_home_credit_random_forest,
+            True,
+        ),
+    }
+    results: dict[str, pd.DataFrame] = {}
+    for dataset, (target, logistic_trainer, forest_trainer, home_credit) in specifications.items():
+        base = root / dataset / "completion_run"
+        prepared = base / "prepared"
+        train = pd.read_csv(prepared / "train_processed.csv")
+        validation = pd.read_csv(prepared / "validation_processed.csv")
+        test = pd.read_csv(prepared / "test_processed.csv")
+        trainers = {
+            "logistic_regression": logistic_trainer,
+            "random_forest": forest_trainer,
+        }
+        rows = []
+        for model_key, trainer in trainers.items():
+            model = (
+                trainer(train, target_column=target)
+                if home_credit
+                else trainer(train)
+            )
+            threshold, _ = _select_threshold(validation, target, model)
+            positive_index = list(model.classes_).index(1)
+            probabilities = model.predict_proba(
+                test.drop(columns=[target])
+            )[:, positive_index]
+            intervals = cr_bootstrap_binary_performance(
+                test[target],
+                probabilities,
+                threshold=threshold,
+                random_state=random_state,
+            )
+            intervals.insert(0, "model", model_key)
+            intervals.insert(0, "dataset", dataset)
+            destination = base / ("metrics" if dataset != "give_me_some_credit" else "")
+            destination.mkdir(parents=True, exist_ok=True)
+            intervals.to_csv(
+                destination / f"{model_key}_performance_confidence_intervals.csv",
+                index=False,
+            )
+            rows.append(intervals)
+        results[dataset] = pd.concat(rows, ignore_index=True)
+
+    cr_build_subgroup_support_coverage(
+        str(root),
+        str(root / "subgroup_support_coverage.csv"),
+    )
+    return results
+
+
 def cr_run_component1_inspection(
     *,
     output_root: str | Path,
@@ -433,6 +525,11 @@ def main() -> None:
         action="store_true",
         help="Run the saved-split Taiwan/Home Credit ablation and stability analyses.",
     )
+    parser.add_argument(
+        "--complete-uncertainty-review",
+        action="store_true",
+        help="Write held-out performance intervals and subgroup support coverage from saved splits.",
+    )
     args = parser.parse_args()
     has_baseline_input = any(
         (
@@ -441,7 +538,7 @@ def main() -> None:
             args.home_credit_archive,
         )
     )
-    if not has_baseline_input and not args.run_extended_analysis:
+    if not has_baseline_input and not args.run_extended_analysis and not args.complete_uncertainty_review:
         parser.error(
             "Provide a dataset input or use --run-extended-analysis with saved splits."
         )
@@ -467,6 +564,11 @@ def main() -> None:
                 print(result.to_string(index=False))
             else:
                 print(result["summary"])
+    if args.complete_uncertainty_review:
+        uncertainty = cr_run_saved_performance_uncertainty(args.output_root)
+        for dataset, table in uncertainty.items():
+            print(f"\n{dataset} performance intervals")
+            print(table.to_string(index=False))
 
 
 if __name__ == "__main__":
