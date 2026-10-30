@@ -6,3 +6,5 @@ plotly
 scikit-learn>=1.2
 xlrd>=2.0
 shap
+pycountry
+reportlab>=4.0
