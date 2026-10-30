@@ -9,6 +9,7 @@ import pandas as pd
 
 from backend.src.credit_risk.common.cr_evaluation import (
     cr_analyze_probability_thresholds,
+    cr_bootstrap_binary_performance,
     cr_evaluate_binary_probabilities,
 )
 from backend.src.credit_risk.fairness.cr_fairness import (
@@ -195,6 +196,7 @@ def cr_run_credit_card_baselines(
     threshold_tables = []
     comparison_rows = []
     model_metrics = {}
+    performance_intervals = {}
 
     for model_name, model in models.items():
         positive_index = list(model.classes_).index(1)
@@ -222,6 +224,12 @@ def cr_run_credit_card_baselines(
             test_probability,
             threshold=selected_threshold,
             target_names=("No default", "Default"),
+        )
+        performance_intervals[model_name] = cr_bootstrap_binary_performance(
+            test_df[target_column],
+            test_probability,
+            threshold=selected_threshold,
+            random_state=42,
         )
         model_metrics[model_name] = metrics
         comparison_rows.append(
@@ -295,6 +303,10 @@ def cr_run_credit_card_baselines(
             safe_name = model_name.lower().replace(" ", "_")
             pd.DataFrame(metrics["calibration_bins"]).to_csv(
                 destination / f"{safe_name}_calibration_bins.csv",
+                index=False,
+            )
+            performance_intervals[model_name].to_csv(
+                destination / f"{safe_name}_performance_confidence_intervals.csv",
                 index=False,
             )
             if "fairness" in result:

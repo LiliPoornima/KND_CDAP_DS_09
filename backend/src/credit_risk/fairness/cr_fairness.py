@@ -35,6 +35,92 @@ def cr_bin_age_groups(
     return bands.rename("age_group")
 
 
+def cr_build_subgroup_support_coverage(
+    output_root: str,
+    output_path: str | None = None,
+    *,
+    min_group_size: int = 30,
+    min_class_count: int = 5,
+) -> pd.DataFrame:
+    """Collect per-group audit support and eligibility from saved fairness CSVs.
+
+    The output keeps every observed group and makes the existing audit
+    thresholds explicit, so small groups are reported as coverage limits
+    rather than silently omitted.
+    """
+    from pathlib import Path
+
+    root = Path(output_root)
+    if not root.is_dir():
+        raise FileNotFoundError(f"Credit-risk output root not found: {root}")
+    if min_group_size < 1 or min_class_count < 1:
+        raise ValueError("Support thresholds must be positive integers.")
+
+    rows: list[dict[str, Any]] = []
+    for source in sorted(root.rglob("*_fairness.csv")):
+        try:
+            relative = source.relative_to(root)
+            dataset = relative.parts[0]
+            table = pd.read_csv(source)
+        except (ValueError, pd.errors.EmptyDataError):
+            continue
+        required = {"group", "n", "positive_support", "negative_support"}
+        if not required.issubset(table.columns) or table.empty:
+            continue
+        stem = source.stem
+        model = next(
+            (name for name in ("logistic_regression", "random_forest") if stem.startswith(name)),
+            "unknown",
+        )
+        attribute = str(table.iloc[0].get("attribute", "unknown"))
+        for record in table.to_dict(orient="records"):
+            n = int(record["n"])
+            positives = int(record["positive_support"])
+            negatives = int(record["negative_support"])
+            eligible_sample = n >= min_group_size
+            eligible_tpr = eligible_sample and positives >= min_class_count
+            eligible_fpr = eligible_sample and negatives >= min_class_count
+            rows.append(
+                {
+                    "dataset": dataset,
+                    "model": model,
+                    "attribute": attribute,
+                    "group": str(record["group"]),
+                    "n": n,
+                    "positive_support": positives,
+                    "negative_support": negatives,
+                    "min_group_size": min_group_size,
+                    "min_class_count": min_class_count,
+                    "selection_rate_reportable": eligible_sample,
+                    "tpr_reportable": eligible_tpr,
+                    "fpr_reportable": eligible_fpr,
+                    "coverage_note": (
+                        "meets all rate support rules"
+                        if eligible_tpr and eligible_fpr
+                        else "limited: " + ", ".join(
+                            label
+                            for condition, label in (
+                                (not eligible_sample, "group below minimum size"),
+                                (eligible_sample and not eligible_tpr, "positive class below minimum"),
+                                (eligible_sample and not eligible_fpr, "negative class below minimum"),
+                            )
+                            if condition
+                        )
+                    ),
+                    "source_file": str(relative).replace("\\", "/"),
+                }
+            )
+
+    coverage = pd.DataFrame(rows)
+    if coverage.empty:
+        raise FileNotFoundError(f"No saved subgroup fairness tables found under {root}")
+    if output_path is not None:
+        destination = Path(output_path)
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        coverage.to_csv(destination, index=False)
+    return coverage
+
+
 def cr_analyze_group_fairness(
     y_true: Iterable[Any],
     y_pred: Iterable[Any],

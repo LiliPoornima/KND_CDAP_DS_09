@@ -1,6 +1,7 @@
 """Component 1: saved credit-risk model and fairness research results."""
 
 from pathlib import Path
+import json
 
 import pandas as pd
 import plotly.express as px
@@ -59,6 +60,34 @@ def _load_csv(path_string: str) -> pd.DataFrame | None:
     if not path.is_file():
         return None
     return pd.read_csv(path)
+
+
+@st.cache_data(show_spinner=False)
+def _load_json(
+    path_string: str,
+    modified_ns: int = 0,
+    size_bytes: int = 0,
+) -> dict | None:
+    """Load a small dataset run manifest."""
+    del modified_ns, size_bytes  # Included in the cache key for file refreshes.
+    path = Path(path_string)
+    if not path.is_file():
+        return None
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
+@st.cache_data(show_spinner=False)
+def _load_text(
+    path_string: str,
+    modified_ns: int = 0,
+    size_bytes: int = 0,
+) -> str | None:
+    """Load a small research report and refresh it when the file changes."""
+    del modified_ns, size_bytes  # Included in the cache key for file refreshes.
+    path = Path(path_string)
+    if not path.is_file():
+        return None
+    return path.read_text(encoding="utf-8")
 
 
 def _dataset_path(dataset: dict[str, str], relative_path: str) -> Path:
@@ -129,6 +158,34 @@ def _render_performance(dataset: dict[str, str]) -> None:
         hide_index=True,
         width="stretch",
     )
+
+    interval_tables = []
+    for model_name in comparison["Model"]:
+        model_key = "random_forest" if model_name == "Random Forest" else "logistic_regression"
+        interval_path = _dataset_path(
+            dataset,
+            f"{dataset['metrics_dir']}/{model_key}_performance_confidence_intervals.csv",
+        )
+        interval_table = _load_csv(str(interval_path))
+        if interval_table is not None and not interval_table.empty:
+            interval_table.insert(0, "Model", model_name)
+            interval_tables.append(interval_table)
+    if interval_tables:
+        intervals = pd.concat(interval_tables, ignore_index=True)
+        st.markdown("**95% stratified bootstrap intervals for held-out metrics**")
+        st.dataframe(
+            intervals[["Model", "metric", "estimate", "lower", "upper", "n"]].style.format(
+                {"estimate": "{:.3f}", "lower": "{:.3f}", "upper": "{:.3f}"}
+            ),
+            hide_index=True,
+            width="stretch",
+        )
+        st.caption(
+            "Intervals resample test rows within each observed outcome class and "
+            "condition on the fitted model and frozen validation threshold."
+        )
+    else:
+        st.info("Held-out performance confidence intervals have not been generated yet.")
 
     if "Test F1-score" in comparison.columns:
         chart_data = comparison.melt(
@@ -244,6 +301,8 @@ def _render_fairness(dataset: dict[str, str]) -> None:
             "false_positive_rate",
             "precision",
             "sample_sufficient",
+            "positive_support_sufficient",
+            "negative_support_sufficient",
         )
         if column in fairness.columns
     ]
@@ -280,8 +339,9 @@ def _render_fairness(dataset: dict[str, str]) -> None:
         st.markdown("**95% bootstrap intervals for between-group gaps**")
         st.dataframe(gap_ci, hide_index=True, width="stretch")
     st.caption(
-        "Intervals condition on the fitted model, validation-selected threshold, "
-        "and observed group sizes. They do not include model-refit uncertainty."
+        "Group-level rates are eligible when the group has at least 30 records; "
+        "TPR and FPR additionally require at least 5 positive or negative cases. "
+        "Fairness intervals condition on the fitted model and observed group sizes."
     )
 
 
@@ -347,6 +407,48 @@ def _render_explanations(dataset: dict[str, str]) -> None:
         "do not establish causal effects."
     )
 
+    if dataset["key"] == "give_me_some_credit":
+        local_path = _dataset_path(dataset, "completion_run/shap_attributions_sample.csv")
+    else:
+        local_path = _dataset_path(
+            dataset,
+            f"{dataset['explainability_dir']}/random_forest_shap_attributions_sample.csv",
+        )
+    local = _load_csv(str(local_path))
+    st.markdown("**Local Random Forest example**")
+    if local is None or local.empty:
+        _show_missing(local_path)
+        return
+
+    # The first column is the saved test-row index; omit it from the UI.
+    feature_columns = [
+        column for column in local.columns if column != "Unnamed: 0"
+    ]
+    sample_number = st.selectbox(
+        "Example",
+        range(len(local)),
+        format_func=lambda value: f"Example {value + 1}",
+        key=f"credit_local_shap_{dataset['key']}",
+    )
+    contributions = pd.to_numeric(local.iloc[sample_number][feature_columns], errors="coerce")
+    contributions = contributions.dropna()
+    contributions = contributions.reindex(
+        contributions.abs().nlargest(min(12, len(contributions))).index
+    ).sort_values()
+    local_figure = px.bar(
+        x=contributions.values,
+        y=contributions.index,
+        orientation="h",
+        title="Largest signed SHAP contributions for this example",
+        labels={"x": "SHAP contribution", "y": "Feature"},
+    )
+    st.plotly_chart(local_figure, use_container_width=True)
+    st.caption(
+        "Positive contributions move the model output above its SHAP baseline; "
+        "negative contributions move it below. This is a model explanation, not "
+        "a causal effect or a credit recommendation."
+    )
+
 
 def _render_ablation(dataset: dict[str, str]) -> None:
     path = _dataset_path(
@@ -397,6 +499,57 @@ st.info(
     "are reported separately and should not be read as a global ranking of borrower risk."
 )
 
+manifest_path = _dataset_path(dataset, "completion_run/run_manifest.json")
+manifest_signature = (
+    manifest_path.stat() if manifest_path.is_file() else None
+)
+manifest = _load_json(
+    str(manifest_path),
+    manifest_signature.st_mtime_ns if manifest_signature else 0,
+    manifest_signature.st_size if manifest_signature else 0,
+)
+with st.expander("Run reproducibility details"):
+    if manifest is None:
+        st.info(f"No run manifest is available at `{manifest_path.relative_to(PROJECT_ROOT)}` yet.")
+    else:
+        source = manifest["dataset"]["source_archive"]
+        implementation = manifest["implementation"]
+        st.caption(
+            f"Generated {manifest['generated_at_utc']} · revision "
+            f"{implementation.get('commit') or 'unknown'} · working tree "
+            f"{'dirty' if implementation.get('working_tree_dirty') else 'clean'}"
+        )
+        st.markdown("**Source archive**")
+        st.write(f"{source['filename']} · SHA-256 `{source['sha256']}`")
+        st.dataframe(
+            pd.DataFrame(source["members_used"]),
+            hide_index=True,
+            width="stretch",
+        )
+        st.markdown("**Saved split artifacts**")
+        split_rows = []
+        for name, artifact in manifest["preparation"]["saved_splits"].items():
+            split_rows.append(
+                {
+                    "partition": name,
+                    "rows": artifact["rows"],
+                    "target_counts": artifact.get("target_counts", "audit groups"),
+                    "sha256": artifact["sha256"],
+                }
+            )
+        st.dataframe(pd.DataFrame(split_rows), hide_index=True, width="stretch")
+        with st.popover("Model and software settings"):
+            st.json(
+                {
+                    "models": manifest["experiments"]["models"],
+                    "threshold_selection": manifest["experiments"]["threshold_selection"],
+                    "performance_uncertainty": manifest["experiments"]["performance_uncertainty"],
+                    "fairness_uncertainty": manifest["experiments"]["fairness_uncertainty"],
+                    "software": manifest["software"],
+                },
+                expanded=False,
+            )
+
 if comparison is not None and not comparison.empty:
     best_row = comparison.sort_values("Test F1-score", ascending=False).iloc[0]
     metric_columns = st.columns(4)
@@ -409,8 +562,14 @@ if comparison is not None and not comparison.empty:
         help=f"Selected for {best_row['Model']} on the validation split.",
     )
 
-performance_tab, fairness_tab, explanation_tab, ablation_tab = st.tabs(
-    ["Performance & calibration", "Fairness", "Explainability", "Feature ablation"]
+performance_tab, fairness_tab, explanation_tab, ablation_tab, report_tab = st.tabs(
+    [
+        "Performance & calibration",
+        "Fairness",
+        "Explainability",
+        "Feature ablation",
+        "Research report",
+    ]
 )
 
 with performance_tab:
@@ -439,6 +598,20 @@ with explanation_tab:
 with ablation_tab:
     st.subheader("Controlled feature-group ablation")
     _render_ablation(dataset)
+
+with report_tab:
+    st.subheader("Component 1 final research report")
+    report_path = PROJECT_ROOT / "docs" / "research" / "credit_risk_final_report.md"
+    report_signature = report_path.stat() if report_path.is_file() else None
+    report = _load_text(
+        str(report_path),
+        report_signature.st_mtime_ns if report_signature else 0,
+        report_signature.st_size if report_signature else 0,
+    )
+    if report is None:
+        _show_missing(report_path)
+    else:
+        st.markdown(report)
 
 st.divider()
 st.caption(

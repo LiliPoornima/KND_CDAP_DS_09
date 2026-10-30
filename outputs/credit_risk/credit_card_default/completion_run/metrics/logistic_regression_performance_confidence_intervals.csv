@@ -1,0 +1,9 @@
+dataset,model,metric,estimate,confidence_level,lower,upper,valid_replicates,n,positive_support,negative_support,threshold,bootstrap_method
+credit_card_default,logistic_regression,accuracy,0.7363333333333333,0.95,0.7251666666666666,0.7471708333333333,1000,6000,1327,4673,0.5,stratified_by_target_class
+credit_card_default,logistic_regression,precision,0.43228890069038767,0.95,0.4162641898478854,0.44869990293794443,1000,6000,1327,4673,0.5,stratified_by_target_class
+credit_card_default,logistic_regression,recall,0.613413715146948,0.95,0.5870384325546345,0.6390354182366239,1000,6000,1327,4673,0.5,stratified_by_target_class
+credit_card_default,logistic_regression,f1_score,0.5071651090342679,0.95,0.48876120589738015,0.5248672768469197,1000,6000,1327,4673,0.5,stratified_by_target_class
+credit_card_default,logistic_regression,roc_auc,0.7506612164253561,0.95,0.7353718938228574,0.7656830711178761,1000,6000,1327,4673,0.5,stratified_by_target_class
+credit_card_default,logistic_regression,pr_auc_average_precision,0.506146525774392,0.95,0.4816734655191105,0.5329930245133381,1000,6000,1327,4673,0.5,stratified_by_target_class
+credit_card_default,logistic_regression,brier_score,0.19224066656267333,0.95,0.18755907824184193,0.1964920028282594,1000,6000,1327,4673,0.5,stratified_by_target_class
+credit_card_default,logistic_regression,log_loss,0.5764471851270215,0.95,0.565742733082431,0.5866355049630959,1000,6000,1327,4673,0.5,stratified_by_target_class
