@@ -52,6 +52,7 @@ def _build_home_credit_pipeline(
     target_column: str,
     classifier: Any,
     scale_numeric: bool,
+    fit: bool = True,
 ) -> Pipeline:
     X_train, y_train, numeric_columns, categorical_columns = (
         _validate_home_credit_training_data(train_df, target_column)
@@ -117,7 +118,8 @@ def _build_home_credit_pipeline(
             ("classifier", classifier),
         ]
     )
-    model.fit(X_train, y_train)
+    if fit:
+        model.fit(X_train, y_train)
     return model
 
 
@@ -176,4 +178,24 @@ def cr_train_home_credit_random_forest(
             n_jobs=-1,
         ),
         scale_numeric=False,
+    )
+
+
+def cr_create_home_credit_random_forest(
+    train_df: pd.DataFrame,
+    target_column: str = TARGET_COLUMN,
+) -> Pipeline:
+    """Create the standard Random Forest pipeline without fitting it."""
+
+    return _build_home_credit_pipeline(
+        train_df,
+        target_column=target_column,
+        classifier=RandomForestClassifier(
+            n_estimators=200,
+            class_weight="balanced",
+            random_state=42,
+            n_jobs=-1,
+        ),
+        scale_numeric=False,
+        fit=False,
     )
