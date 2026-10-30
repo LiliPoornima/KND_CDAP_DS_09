@@ -13,6 +13,7 @@ def cr_explain_model(
     model: Any,
     X: pd.DataFrame,
     *,
+    background_data: pd.DataFrame | None = None,
     sample_size: int = 100,
     background_size: int = 100,
     random_state: int = 42,
@@ -31,6 +32,14 @@ def cr_explain_model(
         raise ValueError("X must contain rows and predictor columns.")
     if not X.columns.is_unique:
         raise ValueError("X must have unique feature names.")
+    if background_data is not None:
+        if not isinstance(background_data, pd.DataFrame):
+            raise TypeError("background_data must be a pandas DataFrame.")
+        if background_data.empty or list(background_data.columns) != list(X.columns):
+            raise ValueError(
+                "background_data must be non-empty and have the same feature columns in order as X."
+            )
+    background_source = X if background_data is None else background_data
     if not isinstance(model, Pipeline):
         if X.isna().any().any():
             raise ValueError("X must not contain missing predictor values.")
@@ -40,6 +49,13 @@ def cr_explain_model(
             )
         if not np.isfinite(X.to_numpy(dtype=float)).all():
             raise ValueError("X must contain only finite predictor values.")
+        if background_source.isna().any().any() or not all(
+            pd.api.types.is_numeric_dtype(background_source[c])
+            for c in background_source.columns
+        ):
+            raise ValueError("background_data must contain complete numeric predictors.")
+        if not np.isfinite(background_source.to_numpy(dtype=float)).all():
+            raise ValueError("background_data must contain only finite predictors.")
     for name, value in (("sample_size", sample_size), ("background_size", background_size)):
         if not isinstance(value, int) or isinstance(value, bool) or value < 1:
             raise ValueError(f"{name} must be a positive integer.")
@@ -55,8 +71,8 @@ def cr_explain_model(
         n=min(sample_size, len(X)),
         random_state=random_state,
     )
-    background = X.sample(
-        n=min(background_size, len(X)),
+    background = background_source.sample(
+        n=min(background_size, len(background_source)),
         random_state=random_state + 1,
     )
 
