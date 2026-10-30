@@ -9,13 +9,27 @@ from sklearn.base import clone
 
 from backend.src.credit_risk.common.cr_evaluation import (
     cr_analyze_probability_thresholds,
+    cr_bootstrap_binary_performance,
 )
 from backend.src.credit_risk.credit_card_default.experiment import (
     cr_prepare_credit_card_dataset_from_file,
     cr_run_credit_card_baselines,
 )
+from backend.src.credit_risk.credit_card_default.feature_engineering import (
+    BILL_AMOUNT_COLUMNS,
+    PAYMENT_AMOUNT_COLUMNS,
+    PAYMENT_STATUS_COLUMNS,
+)
+from backend.src.credit_risk.credit_card_default.training import (
+    cr_train_credit_card_logistic_regression,
+    cr_train_credit_card_random_forest,
+)
+from backend.src.credit_risk.experiments.cr_ablation import (
+    cr_run_validation_selected_feature_ablation,
+)
 from backend.src.credit_risk.fairness.cr_fairness import (
     cr_analyze_group_fairness,
+    cr_build_subgroup_support_coverage,
     cr_bootstrap_group_fairness,
     cr_bin_age_groups,
 )
@@ -37,6 +51,17 @@ from backend.src.credit_risk.give_me_some_credit.model import (
 from backend.src.credit_risk.home_credit.experiment import (
     cr_prepare_home_credit_dataset_from_archive,
     cr_run_home_credit_baselines,
+)
+from backend.src.credit_risk.home_credit.preprocessing import (
+    TARGET_COLUMN as HOME_CREDIT_TARGET,
+)
+from backend.src.credit_risk.home_credit.training import (
+    cr_create_home_credit_random_forest,
+    cr_train_home_credit_logistic_regression,
+    cr_train_home_credit_random_forest,
+)
+from backend.src.credit_risk.credit_card_default.preprocessing import (
+    TARGET_COLUMN as CREDIT_CARD_TARGET,
 )
 
 
@@ -97,6 +122,16 @@ def cr_run_give_me_some_credit(
             test.drop(columns=[GIVE_ME_SOME_CREDIT_TARGET])
         )[:, positive_index]
         test_predictions = (test_probabilities >= threshold).astype(int)
+        cr_bootstrap_binary_performance(
+            test[GIVE_ME_SOME_CREDIT_TARGET],
+            test_probabilities,
+            threshold=threshold,
+            random_state=random_state,
+        ).to_csv(
+            output
+            / f"{model_name.lower().replace(' ', '_')}_performance_confidence_intervals.csv",
+            index=False,
+        )
         model_metrics[model_name] = metrics
         comparisons.append(
             {
@@ -237,6 +272,196 @@ def cr_run_explanation_stability(
     return stability
 
 
+def cr_run_extended_dataset_analyses(
+    output_root: str | Path = "outputs/credit_risk",
+) -> dict[str, Any]:
+    """Run the pending Taiwan and Home Credit ablation/stability analyses.
+
+    This uses the saved leakage-aware split files. Thresholds are selected on
+    each scenario's validation predictions, and held-out test partitions are
+    reserved for the reported comparison.
+    """
+
+    root = Path(output_root)
+    results: dict[str, Any] = {}
+
+    credit_card_dir = root / "credit_card_default" / "completion_run"
+    credit_card_prepared = credit_card_dir / "prepared"
+    credit_card_train = pd.read_csv(
+        credit_card_prepared / "train_processed.csv"
+    )
+    credit_card_validation = pd.read_csv(
+        credit_card_prepared / "validation_processed.csv"
+    )
+    credit_card_test = pd.read_csv(
+        credit_card_prepared / "test_processed.csv"
+    )
+    credit_card_target = CREDIT_CARD_TARGET
+    credit_card_features = [
+        column for column in credit_card_train.columns
+        if column != credit_card_target
+    ]
+    credit_card_groups = {
+        "repayment_status_history": [
+            *[column for column in PAYMENT_STATUS_COLUMNS if column in credit_card_features],
+            "BehavioralDelinquencyMonths",
+            "MaximumReportedDelayLevel",
+        ],
+        "monthly_amount_history": [
+            "LIMIT_BAL",
+            *[column for column in BILL_AMOUNT_COLUMNS if column in credit_card_features],
+            *[column for column in PAYMENT_AMOUNT_COLUMNS if column in credit_card_features],
+        ],
+        "derived_payment_summaries": [
+            "MonthsWithPositivePayment",
+            "MeanPositiveBillPaymentRatio",
+        ],
+    }
+    results["credit_card_default_ablation"] = (
+        cr_run_validation_selected_feature_ablation(
+            credit_card_train,
+            credit_card_validation,
+            credit_card_test,
+            credit_card_groups,
+            trainer=cr_train_credit_card_random_forest,
+            model_name="Random Forest",
+            target_column=credit_card_target,
+            output_path=credit_card_dir / "metrics" / "feature_ablation.csv",
+        )
+    )
+
+    home_credit_dir = root / "home_credit" / "completion_run"
+    home_credit_prepared = home_credit_dir / "prepared"
+    home_credit_train = pd.read_csv(home_credit_prepared / "train_processed.csv")
+    home_credit_validation = pd.read_csv(
+        home_credit_prepared / "validation_processed.csv"
+    )
+    home_credit_test = pd.read_csv(home_credit_prepared / "test_processed.csv")
+    home_credit_features = [
+        column for column in home_credit_train.columns
+        if column != HOME_CREDIT_TARGET
+    ]
+    history_prefixes = (
+        "BUREAU_",
+        "PREVIOUS_",
+        "INSTALLMENT_",
+        "POS_CASH_",
+        "CREDIT_CARD_",
+    )
+    history_features = [
+        column for column in home_credit_features
+        if column.startswith(history_prefixes)
+    ]
+    if not history_features:
+        raise ValueError("No aggregated Home Credit history features were found.")
+    results["home_credit_ablation"] = (
+        cr_run_validation_selected_feature_ablation(
+            home_credit_train,
+            home_credit_validation,
+            home_credit_test,
+            {"prior_repayment_history": history_features},
+            trainer=cr_train_home_credit_random_forest,
+            model_name="Random Forest",
+            target_column=HOME_CREDIT_TARGET,
+            output_path=home_credit_dir / "metrics" / "feature_ablation.csv",
+        )
+    )
+
+    model_template = cr_create_home_credit_random_forest(
+        home_credit_train,
+        target_column=HOME_CREDIT_TARGET,
+    )
+    results["home_credit_explanation_stability"] = cr_run_explanation_stability(
+        model_template,
+        home_credit_train,
+        home_credit_test.drop(columns=[HOME_CREDIT_TARGET]),
+        home_credit_dir / "explainability",
+        target_column=HOME_CREDIT_TARGET,
+        random_states=(42, 43, 44),
+        sample_size=100,
+        background_size=100,
+    )
+    return results
+
+
+def cr_run_saved_performance_uncertainty(
+    output_root: str | Path = "outputs/credit_risk",
+    *,
+    random_state: int = 42,
+) -> dict[str, pd.DataFrame]:
+    """Refit baselines on saved training splits and write test metric intervals.
+
+    Validation splits select the threshold anew; test splits are used only for
+    metric estimation and the stratified bootstrap intervals.
+    """
+    root = Path(output_root)
+    specifications = {
+        "give_me_some_credit": (
+            GIVE_ME_SOME_CREDIT_TARGET,
+            cr_train_logistic_regression,
+            cr_train_random_forest,
+            False,
+        ),
+        "credit_card_default": (
+            CREDIT_CARD_TARGET,
+            cr_train_credit_card_logistic_regression,
+            cr_train_credit_card_random_forest,
+            False,
+        ),
+        "home_credit": (
+            HOME_CREDIT_TARGET,
+            cr_train_home_credit_logistic_regression,
+            cr_train_home_credit_random_forest,
+            True,
+        ),
+    }
+    results: dict[str, pd.DataFrame] = {}
+    for dataset, (target, logistic_trainer, forest_trainer, home_credit) in specifications.items():
+        base = root / dataset / "completion_run"
+        prepared = base / "prepared"
+        train = pd.read_csv(prepared / "train_processed.csv")
+        validation = pd.read_csv(prepared / "validation_processed.csv")
+        test = pd.read_csv(prepared / "test_processed.csv")
+        trainers = {
+            "logistic_regression": logistic_trainer,
+            "random_forest": forest_trainer,
+        }
+        rows = []
+        for model_key, trainer in trainers.items():
+            model = (
+                trainer(train, target_column=target)
+                if home_credit
+                else trainer(train)
+            )
+            threshold, _ = _select_threshold(validation, target, model)
+            positive_index = list(model.classes_).index(1)
+            probabilities = model.predict_proba(
+                test.drop(columns=[target])
+            )[:, positive_index]
+            intervals = cr_bootstrap_binary_performance(
+                test[target],
+                probabilities,
+                threshold=threshold,
+                random_state=random_state,
+            )
+            intervals.insert(0, "model", model_key)
+            intervals.insert(0, "dataset", dataset)
+            destination = base / ("metrics" if dataset != "give_me_some_credit" else "")
+            destination.mkdir(parents=True, exist_ok=True)
+            intervals.to_csv(
+                destination / f"{model_key}_performance_confidence_intervals.csv",
+                index=False,
+            )
+            rows.append(intervals)
+        results[dataset] = pd.concat(rows, ignore_index=True)
+
+    cr_build_subgroup_support_coverage(
+        str(root),
+        str(root / "subgroup_support_coverage.csv"),
+    )
+    return results
+
+
 def cr_run_component1_inspection(
     *,
     output_root: str | Path,
@@ -295,17 +520,55 @@ def main() -> None:
     parser.add_argument("--credit-card-archive")
     parser.add_argument("--home-credit-archive")
     parser.add_argument("--random-state", type=int, default=42)
+    parser.add_argument(
+        "--run-extended-analysis",
+        action="store_true",
+        help="Run the saved-split Taiwan/Home Credit ablation and stability analyses.",
+    )
+    parser.add_argument(
+        "--complete-uncertainty-review",
+        action="store_true",
+        help="Write held-out performance intervals and subgroup support coverage from saved splits.",
+    )
     args = parser.parse_args()
-    results = cr_run_component1_inspection(
-        output_root=args.output_root,
-        give_me_some_credit_csv=args.give_me_some_credit_csv,
-        credit_card_archive=args.credit_card_archive,
-        home_credit_archive=args.home_credit_archive,
-        random_state=args.random_state,
+    has_baseline_input = any(
+        (
+            args.give_me_some_credit_csv,
+            args.credit_card_archive,
+            args.home_credit_archive,
+        )
+    )
+    if not has_baseline_input and not args.run_extended_analysis and not args.complete_uncertainty_review:
+        parser.error(
+            "Provide a dataset input or use --run-extended-analysis with saved splits."
+        )
+    results = (
+        cr_run_component1_inspection(
+            output_root=args.output_root,
+            give_me_some_credit_csv=args.give_me_some_credit_csv,
+            credit_card_archive=args.credit_card_archive,
+            home_credit_archive=args.home_credit_archive,
+            random_state=args.random_state,
+        )
+        if has_baseline_input
+        else {}
     )
     for dataset, result in results.items():
         print(f"\n{dataset}")
         print(result["comparison"].to_string())
+    if args.run_extended_analysis:
+        extended = cr_run_extended_dataset_analyses(args.output_root)
+        for analysis, result in extended.items():
+            print(f"\n{analysis}")
+            if isinstance(result, pd.DataFrame):
+                print(result.to_string(index=False))
+            else:
+                print(result["summary"])
+    if args.complete_uncertainty_review:
+        uncertainty = cr_run_saved_performance_uncertainty(args.output_root)
+        for dataset, table in uncertainty.items():
+            print(f"\n{dataset} performance intervals")
+            print(table.to_string(index=False))
 
 
 if __name__ == "__main__":

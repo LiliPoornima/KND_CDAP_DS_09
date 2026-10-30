@@ -1,0 +1,9 @@
+dataset,model,metric,estimate,confidence_level,lower,upper,valid_replicates,n,positive_support,negative_support,threshold,bootstrap_method
+credit_card_default,random_forest,accuracy,0.7826666666666666,0.95,0.7729875,0.7926666666666666,1000,6000,1327,4673,0.45,stratified_by_target_class
+credit_card_default,random_forest,precision,0.5078929306794784,0.95,0.4879717796989639,0.5290064189306743,1000,6000,1327,4673,0.45,stratified_by_target_class
+credit_card_default,random_forest,recall,0.557648831951771,0.95,0.5312735493594575,0.5840241145440844,1000,6000,1327,4673,0.45,stratified_by_target_class
+credit_card_default,random_forest,f1_score,0.5316091954022989,0.95,0.5112063095689872,0.5516020274144681,1000,6000,1327,4673,0.45,stratified_by_target_class
+credit_card_default,random_forest,roc_auc,0.7567690323171594,0.95,0.7418152424798878,0.7720953606239955,1000,6000,1327,4673,0.45,stratified_by_target_class
+credit_card_default,random_forest,pr_auc_average_precision,0.5186739601752315,0.95,0.49343807960374747,0.5437839257734285,1000,6000,1327,4673,0.45,stratified_by_target_class
+credit_card_default,random_forest,brier_score,0.15409698836988475,0.95,0.14938356282322796,0.158823096874105,1000,6000,1327,4673,0.45,stratified_by_target_class
+credit_card_default,random_forest,log_loss,0.5003247314454102,0.95,0.4792192219792356,0.5265899396259792,1000,6000,1327,4673,0.45,stratified_by_target_class

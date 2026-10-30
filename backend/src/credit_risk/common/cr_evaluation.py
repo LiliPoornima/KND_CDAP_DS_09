@@ -11,6 +11,7 @@ from sklearn.metrics import (
     classification_report,
     confusion_matrix,
     f1_score,
+    log_loss,
     precision_score,
     recall_score,
     roc_auc_score,
@@ -22,6 +23,82 @@ from backend.src.credit_risk.common.cr_calibration import (
 
 
 DEFAULT_THRESHOLDS = (0.10, 0.15, 0.20, 0.25, 0.30, 0.35, 0.40, 0.45, 0.50)
+
+
+def cr_bootstrap_binary_performance(
+    y_true: Iterable[Any],
+    y_probability: Iterable[Any],
+    *,
+    threshold: float = 0.5,
+    n_bootstrap: int = 1000,
+    confidence_level: float = 0.95,
+    random_state: int = 42,
+) -> pd.DataFrame:
+    """Estimate test-metric percentile intervals with a stratified bootstrap.
+
+    Rows are resampled with replacement within each observed target class, so
+    every replicate contains both classes and preserves the test set's class
+    counts. Intervals condition on the fitted model and frozen threshold; they
+    do not include model-refit or threshold-selection uncertainty.
+    """
+    truth, probability = _validate_binary_probabilities(y_true, y_probability)
+    if (
+        not isinstance(threshold, (int, float))
+        or isinstance(threshold, bool)
+        or not 0.0 < threshold < 1.0
+    ):
+        raise ValueError("threshold must be strictly between 0 and 1.")
+    if not isinstance(n_bootstrap, int) or isinstance(n_bootstrap, bool) or n_bootstrap < 1:
+        raise ValueError("n_bootstrap must be a positive integer.")
+    if not isinstance(confidence_level, (int, float)) or not 0.0 < confidence_level < 1.0:
+        raise ValueError("confidence_level must be strictly between 0 and 1.")
+    if not isinstance(random_state, int) or isinstance(random_state, bool):
+        raise TypeError("random_state must be an integer.")
+
+    def calculate(y: np.ndarray, p: np.ndarray) -> dict[str, float]:
+        predicted = (p >= threshold).astype(int)
+        return {
+            "accuracy": float(accuracy_score(y, predicted)),
+            "precision": float(precision_score(y, predicted, zero_division=0)),
+            "recall": float(recall_score(y, predicted, zero_division=0)),
+            "f1_score": float(f1_score(y, predicted, zero_division=0)),
+            "roc_auc": float(roc_auc_score(y, p)),
+            "pr_auc_average_precision": float(average_precision_score(y, p)),
+            "brier_score": float(np.mean((p - y) ** 2)),
+            "log_loss": float(log_loss(y, p, labels=[0, 1])),
+        }
+
+    point = calculate(truth, probability)
+    class_indices = [np.flatnonzero(truth == label) for label in (0, 1)]
+    rng = np.random.default_rng(random_state)
+    bootstrap_values = {name: [] for name in point}
+    for _ in range(n_bootstrap):
+        sampled = np.concatenate(
+            [rng.choice(indices, size=len(indices), replace=True) for indices in class_indices]
+        )
+        replicate = calculate(truth[sampled], probability[sampled])
+        for name, value in replicate.items():
+            bootstrap_values[name].append(value)
+
+    alpha = (1.0 - float(confidence_level)) / 2.0
+    return pd.DataFrame(
+        [
+            {
+                "metric": name,
+                "estimate": estimate,
+                "confidence_level": float(confidence_level),
+                "lower": float(np.quantile(bootstrap_values[name], alpha)),
+                "upper": float(np.quantile(bootstrap_values[name], 1.0 - alpha)),
+                "valid_replicates": n_bootstrap,
+                "n": int(len(truth)),
+                "positive_support": int((truth == 1).sum()),
+                "negative_support": int((truth == 0).sum()),
+                "threshold": float(threshold),
+                "bootstrap_method": "stratified_by_target_class",
+            }
+            for name, estimate in point.items()
+        ]
+    )
 
 
 def _validate_binary_probabilities(

@@ -1,0 +1,9 @@
+dataset,model,metric,estimate,confidence_level,lower,upper,valid_replicates,n,positive_support,negative_support,threshold,bootstrap_method
+give_me_some_credit,logistic_regression,accuracy,0.7719,0.95,0.7672658333333333,0.7762675,1000,30000,2005,27995,0.5,stratified_by_target_class
+give_me_some_credit,logistic_regression,precision,0.1793478260869565,0.95,0.17400869272984404,0.18458563698910813,1000,30000,2005,27995,0.5,stratified_by_target_class
+give_me_some_credit,logistic_regression,recall,0.6748129675810474,0.95,0.654364089775561,0.6947630922693266,1000,30000,2005,27995,0.5,stratified_by_target_class
+give_me_some_credit,logistic_regression,f1_score,0.2833804586867735,0.95,0.2752188088901303,0.29141878985459313,1000,30000,2005,27995,0.5,stratified_by_target_class
+give_me_some_credit,logistic_regression,roc_auc,0.8006603779887662,0.95,0.7901595192675571,0.8106717014839219,1000,30000,2005,27995,0.5,stratified_by_target_class
+give_me_some_credit,logistic_regression,pr_auc_average_precision,0.32102217549311174,0.95,0.30250868226172495,0.3410379198906409,1000,30000,2005,27995,0.5,stratified_by_target_class
+give_me_some_credit,logistic_regression,brier_score,0.18084615787199618,0.95,0.17951193410043464,0.18239119236016574,1000,30000,2005,27995,0.5,stratified_by_target_class
+give_me_some_credit,logistic_regression,log_loss,0.5781723398146231,0.95,0.5670377653778113,0.5909665901308018,1000,30000,2005,27995,0.5,stratified_by_target_class
