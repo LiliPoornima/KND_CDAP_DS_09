@@ -15,8 +15,7 @@ def render(df: pd.DataFrame) -> None:
 
     st.caption(
         "Descriptive, unweighted summaries of the saved 5D_k5 "
-        "analytical sample. Patterns are not causal and are not "
-        "official national estimates."
+        "analytical sample. "
     )
 
     # --------------------------------------------------
@@ -54,7 +53,7 @@ def render(df: pd.DataFrame) -> None:
         with st.container(border=True):
             st.markdown("**Largest Observed Profile**")
             st.markdown(f"**{largest['Profile']}**")
-        
+
     # --------------------------------------------------
     # Understanding the Five Dimensions
     # --------------------------------------------------
@@ -116,7 +115,6 @@ def render(df: pd.DataFrame) -> None:
                     f"{dimension['description']}</div>",
                     unsafe_allow_html=True,
                 )
-
 
     # --------------------------------------------------
     # 3. Five dimension means
@@ -232,5 +230,3 @@ def render(df: pd.DataFrame) -> None:
         f"- Lowest observed dimension mean: **{low['Dimension']}**, "
         f"{low['mean']:.3f}."
     )
-
-   
