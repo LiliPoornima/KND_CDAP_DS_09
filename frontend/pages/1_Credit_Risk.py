@@ -113,8 +113,9 @@ def _render_borrower_prediction() -> None:
     st.subheader("Thin-file applicant assessment prototype")
     st.caption(
         "This prototype uses application details only. It estimates the Home Credit "
-        "dataset's recorded payment-difficulty outcome; it does not approve a loan, "
-        "set a loan amount, or predict a universal default horizon."
+        "dataset's recorded payment-difficulty outcome and shows a research-only "
+        "YES/NO result; that result is not a validated lender approval, does not set "
+        "a loan amount, and does not predict a universal default horizon."
     )
     st.warning(
         "The three research datasets have different labels and populations, so they "
@@ -221,20 +222,35 @@ def _render_borrower_prediction() -> None:
         st.error(f"Could not estimate risk from this application: {exc}")
         return
 
-    st.subheader("Research estimate")
+    st.subheader("Research-prototype decision")
+    prototype_decision = "NO" if probability >= bundle["threshold"] else "YES"
     result_cols = st.columns(2)
-    result_cols[0].metric("Calibrated estimate of recorded payment difficulty", f"{probability:.1%}")
-    result_cols[1].metric(
-        "Position against validation threshold",
-        "At / above threshold" if probability >= bundle["threshold"] else "Below threshold",
-    )
+    result_cols[0].metric("Research-only result: grant requested loan?", prototype_decision)
+    result_cols[1].metric("Calibrated payment-difficulty estimate", f"{probability:.1%}")
     st.caption(
-        f"Threshold {bundle['threshold']:.2f} was selected on {bundle['threshold_selection_rows']:,} "
-        f"validation cases to maximize F1. Probabilities were calibrated separately "
-        f"on {bundle['calibration_rows']:,} validation cases. "
-        "It is a research classification threshold, not a lending-policy cutoff. "
-        "This display is not an approve/decline recommendation."
+        f"The prototype returns YES below its {bundle['threshold']:.2f} threshold and NO at or "
+        f"above it. The threshold maximized F1 on {bundle['threshold_selection_rows']:,} "
+        f"validation cases; probabilities were calibrated on a separate "
+        f"{bundle['calibration_rows']:,} validation cases. This is a clear binary "
+        "research result, not a validated lender approval rule: it does not check "
+        "affordability, loss costs, local law, or the amount a lender can safely offer."
     )
+    distance_pp = abs(probability - bundle["threshold"]) * 100
+    if prototype_decision == "NO":
+        st.warning(
+            f"Why the prototype said NO: the estimated payment-difficulty risk "
+            f"({probability:.1%}) is {distance_pp:.1f} percentage points above its "
+            f"{bundle['threshold']:.1%} research cutoff. This is the model's rule, "
+            "not proof that the applicant will miss payments."
+        )
+    else:
+        st.info(
+            f"Why the prototype said YES: the estimated payment-difficulty risk "
+            f"({probability:.1%}) is {distance_pp:.1f} percentage points below its "
+            f"{bundle['threshold']:.1%} research cutoff. This only means the model "
+            "did not flag the applicant at this cutoff; it does not establish that "
+            "the requested loan is affordable or safe to grant."
+        )
 
     st.markdown("**Model reliability on held-out Home Credit applicants**")
     metrics = bundle["test_metrics"]
@@ -304,7 +320,7 @@ def _render_borrower_prediction() -> None:
             "this prototype must not be used to approve, decline, or price loans."
         )
 
-    st.markdown("**Local SHAP explanation**")
+    st.markdown("**Why did the prototype return YES or NO? — Local SHAP explanation**")
     try:
         import shap
 
@@ -312,22 +328,73 @@ def _render_borrower_prediction() -> None:
         background = pd.read_csv(train_path, usecols=APPLICATION_FEATURES).sample(
             n=40, random_state=42
         )
+        preprocessor = model.named_steps["preprocessor"]
+        classifier = model.named_steps["classifier"]
+        transformed_background = preprocessor.transform(background)
+        transformed_applicant = preprocessor.transform(applicant)
+        if hasattr(transformed_background, "toarray"):
+            transformed_background = transformed_background.toarray()
+            transformed_applicant = transformed_applicant.toarray()
+        transformed_names = list(preprocessor.get_feature_names_out())
+
         def predict_probability(values):
-            frame = pd.DataFrame(values, columns=APPLICATION_FEATURES)
-            raw_probability = model.predict_proba(frame)[:, list(model.classes_).index(1)]
+            raw_probability = classifier.predict_proba(values)[:, list(model.classes_).index(1)]
             clipped = np.clip(raw_probability, 1e-6, 1 - 1e-6)
             logits = np.log(clipped / (1 - clipped)).reshape(-1, 1)
             return bundle["calibrator"].predict_proba(logits)[:, 1]
         explainer = shap.Explainer(
-            predict_probability, background, algorithm="permutation",
-            feature_names=APPLICATION_FEATURES,
+            predict_probability, transformed_background, algorithm="permutation",
+            feature_names=transformed_names,
         )
-        shap_values = explainer(applicant, max_evals=2 * len(APPLICATION_FEATURES) + 1)
+        shap_values = explainer(
+            transformed_applicant,
+            max_evals=2 * transformed_applicant.shape[1] + 1,
+        )
+        contributions = dict.fromkeys(APPLICATION_FEATURES, 0.0)
+        for transformed_name, contribution in zip(
+            transformed_names, shap_values.values[0]
+        ):
+            candidate = transformed_name.split("__", 1)[-1]
+            source_feature = next(
+                (
+                    feature for feature in sorted(
+                        APPLICATION_FEATURES, key=len, reverse=True
+                    )
+                    if candidate == feature or candidate.startswith(feature + "_")
+                ),
+                None,
+            )
+            if source_feature is not None:
+                contributions[source_feature] += float(contribution)
         local = pd.DataFrame({
             "Feature": APPLICATION_FEATURES,
-            "SHAP value": shap_values.values[0],
+            "Application value": applicant.iloc[0].to_numpy(),
+            "SHAP value": [contributions[feature] for feature in APPLICATION_FEATURES],
         })
         local = local.reindex(local["SHAP value"].abs().sort_values().index).tail(12)
+        feature_labels = {
+            "AMT_INCOME_TOTAL": "Annual income",
+            "AMT_CREDIT": "Requested loan amount",
+            "AMT_ANNUITY": "Estimated installment amount",
+            "AMT_GOODS_PRICE": "Purchase price / goods value",
+            "CNT_CHILDREN": "Number of children",
+            "CNT_FAM_MEMBERS": "Household size",
+            "DAYS_EMPLOYED": "Employment duration (source days)",
+            "YEARS_EMPLOYED": "Years employed",
+            "CREDIT_TO_INCOME_RATIO": "Loan amount / income ratio",
+            "ANNUITY_TO_INCOME_RATIO": "Installment / income ratio",
+            "CREDIT_TO_GOODS_RATIO": "Loan amount / goods value ratio",
+            "ANNUITY_TO_CREDIT_RATIO": "Installment / loan amount ratio",
+            "NAME_CONTRACT_TYPE": "Loan product type",
+            "NAME_INCOME_TYPE": "Employment / income category",
+            "NAME_EDUCATION_TYPE": "Education category",
+            "NAME_FAMILY_STATUS": "Family status",
+            "NAME_HOUSING_TYPE": "Housing category",
+            "OCCUPATION_TYPE": "Occupation",
+            "FLAG_OWN_CAR": "Car ownership",
+            "FLAG_OWN_REALTY": "Property ownership",
+        }
+        local["Feature"] = local["Feature"].map(feature_labels).fillna(local["Feature"])
         figure = px.bar(
             local, x="SHAP value", y="Feature", orientation="h",
             title="Application features influencing this model estimate",
@@ -335,14 +402,40 @@ def _render_borrower_prediction() -> None:
         )
         figure.update_layout(coloraxis_showscale=False, xaxis_title="SHAP contribution to model probability")
         st.plotly_chart(figure, width="stretch")
-        st.caption("Positive SHAP values move this model output toward payment difficulty; negative values move it away. This is an association, not a causal explanation.")
+        st.caption(
+            "Positive SHAP contributions push the estimate toward payment difficulty; "
+            "negative contributions push it away. Values are approximate percentage- "
+            "point contributions to this model output relative to its training background. "
+            "They explain model behavior; they do not show that a feature caused risk."
+        )
+        top_up = local.nlargest(3, "SHAP value")
+        top_down = local.nsmallest(3, "SHAP value")
+        def _driver_text(rows):
+            return "; ".join(
+                f"{row['Feature']} (entered/derived value {row['Application value']}, "
+                f"{row['SHAP value'] * 100:+.1f} percentage points)"
+                for _, row in rows.iterrows()
+            )
+        if not top_up.empty and float(top_up.iloc[0]["SHAP value"]) > 0:
+            st.write("**Largest factors pushing the estimate up:** " + _driver_text(top_up[top_up["SHAP value"] > 0]))
+        if not top_down.empty and float(top_down.iloc[-1]["SHAP value"]) < 0:
+            st.write("**Largest factors pushing the estimate down:** " + _driver_text(top_down[top_down["SHAP value"] < 0]))
+        local["Contribution (percentage points)"] = local["SHAP value"] * 100
+        st.dataframe(
+            local[["Feature", "Application value", "Contribution (percentage points)"]].style.format(
+                {"Contribution (percentage points)": "{:+.1f}"}
+            ),
+            hide_index=True,
+            width="stretch",
+        )
     except Exception as exc:
         st.info(f"Risk estimate calculated; a local SHAP explanation could not be displayed: {exc}")
 
     st.info(
         "The other datasets' performance, calibration, and fairness findings remain "
         "separate in this dashboard. They are not combined into this applicant's score. "
-        "No loan approval or amount rule has been trained from these datasets."
+        "No validated lending policy or loan-amount recommendation has been learned "
+        "from these datasets."
     )
 
 
