@@ -3,19 +3,17 @@
 from pathlib import Path
 import json
 
+import numpy as np
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
 
-from backend.src.credit_risk.credit_card_default.feature_engineering import (
-    BILL_AMOUNT_COLUMNS,
-    PAYMENT_AMOUNT_COLUMNS,
-    PAYMENT_STATUS_COLUMNS,
-)
-from backend.src.credit_risk.credit_card_default.prediction import (
-    cr_prepare_credit_card_prediction,
-    cr_train_credit_card_prediction_model,
+from backend.src.credit_risk.home_credit.prediction import (
+    APPLICATION_FEATURES,
+    cr_fit_home_credit_application_model,
+    cr_prepare_home_credit_application,
+    cr_predict_home_credit_application,
 )
 
 
@@ -104,172 +102,247 @@ def _dataset_path(dataset: dict[str, str], relative_path: str) -> Path:
     return OUTPUT_ROOT / dataset["key"] / relative_path
 
 
-@st.cache_resource(show_spinner="Loading the Taiwan credit-card model…")
-def _load_interactive_prediction_model(training_path: str, modified_ns: int, size: int):
-    """Train once per app session from the existing training split."""
-    del modified_ns, size
-    return cr_train_credit_card_prediction_model(training_path)
+@st.cache_resource(show_spinner="Fitting the application-only Home Credit research model…")
+def _load_application_only_model(prepared_dir: str, signature: tuple[int, int]):
+    """Fit once from the existing train split and evaluate on held-out splits."""
+    del signature
+    return cr_fit_home_credit_application_model(prepared_dir)
 
 
-def _render_borrower_prediction(dataset: dict[str, str], comparison: pd.DataFrame | None) -> None:
-    st.subheader("Borrower input")
-    if dataset["key"] != "credit_card_default":
-        st.info(
-            "Interactive borrower prediction is currently available for the Taiwan "
-            "credit-card dataset. The other datasets use different targets and have "
-            "much larger or less suitable input schemas; their research evaluations "
-            "remain available in the other tabs."
-        )
-        return
-
+def _render_borrower_prediction() -> None:
+    st.subheader("Thin-file applicant assessment prototype")
     st.caption(
-        "Enter the account limit and the six most recent monthly repayment, bill, "
-        "and payment values. Amounts use the source dataset's units (NT dollars); "
-        "they are not converted to LKR. The model predicts next-month default in "
-        "the historical Taiwan sample."
+        "This prototype uses application details only. It estimates the Home Credit "
+        "dataset's recorded payment-difficulty outcome; it does not approve a loan, "
+        "set a loan amount, or predict a universal default horizon."
     )
-    training_path = _dataset_path(dataset, "completion_run/prepared/train_processed.csv")
-    if not training_path.is_file():
-        _show_missing(training_path)
+    st.warning(
+        "The three research datasets have different labels and populations, so they "
+        "are evaluated separately rather than blended into one score. This form uses "
+        "a Home Credit application-only model and excludes prior-history predictors. "
+        "Use the amount units represented in that source dataset; no LKR conversion "
+        "or Sri Lankan validation is available."
+    )
+
+    prepared_dir = OUTPUT_ROOT / "home_credit" / "completion_run" / "prepared"
+    train_path = prepared_dir / "train_processed.csv"
+    validation_path = prepared_dir / "validation_processed.csv"
+    test_path = prepared_dir / "test_processed.csv"
+    if not all(path.is_file() for path in (train_path, validation_path, test_path)):
+        _show_missing(train_path)
         return
 
-    with st.form("credit_card_borrower_prediction"):
-        st.markdown("**Credit account**")
-        limit = st.number_input("Credit limit", min_value=0, value=200000, step=10000)
-        st.markdown("**Repayment status by month**")
-        st.caption("0 = on time; positive values indicate delayed-payment levels; negative values are source-dataset status codes.")
-        status_inputs = st.columns(3)
-        statuses = {
-            name: status_inputs[index % 3].selectbox(
-                f"{name} status", [-2, -1, 0, 1, 2, 3, 4, 5, 6, 7, 8], index=2,
-                key=f"borrower_{name}",
-            )
-            for index, name in enumerate(PAYMENT_STATUS_COLUMNS)
-        }
+    with st.form("home_credit_thin_file_application"):
+        st.markdown("**Requested credit**")
+        amount_cols = st.columns(2)
+        income = amount_cols[0].number_input(
+            "Annual income (source data units)", min_value=0.0, value=150000.0, step=10000.0
+        )
+        requested_credit = amount_cols[1].number_input(
+            "Requested loan amount (source data units)", min_value=0.0, value=500000.0, step=10000.0
+        )
+        amount_cols = st.columns(2)
+        annuity = amount_cols[0].number_input(
+            "Estimated installment amount (source data units)", min_value=0.0, value=25000.0, step=1000.0,
+            help="Enter the proposed installment amount. Loan term is not a model feature in this dataset.",
+        )
+        goods_price = amount_cols[1].number_input(
+            "Purchase price / goods value (source data units)", min_value=0.0, value=450000.0, step=10000.0
+        )
 
-        st.markdown("**Monthly statement and payment amounts**")
-        bills: dict[str, int] = {}
-        payments: dict[str, int] = {}
-        for label, names, store in (
-            ("Statement balance", BILL_AMOUNT_COLUMNS, bills),
-            ("Payment made", PAYMENT_AMOUNT_COLUMNS, payments),
-        ):
-            st.caption(label)
-            cols = st.columns(3)
-            for index, name in enumerate(names):
-                store[name] = cols[index % 3].number_input(
-                    name,
-                    min_value=None if name in BILL_AMOUNT_COLUMNS else 0,
-                    value=0,
-                    step=1000,
-                    key=f"borrower_{name}",
-                )
-        submitted = st.form_submit_button("Predict next-month default", type="primary")
+        st.markdown("**Work and household application details**")
+        employment_options = [
+            "Working", "Commercial associate", "Pensioner", "State servant",
+            "Unemployed", "Businessman", "Student", "Maternity leave",
+        ]
+        education_options = [
+            "Secondary / secondary special", "Higher education", "Incomplete higher",
+            "Lower secondary", "Academic degree",
+        ]
+        family_options = [
+            "Married", "Single / not married", "Civil marriage", "Separated", "Widow", "Unknown",
+        ]
+        housing_options = [
+            "House / apartment", "With parents", "Municipal apartment",
+            "Rented apartment", "Office apartment", "Co-op apartment",
+        ]
+        left, right = st.columns(2)
+        contract = left.selectbox("Loan product type", ["Cash loans", "Revolving loans"])
+        income_type = right.selectbox("Employment / income category", employment_options)
+        education = left.selectbox("Education category", education_options)
+        family = right.selectbox("Family status", family_options)
+        housing = left.selectbox("Housing category", housing_options)
+        occupation_options = [
+            "Unknown / not reported", "Laborers", "Sales staff", "Core staff", "Managers",
+            "Drivers", "High skill tech staff", "Accountants", "Medicine staff",
+            "Security staff", "Cooking staff", "Cleaning staff", "Private service staff",
+            "Low-skill Laborers", "Waiters/barmen staff", "Secretaries", "Realty agents",
+            "HR staff", "IT staff",
+        ]
+        occupation_choice = right.selectbox("Occupation", occupation_options)
+        car = left.selectbox("Own a car", ["No", "Yes"])
+        property_owner = right.selectbox("Own property", ["No", "Yes"])
+        detail_cols = st.columns(3)
+        children = detail_cols[0].number_input("Number of children", min_value=0, value=0, step=1)
+        household = detail_cols[1].number_input("Household size", min_value=1, value=2, step=1)
+        years_employed = detail_cols[2].number_input(
+            "Years employed", min_value=0.0, value=5.0, step=1.0
+        )
+        submitted = st.form_submit_button("Estimate recorded payment-difficulty risk", type="primary")
 
     if not submitted:
-        st.info("Enter the account history above and submit it to see the model result.")
+        st.info("Complete the application fields and submit to calculate a research risk estimate.")
         return
 
-    signature = training_path.stat()
+    signature = tuple(path.stat().st_mtime_ns for path in (train_path, validation_path, test_path))
     try:
-        model = _load_interactive_prediction_model(
-            str(training_path), signature.st_mtime_ns, signature.st_size
-        )
+        bundle = _load_application_only_model(str(prepared_dir), signature)
+        raw = pd.DataFrame([{
+            "NAME_CONTRACT_TYPE": contract,
+            "FLAG_OWN_CAR": "Y" if car == "Yes" else "N",
+            "FLAG_OWN_REALTY": "Y" if property_owner == "Yes" else "N",
+            "CNT_CHILDREN": children,
+            "AMT_INCOME_TOTAL": income,
+            "AMT_CREDIT": requested_credit,
+            "AMT_ANNUITY": annuity,
+            "AMT_GOODS_PRICE": goods_price,
+            "NAME_INCOME_TYPE": income_type,
+            "NAME_EDUCATION_TYPE": education,
+            "NAME_FAMILY_STATUS": family,
+            "NAME_HOUSING_TYPE": housing,
+            "DAYS_EMPLOYED": -years_employed * 365.25,
+            "OCCUPATION_TYPE": None if occupation_choice == "Unknown / not reported" else occupation_choice,
+            "CNT_FAM_MEMBERS": household,
+        }])
+        applicant = cr_prepare_home_credit_application(raw)
+        model = bundle["model"]
+        probability = cr_predict_home_credit_application(bundle, applicant)
     except Exception as exc:
-        st.error(f"Could not load the saved training split for prediction: {exc}")
+        st.error(f"Could not estimate risk from this application: {exc}")
         return
 
-    raw = {"LIMIT_BAL": [limit], **{key: [value] for key, value in statuses.items()},
-           **{key: [value] for key, value in bills.items()},
-           **{key: [value] for key, value in payments.items()}}
-    raw_frame = pd.DataFrame(raw)
-    try:
-        train = pd.read_csv(training_path, nrows=1)
-        feature_columns = [column for column in train.columns if column != "default.payment.next.month"]
-        applicant = cr_prepare_credit_card_prediction(raw_frame, feature_columns)
-        probability = float(model.predict_proba(applicant)[0, list(model.classes_).index(1)])
-        row = comparison.loc[comparison["Model"] == "Random Forest"] if comparison is not None and "Model" in comparison else pd.DataFrame()
-        threshold = float(row.iloc[0]["Validation-selected threshold"]) if not row.empty else 0.5
-    except Exception as exc:
-        st.error(f"Could not score this input: {exc}")
-        return
-
-    st.subheader("Prediction results")
+    st.subheader("Research estimate")
     result_cols = st.columns(2)
-    result_cols[0].metric("Predicted class", "Higher risk" if probability >= threshold else "Lower risk")
-    result_cols[1].metric("Estimated default probability", f"{probability:.1%}")
+    result_cols[0].metric("Calibrated estimate of recorded payment difficulty", f"{probability:.1%}")
+    result_cols[1].metric(
+        "Position against validation threshold",
+        "At / above threshold" if probability >= bundle["threshold"] else "Below threshold",
+    )
     st.caption(
-        f"Class threshold: {threshold:.3f}, selected on validation data. The label is a "
-        "model classification, not an approval decision or an individual confidence interval."
+        f"Threshold {bundle['threshold']:.2f} was selected on {bundle['threshold_selection_rows']:,} "
+        f"validation cases to maximize F1. Probabilities were calibrated separately "
+        f"on {bundle['calibration_rows']:,} validation cases. "
+        "It is a research classification threshold, not a lending-policy cutoff. "
+        "This display is not an approve/decline recommendation."
     )
 
-    st.markdown("**Model reliability on the separate held-out test set**")
-    if not row.empty:
-        reliability = row.iloc[0]
-        reliability_specs = (
-            ("Test ROC-AUC", "ROC-AUC", ".3f"),
-            ("Test precision", "Precision", ".3f"),
-            ("Test recall", "Recall", ".3f"),
-            ("Test F1-score", "F1-score", ".3f"),
-            ("Test Brier score", "Brier score", ".3f"),
-        )
-        reliability_cols = st.columns(len(reliability_specs))
-        for index, (column, label, fmt) in enumerate(reliability_specs):
-            if column in reliability:
-                reliability_cols[index].metric(label, format(float(reliability[column]), fmt))
-    st.caption("These metrics describe the model on held-out historical records; they are not confidence scores for this applicant.")
-
-    calibration_path = _dataset_path(
-        dataset, f"{dataset['metrics_dir']}/random_forest_calibration_bins.csv"
+    st.markdown("**Model reliability on held-out Home Credit applicants**")
+    metrics = bundle["test_metrics"]
+    reliability_specs = (
+        ("roc_auc", "ROC-AUC"), ("pr_auc_average_precision", "PR-AUC"),
+        ("precision", "Precision"), ("recall", "Recall"),
+        ("f1_score", "F1-score"), ("brier_score", "Brier score"),
+        ("expected_calibration_error", "ECE"),
     )
-    calibration = _load_csv(str(calibration_path))
-    if calibration is not None and not calibration.empty:
-        calibration_figure = go.Figure()
-        calibration_figure.add_trace(go.Scatter(
-            x=[0, 1], y=[0, 1], mode="lines", name="Perfect calibration",
-            line={"dash": "dash", "color": "#7B8794"},
-        ))
-        calibration_figure.add_trace(go.Scatter(
-            x=calibration["mean_predicted_probability"],
-            y=calibration["observed_rate"], mode="lines+markers",
-            name="Random Forest", text=calibration["count"].map(lambda n: f"n={n:,}"),
-            hovertemplate="Predicted: %{x:.3f}<br>Observed: %{y:.3f}<br>%{text}<extra></extra>",
-        ))
-        calibration_figure.update_layout(
-            title="Held-out Random Forest calibration curve",
-            xaxis_title="Mean predicted probability", yaxis_title="Observed default rate",
-            xaxis={"range": [0, 1]}, yaxis={"range": [0, 1]},
+    reliability_cols = st.columns(len(reliability_specs))
+    for index, (key, label) in enumerate(reliability_specs):
+        reliability_cols[index].metric(label, f"{metrics[key]:.3f}")
+    st.caption(
+        f"Held-out test: {bundle['test_rows']:,} records. A stricter subset with "
+        f"zero recorded counts in all five linked-history tables has "
+        f"{bundle['no_history_rows']:,} records and {bundle['no_history_events']:,} "
+        "positive outcomes; this small subset limits conclusions about completely "
+        "history-free applicants."
+    )
+    if bundle["no_history_metrics"] is not None:
+        st.caption(
+            "In that no-linked-history subset, test ROC-AUC was "
+            f"{bundle['no_history_metrics']['roc_auc']:.3f} and Brier score was "
+            f"{bundle['no_history_metrics']['brier_score']:.3f}; these estimates are "
+            "uncertain because the subset is small."
         )
-        st.plotly_chart(calibration_figure, width="stretch")
+
+    calibration = pd.DataFrame(metrics["calibration_bins"])
+    if not calibration.empty:
+        curve = go.Figure()
+        curve.add_trace(go.Scatter(x=[0, 1], y=[0, 1], mode="lines", name="Perfect calibration", line={"dash": "dash"}))
+        curve.add_trace(go.Scatter(
+            x=calibration["mean_predicted_probability"], y=calibration["observed_rate"],
+            mode="lines+markers", name="Application-only Random Forest",
+        ))
+        curve.update_layout(
+            title="Held-out reliability curve", xaxis_title="Mean predicted probability",
+            yaxis_title="Observed payment-difficulty rate", xaxis={"range": [0, 1]}, yaxis={"range": [0, 1]},
+        )
+        st.plotly_chart(curve, width="stretch")
+
+    st.markdown("**Population fairness audit for this application-only model**")
+    st.caption(
+        "Age and gender are audit-only fields: neither is requested in the form nor "
+        "used as a model predictor. These held-out subgroup rates are not individual "
+        "fairness guarantees, and this prototype's interactive audit does not yet "
+        "include bootstrap confidence intervals."
+    )
+    for attribute, result in bundle["fairness_results"].items():
+        st.markdown(f"**{attribute.title()} groups**")
+        st.dataframe(result["group_metrics"], hide_index=True, width="stretch")
+        gap = result["disparities"]
+        gap_frame = pd.DataFrame([{
+            "Selection-rate gap": gap["selection_rate_difference"],
+            "TPR gap": gap["true_positive_rate_difference"],
+            "FPR gap": gap["false_positive_rate_difference"],
+            "Equalized-odds gap": gap["equalized_odds_difference"],
+        }])
+        st.dataframe(gap_frame.style.format("{:.3f}"), hide_index=True, width="stretch")
+    age_tpr_gap = bundle["fairness_results"]["age"]["disparities"][
+        "true_positive_rate_difference"
+    ]
+    if age_tpr_gap is not None:
+        st.warning(
+            f"The held-out age-group true-positive-rate gap is {age_tpr_gap:.3f}. "
+            "This is a substantial difference in error rates and is another reason "
+            "this prototype must not be used to approve, decline, or price loans."
+        )
 
     st.markdown("**Local SHAP explanation**")
     try:
         import shap
 
-        explainer = shap.TreeExplainer(model.named_steps["classifier"])
-        values = explainer.shap_values(applicant)
-        if isinstance(values, list):
-            contributions = values[list(model.classes_).index(1)][0]
-        else:
-            array = getattr(values, "values", values)
-            contributions = array[0]
-            if getattr(contributions, "ndim", 1) == 2:
-                contributions = contributions[:, list(model.classes_).index(1)]
-        explanation = pd.DataFrame({"Feature": feature_columns, "SHAP value": contributions})
-        explanation = explanation.reindex(explanation["SHAP value"].abs().sort_values().index).tail(12)
-        fig = px.bar(explanation, x="SHAP value", y="Feature", orientation="h",
-                     title="Features contributing most to this model output",
-                     color="SHAP value", color_continuous_scale="RdBu_r")
-        fig.update_layout(coloraxis_showscale=False, xaxis_title="SHAP contribution (model output scale)")
-        st.plotly_chart(fig, width="stretch")
-        st.caption("Positive values push the model output toward default; negative values push it away. SHAP describes this fitted model, not causation.")
+        train_path = prepared_dir / "train_processed.csv"
+        background = pd.read_csv(train_path, usecols=APPLICATION_FEATURES).sample(
+            n=40, random_state=42
+        )
+        def predict_probability(values):
+            frame = pd.DataFrame(values, columns=APPLICATION_FEATURES)
+            raw_probability = model.predict_proba(frame)[:, list(model.classes_).index(1)]
+            clipped = np.clip(raw_probability, 1e-6, 1 - 1e-6)
+            logits = np.log(clipped / (1 - clipped)).reshape(-1, 1)
+            return bundle["calibrator"].predict_proba(logits)[:, 1]
+        explainer = shap.Explainer(
+            predict_probability, background, algorithm="permutation",
+            feature_names=APPLICATION_FEATURES,
+        )
+        shap_values = explainer(applicant, max_evals=2 * len(APPLICATION_FEATURES) + 1)
+        local = pd.DataFrame({
+            "Feature": APPLICATION_FEATURES,
+            "SHAP value": shap_values.values[0],
+        })
+        local = local.reindex(local["SHAP value"].abs().sort_values().index).tail(12)
+        figure = px.bar(
+            local, x="SHAP value", y="Feature", orientation="h",
+            title="Application features influencing this model estimate",
+            color="SHAP value", color_continuous_scale="RdBu_r",
+        )
+        figure.update_layout(coloraxis_showscale=False, xaxis_title="SHAP contribution to model probability")
+        st.plotly_chart(figure, width="stretch")
+        st.caption("Positive SHAP values move this model output toward payment difficulty; negative values move it away. This is an association, not a causal explanation.")
     except Exception as exc:
-        st.info(f"The prediction was produced, but a local SHAP chart could not be generated: {exc}")
+        st.info(f"Risk estimate calculated; a local SHAP explanation could not be displayed: {exc}")
 
     st.info(
-        "Group-wise selection rates, true-positive rates, false-positive rates, and "
-        "gap estimates are shown in the Fairness tab. They are population-level "
-        "evaluation results; this form does not claim an individual fairness score."
+        "The other datasets' performance, calibration, and fairness findings remain "
+        "separate in this dashboard. They are not combined into this applicant's score. "
+        "No loan approval or amount rule has been trained from these datasets."
     )
 
 
@@ -1022,11 +1095,12 @@ def _render_ablation(dataset: dict[str, str]) -> None:
 
 st.title("Credit Risk")
 st.caption(
-    "Component 1 research results: independent public datasets, validation-selected "
-    "thresholds, held-out evaluation, subgroup fairness, calibration, and explanations."
+    "Component 1 research results across independent public datasets, plus a "
+    "Home Credit application-only risk-estimate prototype for applicants without "
+    "prior repayment inputs."
 )
 
-dataset_name = st.selectbox("Dataset", list(DATASETS), key="credit_risk_dataset")
+dataset_name = st.selectbox("Dataset for research results", list(DATASETS), key="credit_risk_dataset")
 dataset = DATASETS[dataset_name]
 comparison_path = _dataset_path(dataset, dataset["comparison"])
 comparison = _load_csv(str(comparison_path))
@@ -1102,7 +1176,7 @@ if comparison is not None and not comparison.empty:
 
 prediction_tab, performance_tab, fairness_tab, explanation_tab, ablation_tab, report_tab = st.tabs(
     [
-        "Borrower prediction",
+        "Thin-file assessment",
         "Performance & calibration",
         "Fairness",
         "Explainability",
@@ -1112,7 +1186,7 @@ prediction_tab, performance_tab, fairness_tab, explanation_tab, ablation_tab, re
 )
 
 with prediction_tab:
-    _render_borrower_prediction(dataset, comparison)
+    _render_borrower_prediction()
 
 with performance_tab:
     st.subheader("Model comparison")
