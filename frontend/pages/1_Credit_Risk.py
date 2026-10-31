@@ -8,6 +8,16 @@ import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
 
+from backend.src.credit_risk.credit_card_default.feature_engineering import (
+    BILL_AMOUNT_COLUMNS,
+    PAYMENT_AMOUNT_COLUMNS,
+    PAYMENT_STATUS_COLUMNS,
+)
+from backend.src.credit_risk.credit_card_default.prediction import (
+    cr_prepare_credit_card_prediction,
+    cr_train_credit_card_prediction_model,
+)
+
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 OUTPUT_ROOT = PROJECT_ROOT / "outputs" / "credit_risk"
@@ -92,6 +102,175 @@ def _load_text(
 
 def _dataset_path(dataset: dict[str, str], relative_path: str) -> Path:
     return OUTPUT_ROOT / dataset["key"] / relative_path
+
+
+@st.cache_resource(show_spinner="Loading the Taiwan credit-card model…")
+def _load_interactive_prediction_model(training_path: str, modified_ns: int, size: int):
+    """Train once per app session from the existing training split."""
+    del modified_ns, size
+    return cr_train_credit_card_prediction_model(training_path)
+
+
+def _render_borrower_prediction(dataset: dict[str, str], comparison: pd.DataFrame | None) -> None:
+    st.subheader("Borrower input")
+    if dataset["key"] != "credit_card_default":
+        st.info(
+            "Interactive borrower prediction is currently available for the Taiwan "
+            "credit-card dataset. The other datasets use different targets and have "
+            "much larger or less suitable input schemas; their research evaluations "
+            "remain available in the other tabs."
+        )
+        return
+
+    st.caption(
+        "Enter the account limit and the six most recent monthly repayment, bill, "
+        "and payment values. Amounts use the source dataset's units (NT dollars); "
+        "they are not converted to LKR. The model predicts next-month default in "
+        "the historical Taiwan sample."
+    )
+    training_path = _dataset_path(dataset, "completion_run/prepared/train_processed.csv")
+    if not training_path.is_file():
+        _show_missing(training_path)
+        return
+
+    with st.form("credit_card_borrower_prediction"):
+        st.markdown("**Credit account**")
+        limit = st.number_input("Credit limit", min_value=0, value=200000, step=10000)
+        st.markdown("**Repayment status by month**")
+        st.caption("0 = on time; positive values indicate delayed-payment levels; negative values are source-dataset status codes.")
+        status_inputs = st.columns(3)
+        statuses = {
+            name: status_inputs[index % 3].selectbox(
+                f"{name} status", [-2, -1, 0, 1, 2, 3, 4, 5, 6, 7, 8], index=2,
+                key=f"borrower_{name}",
+            )
+            for index, name in enumerate(PAYMENT_STATUS_COLUMNS)
+        }
+
+        st.markdown("**Monthly statement and payment amounts**")
+        bills: dict[str, int] = {}
+        payments: dict[str, int] = {}
+        for label, names, store in (
+            ("Statement balance", BILL_AMOUNT_COLUMNS, bills),
+            ("Payment made", PAYMENT_AMOUNT_COLUMNS, payments),
+        ):
+            st.caption(label)
+            cols = st.columns(3)
+            for index, name in enumerate(names):
+                store[name] = cols[index % 3].number_input(
+                    name,
+                    min_value=None if name in BILL_AMOUNT_COLUMNS else 0,
+                    value=0,
+                    step=1000,
+                    key=f"borrower_{name}",
+                )
+        submitted = st.form_submit_button("Predict next-month default", type="primary")
+
+    if not submitted:
+        st.info("Enter the account history above and submit it to see the model result.")
+        return
+
+    signature = training_path.stat()
+    try:
+        model = _load_interactive_prediction_model(
+            str(training_path), signature.st_mtime_ns, signature.st_size
+        )
+    except Exception as exc:
+        st.error(f"Could not load the saved training split for prediction: {exc}")
+        return
+
+    raw = {"LIMIT_BAL": [limit], **{key: [value] for key, value in statuses.items()},
+           **{key: [value] for key, value in bills.items()},
+           **{key: [value] for key, value in payments.items()}}
+    raw_frame = pd.DataFrame(raw)
+    try:
+        train = pd.read_csv(training_path, nrows=1)
+        feature_columns = [column for column in train.columns if column != "default.payment.next.month"]
+        applicant = cr_prepare_credit_card_prediction(raw_frame, feature_columns)
+        probability = float(model.predict_proba(applicant)[0, list(model.classes_).index(1)])
+        row = comparison.loc[comparison["Model"] == "Random Forest"] if comparison is not None and "Model" in comparison else pd.DataFrame()
+        threshold = float(row.iloc[0]["Validation-selected threshold"]) if not row.empty else 0.5
+    except Exception as exc:
+        st.error(f"Could not score this input: {exc}")
+        return
+
+    st.subheader("Prediction results")
+    result_cols = st.columns(2)
+    result_cols[0].metric("Predicted class", "Higher risk" if probability >= threshold else "Lower risk")
+    result_cols[1].metric("Estimated default probability", f"{probability:.1%}")
+    st.caption(
+        f"Class threshold: {threshold:.3f}, selected on validation data. The label is a "
+        "model classification, not an approval decision or an individual confidence interval."
+    )
+
+    st.markdown("**Model reliability on the separate held-out test set**")
+    if not row.empty:
+        reliability = row.iloc[0]
+        reliability_specs = (
+            ("Test ROC-AUC", "ROC-AUC", ".3f"),
+            ("Test precision", "Precision", ".3f"),
+            ("Test recall", "Recall", ".3f"),
+            ("Test F1-score", "F1-score", ".3f"),
+            ("Test Brier score", "Brier score", ".3f"),
+        )
+        reliability_cols = st.columns(len(reliability_specs))
+        for index, (column, label, fmt) in enumerate(reliability_specs):
+            if column in reliability:
+                reliability_cols[index].metric(label, format(float(reliability[column]), fmt))
+    st.caption("These metrics describe the model on held-out historical records; they are not confidence scores for this applicant.")
+
+    calibration_path = _dataset_path(
+        dataset, f"{dataset['metrics_dir']}/random_forest_calibration_bins.csv"
+    )
+    calibration = _load_csv(str(calibration_path))
+    if calibration is not None and not calibration.empty:
+        calibration_figure = go.Figure()
+        calibration_figure.add_trace(go.Scatter(
+            x=[0, 1], y=[0, 1], mode="lines", name="Perfect calibration",
+            line={"dash": "dash", "color": "#7B8794"},
+        ))
+        calibration_figure.add_trace(go.Scatter(
+            x=calibration["mean_predicted_probability"],
+            y=calibration["observed_rate"], mode="lines+markers",
+            name="Random Forest", text=calibration["count"].map(lambda n: f"n={n:,}"),
+            hovertemplate="Predicted: %{x:.3f}<br>Observed: %{y:.3f}<br>%{text}<extra></extra>",
+        ))
+        calibration_figure.update_layout(
+            title="Held-out Random Forest calibration curve",
+            xaxis_title="Mean predicted probability", yaxis_title="Observed default rate",
+            xaxis={"range": [0, 1]}, yaxis={"range": [0, 1]},
+        )
+        st.plotly_chart(calibration_figure, width="stretch")
+
+    st.markdown("**Local SHAP explanation**")
+    try:
+        import shap
+
+        explainer = shap.TreeExplainer(model.named_steps["classifier"])
+        values = explainer.shap_values(applicant)
+        if isinstance(values, list):
+            contributions = values[list(model.classes_).index(1)][0]
+        else:
+            array = getattr(values, "values", values)
+            contributions = array[0]
+            if getattr(contributions, "ndim", 1) == 2:
+                contributions = contributions[:, list(model.classes_).index(1)]
+        explanation = pd.DataFrame({"Feature": feature_columns, "SHAP value": contributions})
+        explanation = explanation.reindex(explanation["SHAP value"].abs().sort_values().index).tail(12)
+        fig = px.bar(explanation, x="SHAP value", y="Feature", orientation="h",
+                     title="Features contributing most to this model output",
+                     color="SHAP value", color_continuous_scale="RdBu_r")
+        fig.update_layout(coloraxis_showscale=False, xaxis_title="SHAP contribution (model output scale)")
+        st.plotly_chart(fig, width="stretch")
+        st.caption("Positive values push the model output toward default; negative values push it away. SHAP describes this fitted model, not causation.")
+    except Exception as exc:
+        st.info(f"The prediction was produced, but a local SHAP chart could not be generated: {exc}")
+
+    st.info(
+        "Group-wise selection rates, true-positive rates, false-positive rates, and "
+        "gap estimates are shown in the Fairness tab. They are population-level "
+        "evaluation results; this form does not claim an individual fairness score."
+    )
 
 
 def _show_missing(path: Path) -> None:
@@ -921,8 +1100,9 @@ if comparison is not None and not comparison.empty:
         help=f"Selected for {best_row['Model']} on the validation split.",
     )
 
-performance_tab, fairness_tab, explanation_tab, ablation_tab, report_tab = st.tabs(
+prediction_tab, performance_tab, fairness_tab, explanation_tab, ablation_tab, report_tab = st.tabs(
     [
+        "Borrower prediction",
         "Performance & calibration",
         "Fairness",
         "Explainability",
@@ -930,6 +1110,9 @@ performance_tab, fairness_tab, explanation_tab, ablation_tab, report_tab = st.ta
         "Research report",
     ]
 )
+
+with prediction_tab:
+    _render_borrower_prediction(dataset, comparison)
 
 with performance_tab:
     st.subheader("Model comparison")
