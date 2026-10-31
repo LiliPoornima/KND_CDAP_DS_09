@@ -526,9 +526,4 @@ with tabs[4]:
             3. **Production Deployment:** No live streaming infrastructure, distributed latency testing, online asynchronous inference, or concurrent drift handling was tested.
             4. **Significance Tests:** Formal statistical significance testing (e.g. paired t-tests across seeds) was not conducted; metrics report empirical sample means and sample standard deviations across 5 seeds.
             """
-        )
 
-st.divider()
-st.caption(
-    "Component 04: Fraud Detection Dashboard | Branch: feature/component-04-Early-warning-data-preparation | Unit Tests: 101 passed"
-)

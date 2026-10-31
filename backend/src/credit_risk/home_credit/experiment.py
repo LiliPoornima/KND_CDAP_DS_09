@@ -10,6 +10,9 @@ from backend.src.credit_risk.common.cr_evaluation import (
     cr_bootstrap_binary_performance,
     cr_evaluate_binary_probabilities,
 )
+from backend.src.credit_risk.common.cr_calibration import (
+    cr_group_calibration_summary,
+)
 from backend.src.credit_risk.fairness.cr_fairness import (
     cr_analyze_group_fairness,
     cr_bootstrap_group_fairness,
@@ -137,6 +140,7 @@ def cr_run_home_credit_baselines(
     validation_X = validation_df[predictor_columns]
     test_X = test_df[predictor_columns]
     model_metrics: dict[str, dict[str, Any]] = {}
+    model_probabilities: dict[str, Any] = {}
     performance_intervals: dict[str, pd.DataFrame] = {}
     training_diagnostics: list[dict[str, Any]] = []
     threshold_tables = []
@@ -187,6 +191,7 @@ def cr_run_home_credit_baselines(
             random_state=42,
         )
         model_metrics[model_name] = metrics
+        model_probabilities[model_name] = test_probability
         comparison_rows.append(
             {
                 "Model": model_name,
@@ -223,6 +228,8 @@ def cr_run_home_credit_baselines(
             raise ValueError("test_groups must be row-aligned with test_df.")
         fairness_results = {}
         fairness_uncertainty = {}
+        subgroup_calibration_metrics = []
+        subgroup_calibration_bins = []
         for model_name, metrics in model_metrics.items():
             per_attribute = {}
             uncertainty_by_attribute = {}
@@ -230,6 +237,18 @@ def cr_run_home_credit_baselines(
                 group_values = test_groups[attribute]
                 if str(attribute).strip().lower() in {"age", "age_years"}:
                     group_values = cr_bin_age_groups(group_values)
+                calibration = cr_group_calibration_summary(
+                    test_truth,
+                    model_probabilities[model_name],
+                    group_values,
+                    attribute_name=str(attribute),
+                )
+                calibration_metrics = calibration["group_metrics"].copy()
+                calibration_metrics.insert(0, "Model", model_name)
+                subgroup_calibration_metrics.append(calibration_metrics)
+                calibration_bins = calibration["calibration_bins"].copy()
+                calibration_bins.insert(0, "Model", model_name)
+                subgroup_calibration_bins.append(calibration_bins)
                 group_fairness = cr_analyze_group_fairness(
                     test_truth,
                     metrics["predictions"],
@@ -248,6 +267,12 @@ def cr_run_home_credit_baselines(
             fairness_uncertainty[model_name] = uncertainty_by_attribute
         result["fairness"] = fairness_results
         result["fairness_uncertainty"] = fairness_uncertainty
+        result["subgroup_calibration_metrics"] = pd.concat(
+            subgroup_calibration_metrics, ignore_index=True
+        )
+        result["subgroup_calibration_bins"] = pd.concat(
+            subgroup_calibration_bins, ignore_index=True
+        )
 
     if output_dir is not None:
         destination = Path(output_dir)
@@ -305,5 +330,12 @@ def cr_run_home_credit_baselines(
                     destination / f"{safe_name}_fairness_gaps.csv",
                     index=False,
                 )
+        if "subgroup_calibration_metrics" in result:
+            result["subgroup_calibration_metrics"].to_csv(
+                destination / "subgroup_calibration_metrics.csv", index=False
+            )
+            result["subgroup_calibration_bins"].to_csv(
+                destination / "subgroup_calibration_bins.csv", index=False
+            )
 
     return result
