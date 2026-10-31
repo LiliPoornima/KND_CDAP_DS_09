@@ -22,15 +22,64 @@ Feature ablations show dataset-specific patterns. Removing Home Credit's 75 aggr
 
 The supported-group audit found differences across age, dependents, gender, sex, education, and marital-status categories where those fields exist. For the Home Credit Random Forest, the largest reported gaps were age-band selection rate (0.442; 95% CI 0.421–0.463) and true-positive rate (0.676; 95% CI 0.579–0.753). Its two supported gender categories had a selection-rate gap of 0.057 (95% CI 0.051–0.064).
 
-This is a partial audit, not a comprehensive fairness determination. Give Me Some Credit has no sex/gender, race, or ethnicity fields; none of the three datasets has race or ethnicity. Several Taiwan categories and Home Credit's `XNA` gender category have too little support for stable rate comparisons. Fairness was assessed for the full feature models, not for each ablation, so the effect of removing feature groups on fairness remains unanswered.
+This is a partial audit, not a comprehensive fairness determination. Give Me Some Credit has no sex/gender, race, or ethnicity fields; none of the three datasets has race or ethnicity. Several Taiwan categories and Home Credit's `XNA` gender category have too little support for stable rate comparisons. The additional ablation audit below compares subgroup rates across the feature scenarios, but it does not establish causal effects or provide uncertainty intervals for differences between scenarios.
+
+#### Subgroup outcomes across feature ablations
+
+For each predefined ablation, the model was refitted on the same training split, its threshold was selected on validation data, and rates were calculated once on the held-out test split. Groups below the project support rules remain in the saved tables with their support flags; gap values are calculated only across eligible groups for that metric. These comparisons are descriptive and their gaps do not have scenario-to-scenario confidence intervals.
+
+| Dataset / audit attribute | Full-model gap | Feature removal | Gap after removal | Reading |
+|---|---:|---|---:|---|
+| Give Me Some Credit / age selection rate | 0.139 | delinquency aggregates | 0.146 | Slightly higher |
+| Give Me Some Credit / age TPR | 0.226 | delinquency aggregates | 0.272 | Higher |
+| Taiwan / age selection rate | 0.094 | repayment-status history | 0.166 | Higher |
+| Taiwan / education selection rate | 0.212 | repayment-status history | 0.286 | Higher; only support-eligible groups contribute |
+| Taiwan / age selection rate | 0.094 | monthly amount history | 0.037 | Lower |
+| Taiwan / marital-status TPR | 0.066 | monthly amount history | 0.253 | Higher; only eligible groups contribute |
+| Home Credit / age selection rate | 0.442 | prior repayment history | 0.457 | Slightly higher; large in both scenarios |
+| Home Credit / age TPR | 0.676 | prior repayment history | 0.689 | Slightly higher; large in both scenarios |
+
+The direction and size of the gap changes depend on both dataset and audit attribute. For example, removing Taiwan monthly amount history reduced the age selection gap but increased the marital-status TPR gap. This highlights a performance and subgroup trade-off for these particular samples; it does not show that any feature group causes unfairness. Full per-group rates and support counts are saved as `feature_ablation_subgroup_metrics.csv` beside each dataset's ablation results and are shown in the dashboard's Feature ablation tab.
 
 ### RQ3 — Are predicted probabilities calibrated?
 
 Calibration was assessed with Brier score, log loss, expected calibration error (ECE), and reliability bins. Random Forest had lower Brier and ECE than Logistic Regression on all three test sets. ECE used 10 equal-width probability bins. No post-hoc calibration method was fitted, and the reported metrics do not by themselves establish that probabilities are calibrated for future populations.
 
+#### Calibration within observed groups
+
+The saved test probabilities were also evaluated within each observed audit group for both baseline models and for each Random Forest feature-ablation scenario. The table shows the unweighted mean of the group ECE values across reportable age groups; age groups are reportable only when they meet the project rules of at least 30 rows and at least 5 events and 5 non-events. Other attributes and every group, including limited-support groups, remain in the detailed output with support flags. Each subgroup ECE uses the same 10 equal-width bins as the overall analysis.
+
+| Dataset | Reportable age groups | Logistic Regression mean subgroup ECE | Random Forest mean subgroup ECE |
+|---|---:|---:|---:|
+| Give Me Some Credit | 6/6 | 0.380 | 0.057 |
+| Taiwan | 5/6 | 0.226 | 0.103 |
+| Home Credit | 6/6 | 0.329 | 0.084 |
+
+Among the Random Forest scenarios, the unweighted mean age-group ECE was 0.057 for full Give Me Some Credit and 0.055 without the delinquency aggregates; 0.103 for full Taiwan, 0.121 without repayment-status history, 0.182 without monthly amount history, and 0.105 without the derived summaries; and 0.084 for full Home Credit versus 0.087 without prior repayment history. The Taiwan monthly-amount removal had the largest increase in this age-group summary. For the two baseline models, per-group 95% calibration intervals were estimated by resampling within each observed group and target class, holding the 10 equal-width ECE bins fixed. These intervals condition on the fitted models, probabilities, and observed group outcome counts; they do not include model-refit or population-shift uncertainty. Feature-ablation subgroup calibration remains descriptive without intervals, and the baseline intervals have no multiple-comparison adjustment. ECE depends on the chosen bins, while Brier score and log loss also reflect factors beyond calibration. Calibration-in-the-large is saved as mean predicted probability minus observed outcome rate, so positive values indicate average overprediction in that subgroup.
+
+For the 18–24 age group, baseline ECE estimates and within-group 95% intervals were:
+
+| Dataset | Logistic Regression ECE (95% interval) | Random Forest ECE (95% interval) |
+|---|---:|---:|
+| Give Me Some Credit | 0.491 (0.482–0.501) | 0.071 (0.054–0.110) |
+| Taiwan | 0.251 (0.235–0.268) | 0.129 (0.115–0.152) |
+| Home Credit | 0.450 (0.443–0.458) | 0.140 (0.135–0.145) |
+
+This is a descriptive per-group comparison; overlapping or non-overlapping intervals are not a formal paired model test. Taiwan's age 65+ group does not meet the minimum support rule and has no interval. Other group results and support flags are retained in the saved tables.
+
+Per-group metrics and reliability bins are saved as `subgroup_calibration_metrics.csv` and `subgroup_calibration_bins.csv`; baseline intervals are in `subgroup_calibration_confidence_intervals.csv`. Feature-scenario versions use the `feature_ablation_subgroup_calibration` filename and currently have no intervals. These outputs are available in the Credit Risk page's Performance & calibration and Feature ablation tabs.
+
 ### RQ4 — Are model explanations stable across fits?
 
-Three-seed Random Forest explanation comparisons had mean feature-rank correlation / top-10 Jaccard overlap / attribution cosine similarity of 0.997 / 1.000 / 0.989 for Give Me Some Credit, 0.918 / 0.818 / 0.979 for Taiwan, and 0.991 / 0.768 / 0.932 for Home Credit. These are repeated-fit checks on the available analysis setup, not repeated-split or population stability results. SHAP values describe model associations and are not causal explanations.
+Three-seed Random Forest explanation comparisons had mean feature-rank correlation / top-10 Jaccard overlap / attribution cosine similarity of 0.997 / 1.000 / 0.989 for Give Me Some Credit, 0.918 / 0.818 / 0.979 for Taiwan, and 0.991 / 0.768 / 0.932 for Home Credit. A second check refit Random Forests on five different stratified 70% samples of the training partition, holding the estimator seed, preprocessing, 100 held-out explanation rows, and 100-row training-only SHAP background fixed.
+
+| Dataset | Pairwise fits | Mean feature-rank correlation | Mean top-10 Jaccard overlap | Mean attribution cosine similarity |
+|---|---:|---:|---:|---:|
+| Give Me Some Credit | 10 | 0.986 | 0.891 | 0.948 |
+| Taiwan | 10 | 0.952 | 0.873 | 0.933 |
+| Home Credit | 10 | 0.988 | 0.855 | 0.918 |
+
+The rankings and signed attribution patterns were similar across these resamples, while top-10 overlap was lower than the rank correlations, especially for Home Credit. For Home Credit, preprocessing was fit once on the full training partition and held fixed so category encoding and feature names stayed identical; this isolates classifier sensitivity to row resampling and does not include preprocessing-fit uncertainty. These checks do not establish stability across new populations, time periods, or datasets. SHAP values describe model associations and are not causal explanations.
 
 ### RQ5 — What happens when feature groups are removed?
 
@@ -49,9 +98,23 @@ The controlled ablations are summarized below. Thresholds were selected on valid
 | Home Credit | Full | 199 | 0.25 | 0.3081 | 0.7614 | 0.2371 |
 | Home Credit | Without 75 prior-history features | 124 | 0.25 | 0.2910 | 0.7450 | 0.2224 |
 
+Paired bootstrap intervals compare each reduced-feature scenario with its full-feature model on the same outcome-stratified test-row resamples. Differences below are ablation minus full-model F1; thresholds were selected separately on validation data and held fixed during resampling.
+
+| Dataset | Removed feature group | F1 difference | Paired 95% bootstrap interval |
+|---|---|---:|---:|
+| Give Me Some Credit | Delinquency aggregates | −0.003 | −0.010 to +0.004 |
+| Give Me Some Credit | Open-account aggregate | +0.001 | −0.007 to +0.008 |
+| Give Me Some Credit | Dependents indicator | +0.004 | −0.003 to +0.010 |
+| Taiwan | Repayment-status history | −0.077 | −0.093 to −0.058 |
+| Taiwan | Monthly amount history | −0.074 | −0.092 to −0.056 |
+| Taiwan | Derived payment summaries | −0.004 | −0.013 to +0.004 |
+| Home Credit | Prior repayment history | −0.017 | −0.024 to −0.011 |
+
+On these splits, all Give Me Some Credit and derived-summary F1 intervals include zero. Removing Taiwan repayment-status or monthly-amount history, and removing Home Credit prior-history features, reduced F1 in the paired test-row comparisons. Removing Taiwan monthly-amount history also increased Brier score by 0.058 and ECE by 0.075; removing Home Credit prior history increased each by about 0.002. These are conditional, metric-specific comparisons with no multiple-comparison adjustment; they describe the saved test splits and do not establish causal feature effects or performance on future populations.
+
 ### RQ6 — What trade-offs appear across performance, calibration, fairness, and explanation stability?
 
-Home Credit shows a metric trade-off: Random Forest had higher F1 (0.3081 vs. 0.2766) and lower Brier (0.0750 vs. 0.1933) and ECE (0.0791 vs. 0.3249), while Logistic Regression had higher ROC-AUC (0.7695 vs. 0.7614) and PR-AUC (0.2578 vs. 0.2371). Group-rate gaps remain material for some observed groups. Explanation stability is high on some comparisons and lower on others, especially Taiwan's top-10 overlap and Home Credit's top-10 overlap. No single model is best on every measure, and the analysis does not select a lending policy.
+Home Credit shows a metric trade-off: Random Forest had higher F1 (0.3081 vs. 0.2766) and lower Brier (0.0750 vs. 0.1933) and ECE (0.0791 vs. 0.3249), while Logistic Regression had higher ROC-AUC (0.7695 vs. 0.7614) and PR-AUC (0.2578 vs. 0.2371). Group-rate gaps remain material for some observed groups. Explanation ranks were broadly stable across training-row resamples, although top-10 overlap was lower than rank correlation. No single model is best on every measure, and the analysis does not select a lending policy.
 
 ## Data and evaluation protocol
 
@@ -76,7 +139,27 @@ All models use independent dataset-specific splits. The threshold search selecte
 | Home Credit | Logistic Regression | 0.50 | 0.2766 | 0.7695 | 0.2578 | 0.1933 | 0.3249 |
 | Home Credit | Random Forest | 0.25 | 0.3081 | 0.7614 | 0.2371 | 0.0750 | 0.0791 |
 
-The Random Forest F1 95% intervals are 0.394–0.427 for Give Me Some Credit, 0.511–0.552 for Taiwan, and 0.300–0.316 for Home Credit. These are per-model intervals, not paired intervals for the difference between models; overlap or non-overlap should not be presented as a formal significance test.
+The Random Forest F1 95% intervals are 0.394–0.427 for Give Me Some Credit, 0.511–0.552 for Taiwan, and 0.300–0.316 for Home Credit. Paired intervals below estimate the Random Forest minus Logistic Regression metric difference using the same outcome-stratified test-row resamples for both models. Positive differences favor Random Forest for F1, ROC-AUC, and PR-AUC; negative differences favor it for Brier score and ECE, where lower values are better.
+
+| Dataset | Metric | Difference (RF − LR) | Paired 95% bootstrap interval |
+|---|---|---:|---:|
+| Give Me Some Credit | F1 | +0.127 | +0.112 to +0.142 |
+| Give Me Some Credit | ROC-AUC | +0.043 | +0.034 to +0.052 |
+| Give Me Some Credit | PR-AUC | +0.025 | +0.010 to +0.042 |
+| Give Me Some Credit | Brier score | −0.121 | −0.123 to −0.120 |
+| Give Me Some Credit | ECE | −0.296 | −0.297 to −0.294 |
+| Taiwan | F1 | +0.024 | +0.010 to +0.039 |
+| Taiwan | ROC-AUC | +0.006 | −0.005 to +0.017 |
+| Taiwan | PR-AUC | +0.013 | −0.009 to +0.033 |
+| Taiwan | Brier score | −0.038 | −0.041 to −0.035 |
+| Taiwan | ECE | −0.114 | −0.119 to −0.108 |
+| Home Credit | F1 | +0.031 | +0.025 to +0.038 |
+| Home Credit | ROC-AUC | −0.008 | −0.012 to −0.004 |
+| Home Credit | PR-AUC | −0.021 | −0.029 to −0.012 |
+| Home Credit | Brier score | −0.118 | −0.120 to −0.117 |
+| Home Credit | ECE | −0.246 | −0.247 to −0.245 |
+
+Each interval uses 1,000 paired bootstrap replicates (seed 42), stratified within the observed test outcome classes, with both validation-selected thresholds frozen. These intervals condition on the fitted models and observed class counts; they do not include refitting, threshold-selection, or population-shift uncertainty. No multiplicity adjustment is applied across metrics or datasets, so treat the intervals as metric-specific evidence rather than a single confirmatory test.
 
 ## Subgroup support and selected Random Forest gaps
 
@@ -111,9 +194,9 @@ Sampled per-row SHAP contributions are saved under each dataset's `completion_ru
 
 - The models can rank risk signals in these three historical datasets, with performance differences across datasets and metrics.
 - Behavior-history features improved some held-out metrics in the tested ablations, particularly Home Credit and Taiwan; the evidence does not validate mobile-wallet, telecom, utility, or thin-file data.
-- Subgroup gaps are present for several measured attributes. Sparse categories and missing attributes limit conclusions, and fairness of ablated feature sets was not evaluated.
-- Calibration was measured, but no post-hoc calibration was applied and future-population calibration is unknown.
-- Explanation stability was checked over three seeds for Random Forests only; broader split/model stability remains untested.
+- Subgroup gaps were assessed for the full baselines and predefined Random Forest ablations on the same held-out rows. Only observed attributes were available, sparse groups remain limited, and the ablation gap comparisons have no scenario-to-scenario uncertainty intervals.
+- Overall and group-level calibration were measured, but no post-hoc calibration was applied. Subgroup calibration summaries have no confidence intervals, and future-population calibration is unknown.
+- Random Forest explanation stability was checked across three estimator seeds and five stratified training-row resamples. The resampling analysis holds the estimator seed and preprocessing fixed; it does not measure new split, time-period, population, or model-class variability.
 - Results are not pooled across datasets and do not support worldwide coverage, causal claims, a lending-policy recommendation, or production deployment.
 
 ## Sources and reproducibility
@@ -121,4 +204,4 @@ Sampled per-row SHAP contributions are saved under each dataset's `completion_ru
 - Give Me Some Credit target and competition context: [Kaggle competition data page](https://www.kaggle.com/c/GiveMeSomeCredit/data).
 - Taiwan dataset population, target, and dataset details: [UCI Default of Credit Card Clients](https://archive.ics.uci.edu/dataset/350/default%2Bof%2Bcredit%2Bcard%2Bclients%2Bdataset).
 - Home Credit competition and source tables: [Kaggle Home Credit Default Risk](https://www.kaggle.com/competitions/home-credit-default-risk).
-- Model comparisons, bootstrap intervals, subgroup coverage, ablations, SHAP tables, and run manifests are stored in `outputs/credit_risk/` under each dataset's `completion_run/` folder. The source archives remain outside the repository.
+- Model comparisons, bootstrap intervals, subgroup fairness and calibration summaries, feature-ablation results, SHAP tables, three-seed stability outputs, five-resample explanation-stability outputs, and run manifests are stored in `outputs/credit_risk/` under each dataset's `completion_run/` folder. The source archives remain outside the repository.
