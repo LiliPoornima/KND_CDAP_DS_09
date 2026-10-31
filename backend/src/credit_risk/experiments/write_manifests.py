@@ -37,6 +37,8 @@ CODE_FILES = (
     "backend/src/credit_risk/home_credit/feature_engineering.py",
     "backend/src/credit_risk/home_credit/preprocessing.py",
     "backend/src/credit_risk/home_credit/training.py",
+    "backend/src/credit_risk/home_credit/prediction.py",
+    "frontend/pages/1_Credit_Risk.py",
     "requirements.txt",
 )
 
