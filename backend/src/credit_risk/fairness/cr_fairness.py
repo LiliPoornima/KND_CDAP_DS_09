@@ -462,3 +462,223 @@ def cr_bootstrap_group_fairness(
         "group_confidence_intervals": pd.DataFrame(group_rows),
         "disparity_confidence_intervals": pd.DataFrame(disparity_rows),
     }
+
+
+def cr_bootstrap_paired_group_fairness_difference(
+    y_true: Iterable[Any],
+    y_pred_a: Iterable[Any],
+    y_pred_b: Iterable[Any],
+    sensitive_groups: Iterable[Any],
+    *,
+    attribute_name: str = "group",
+    min_group_size: int = 30,
+    min_class_count: int = 5,
+    n_bootstrap: int = 1000,
+    confidence_level: float = 0.95,
+    random_state: int = 42,
+) -> pd.DataFrame:
+    """Estimate paired intervals for changes in subgroup fairness gaps.
+
+    Each replicate resamples the same test-row indices for both prediction
+    vectors, separately within every observed group and target class. The
+    returned difference is model B's max-minus-min disparity gap minus model
+    A's gap. Intervals condition on both fitted models, their frozen
+    validation thresholds, and observed group-by-outcome counts.
+    """
+
+    if (
+        not isinstance(n_bootstrap, int)
+        or isinstance(n_bootstrap, bool)
+        or n_bootstrap < 100
+    ):
+        raise ValueError("n_bootstrap must be an integer of at least 100.")
+    if (
+        not isinstance(confidence_level, (int, float))
+        or isinstance(confidence_level, bool)
+        or not 0.0 < confidence_level < 1.0
+    ):
+        raise ValueError("confidence_level must be strictly between 0 and 1.")
+    if not isinstance(random_state, int) or isinstance(random_state, bool):
+        raise TypeError("random_state must be an integer.")
+
+    try:
+        truth = np.asarray(list(y_true), dtype=float)
+        prediction_a = np.asarray(list(y_pred_a), dtype=float)
+        prediction_b = np.asarray(list(y_pred_b), dtype=float)
+        groups = pd.Series(list(sensitive_groups), dtype="string").fillna(
+            "[missing]"
+        )
+    except (TypeError, ValueError) as exc:
+        raise TypeError("Targets, predictions, and groups must be iterable values.") from exc
+    if (
+        truth.ndim != 1
+        or prediction_a.ndim != 1
+        or prediction_b.ndim != 1
+    ):
+        raise ValueError("Targets and predictions must be one-dimensional.")
+    if truth.size == 0 or not (
+        len(truth) == len(prediction_a) == len(prediction_b) == len(groups)
+    ):
+        raise ValueError("Targets, predictions, and groups must have equal non-zero length.")
+    if not np.isfinite(truth).all() or set(np.unique(truth)) != {0.0, 1.0}:
+        raise ValueError("y_true must contain both binary classes: 0 and 1.")
+    if (
+        not np.isfinite(prediction_a).all()
+        or not np.isfinite(prediction_b).all()
+        or not set(np.unique(prediction_a)).issubset({0.0, 1.0})
+        or not set(np.unique(prediction_b)).issubset({0.0, 1.0})
+    ):
+        raise ValueError("Predictions must contain only finite binary labels: 0 and 1.")
+    if not isinstance(attribute_name, str) or not attribute_name.strip():
+        raise ValueError("attribute_name must be a non-empty string.")
+
+    truth = truth.astype(int)
+    prediction_a = prediction_a.astype(int)
+    prediction_b = prediction_b.astype(int)
+    group_array = groups.to_numpy(dtype=str)
+    point_a = cr_analyze_group_fairness(
+        truth,
+        prediction_a,
+        group_array,
+        attribute_name=attribute_name,
+        min_group_size=min_group_size,
+        min_class_count=min_class_count,
+    )["disparities"]
+    point_b = cr_analyze_group_fairness(
+        truth,
+        prediction_b,
+        group_array,
+        attribute_name=attribute_name,
+        min_group_size=min_group_size,
+        min_class_count=min_class_count,
+    )["disparities"]
+
+    strata: dict[str, tuple[np.ndarray, np.ndarray]] = {}
+    group_sizes: dict[str, int] = {}
+    for group in sorted(np.unique(group_array)):
+        indexes = np.flatnonzero(group_array == group)
+        strata[group] = (indexes[truth[indexes] == 0], indexes[truth[indexes] == 1])
+        group_sizes[group] = len(indexes)
+    selection_groups = [
+        group for group, size in group_sizes.items() if size >= min_group_size
+    ]
+    tpr_groups = [
+        group
+        for group, (negative, positive) in strata.items()
+        if group_sizes[group] >= min_group_size and len(positive) >= min_class_count
+    ]
+    fpr_groups = [
+        group
+        for group, (negative, positive) in strata.items()
+        if group_sizes[group] >= min_group_size and len(negative) >= min_class_count
+    ]
+    metrics = (
+        "selection_rate_difference",
+        "true_positive_rate_difference",
+        "false_positive_rate_difference",
+        "equalized_odds_difference",
+    )
+    differences = {metric: np.full(n_bootstrap, np.nan) for metric in metrics}
+    rng = np.random.default_rng(random_state)
+
+    for replicate in range(n_bootstrap):
+        group_rates_a: dict[str, tuple[float, float | None, float | None]] = {}
+        group_rates_b: dict[str, tuple[float, float | None, float | None]] = {}
+        for group, (negative_indexes, positive_indexes) in strata.items():
+            sampled_negative = (
+                rng.choice(negative_indexes, size=len(negative_indexes), replace=True)
+                if len(negative_indexes)
+                else negative_indexes
+            )
+            sampled_positive = (
+                rng.choice(positive_indexes, size=len(positive_indexes), replace=True)
+                if len(positive_indexes)
+                else positive_indexes
+            )
+            sampled_group = np.concatenate((sampled_negative, sampled_positive))
+            rates = []
+            for prediction in (prediction_a, prediction_b):
+                selection = float(prediction[sampled_group].mean())
+                tpr = (
+                    float(prediction[sampled_positive].mean())
+                    if len(positive_indexes)
+                    else None
+                )
+                fpr = (
+                    float(prediction[sampled_negative].mean())
+                    if len(negative_indexes)
+                    else None
+                )
+                rates.append((selection, tpr, fpr))
+            group_rates_a[group], group_rates_b[group] = rates
+
+        def _gap(
+            values: dict[str, tuple[float, float | None, float | None]],
+            eligible: list[str],
+            rate_index: int,
+        ) -> float | None:
+            rates = [values[group][rate_index] for group in eligible]
+            rates = [rate for rate in rates if rate is not None]
+            return float(max(rates) - min(rates)) if len(rates) >= 2 else None
+
+        gap_a = {
+            "selection_rate_difference": _gap(
+                group_rates_a, selection_groups, 0
+            ),
+            "true_positive_rate_difference": _gap(group_rates_a, tpr_groups, 1),
+            "false_positive_rate_difference": _gap(group_rates_a, fpr_groups, 2),
+        }
+        gap_b = {
+            "selection_rate_difference": _gap(
+                group_rates_b, selection_groups, 0
+            ),
+            "true_positive_rate_difference": _gap(group_rates_b, tpr_groups, 1),
+            "false_positive_rate_difference": _gap(group_rates_b, fpr_groups, 2),
+        }
+        for gaps in (gap_a, gap_b):
+            components = [
+                gaps[key]
+                for key in (
+                    "true_positive_rate_difference",
+                    "false_positive_rate_difference",
+                )
+                if gaps[key] is not None
+            ]
+            gaps["equalized_odds_difference"] = (
+                max(components) if len(components) == 2 else None
+            )
+        for metric in metrics:
+            if gap_a[metric] is not None and gap_b[metric] is not None:
+                differences[metric][replicate] = gap_b[metric] - gap_a[metric]
+
+    tail = (1.0 - float(confidence_level)) / 2.0
+    rows = []
+    for metric in metrics:
+        values = differences[metric]
+        finite = values[np.isfinite(values)]
+        estimate_a = point_a[metric]
+        estimate_b = point_b[metric]
+        rows.append(
+            {
+                "attribute": attribute_name,
+                "metric": metric,
+                "estimate_a": estimate_a,
+                "estimate_b": estimate_b,
+                "difference_b_minus_a": (
+                    float(estimate_b - estimate_a)
+                    if estimate_a is not None and estimate_b is not None
+                    else np.nan
+                ),
+                "confidence_level": float(confidence_level),
+                "lower": float(np.quantile(finite, tail)) if len(finite) else np.nan,
+                "upper": float(np.quantile(finite, 1.0 - tail)) if len(finite) else np.nan,
+                "valid_replicates": int(len(finite)),
+                "n": int(len(truth)),
+                "eligible_selection_groups": len(selection_groups),
+                "eligible_tpr_groups": len(tpr_groups),
+                "eligible_fpr_groups": len(fpr_groups),
+                "bootstrap_method": "paired_stratified_by_group_and_target_class",
+                "random_state": random_state,
+            }
+        )
+    return pd.DataFrame(rows)

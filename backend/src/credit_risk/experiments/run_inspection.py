@@ -4,12 +4,21 @@ import argparse
 from pathlib import Path
 from typing import Any
 
+import numpy as np
 import pandas as pd
 from sklearn.base import clone
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.model_selection import train_test_split
+from sklearn.pipeline import Pipeline
 
 from backend.src.credit_risk.common.cr_evaluation import (
     cr_analyze_probability_thresholds,
     cr_bootstrap_binary_performance,
+    cr_bootstrap_paired_binary_performance,
+)
+from backend.src.credit_risk.common.cr_calibration import (
+    cr_bootstrap_group_calibration,
+    cr_group_calibration_summary,
 )
 from backend.src.credit_risk.credit_card_default.experiment import (
     cr_prepare_credit_card_dataset_from_file,
@@ -99,6 +108,8 @@ def cr_run_give_me_some_credit(
     model_metrics: dict[str, dict[str, Any]] = {}
     comparisons = []
     threshold_tables = []
+    subgroup_calibration_metrics = []
+    subgroup_calibration_bins = []
     models = {
         "Logistic Regression": cr_train_logistic_regression(train),
         "Random Forest": cr_train_random_forest(train),
@@ -166,6 +177,18 @@ def cr_run_give_me_some_credit(
                 groups,
                 attribute_name=group_name,
             )
+            calibration = cr_group_calibration_summary(
+                test[GIVE_ME_SOME_CREDIT_TARGET],
+                test_probabilities,
+                groups,
+                attribute_name=group_name,
+            )
+            calibration_metrics = calibration["group_metrics"].copy()
+            calibration_metrics.insert(0, "Model", model_name)
+            subgroup_calibration_metrics.append(calibration_metrics)
+            calibration_bins = calibration["calibration_bins"].copy()
+            calibration_bins.insert(0, "Model", model_name)
+            subgroup_calibration_bins.append(calibration_bins)
             uncertainty = cr_bootstrap_group_fairness(
                 test[GIVE_ME_SOME_CREDIT_TARGET],
                 test_predictions,
@@ -195,6 +218,12 @@ def cr_run_give_me_some_credit(
     pd.concat(threshold_tables, ignore_index=True).to_csv(
         output / "threshold_analysis.csv",
         index=False,
+    )
+    pd.concat(subgroup_calibration_metrics, ignore_index=True).to_csv(
+        output / "subgroup_calibration_metrics.csv", index=False
+    )
+    pd.concat(subgroup_calibration_bins, ignore_index=True).to_csv(
+        output / "subgroup_calibration_bins.csv", index=False
     )
     pd.DataFrame(comparisons).set_index("Model").to_csv(
         output / "model_comparison.csv"
@@ -272,10 +301,328 @@ def cr_run_explanation_stability(
     return stability
 
 
+def cr_run_training_subsample_explanation_stability(
+    model_template: Pipeline,
+    train_df: pd.DataFrame,
+    evaluation_features: pd.DataFrame,
+    output_dir: str | Path,
+    *,
+    target_column: str,
+    training_fraction: float = 0.70,
+    resample_states: tuple[int, ...] = (42, 43, 44, 45, 46),
+    sample_size: int = 100,
+    background_size: int = 100,
+) -> dict[str, Any]:
+    """Compare explanations after stratified training-row resampling.
+
+    The preprocessor is fitted once on the complete training partition and
+    reused across resamples, so the feature space remains identical. Each
+    classifier is refitted on a stratified subset; the held-out evaluation
+    rows and a training-only SHAP background are fixed across all fits.
+    """
+
+    if not isinstance(model_template, Pipeline):
+        raise TypeError("model_template must be a scikit-learn Pipeline.")
+    if not isinstance(train_df, pd.DataFrame) or train_df.empty:
+        raise ValueError("train_df must be a non-empty DataFrame.")
+    if target_column not in train_df.columns:
+        raise ValueError(f"Training data must include {target_column}.")
+    predictors = train_df.drop(columns=[target_column])
+    target = train_df[target_column].astype(int)
+    if not isinstance(evaluation_features, pd.DataFrame) or evaluation_features.empty:
+        raise ValueError("evaluation_features must be a non-empty DataFrame.")
+    if list(evaluation_features.columns) != list(predictors.columns):
+        raise ValueError("Evaluation predictors must match training columns and order.")
+    if (
+        not isinstance(training_fraction, (int, float))
+        or isinstance(training_fraction, bool)
+        or not 0.1 <= training_fraction < 1
+    ):
+        raise ValueError("training_fraction must be between 0.1 and 1.0.")
+    if len(resample_states) < 3 or len(set(resample_states)) != len(resample_states):
+        raise ValueError("At least three distinct resample states are required.")
+
+    evaluation = evaluation_features.sample(
+        n=min(sample_size, len(evaluation_features)),
+        random_state=101,
+    )
+    background_positions = np.random.default_rng(202).choice(
+        len(predictors),
+        size=min(background_size, len(predictors)),
+        replace=False,
+    )
+    background_source = predictors.iloc[background_positions]
+
+    if len(model_template.steps) > 1:
+        preprocessor = clone(model_template[:-1])
+        preprocessor.fit(predictors)
+        transformed_train = preprocessor.transform(predictors)
+        transformed_evaluation = preprocessor.transform(evaluation)
+        transformed_background = preprocessor.transform(background_source)
+        try:
+            feature_names = list(
+                preprocessor.get_feature_names_out(predictors.columns)
+            )
+        except (AttributeError, ValueError):
+            feature_names = [f"feature_{index}" for index in range(transformed_train.shape[1])]
+    else:
+        transformed_train = predictors.to_numpy()
+        transformed_evaluation = evaluation.to_numpy()
+        transformed_background = background_source.to_numpy()
+        feature_names = list(predictors.columns)
+
+    def _to_frame(values: Any, index: pd.Index) -> pd.DataFrame:
+        if hasattr(values, "toarray"):
+            values = values.toarray()
+        return pd.DataFrame(
+            np.asarray(values),
+            index=index,
+            columns=feature_names,
+        )
+
+    evaluation_frame = _to_frame(transformed_evaluation, evaluation.index)
+    background_frame = _to_frame(transformed_background, background_source.index)
+    classifier_template = model_template.steps[-1][1]
+    attribution_runs = []
+    importance_tables = []
+
+    for run_number, resample_state in enumerate(resample_states, start=1):
+        selected_positions, _ = train_test_split(
+            np.arange(len(target)),
+            train_size=training_fraction,
+            random_state=resample_state,
+            stratify=target.to_numpy(),
+        )
+        fitted_classifier = clone(classifier_template)
+        if "random_state" in fitted_classifier.get_params():
+            # Keep estimator randomness fixed to focus this experiment on row resampling.
+            fitted_classifier.set_params(random_state=42)
+        fitted_classifier.fit(
+            transformed_train[selected_positions],
+            target.iloc[selected_positions],
+        )
+        explanation = cr_explain_model(
+            fitted_classifier,
+            evaluation_frame,
+            background_data=background_frame,
+            sample_size=len(evaluation_frame),
+            background_size=len(background_frame),
+            random_state=42,
+        )
+        attribution_runs.append(explanation["attributions"])
+        importance = explanation["global_importance"].copy()
+        importance.insert(0, "Run", run_number)
+        importance.insert(1, "Resample state", resample_state)
+        importance.insert(2, "Training rows", len(selected_positions))
+        importance_tables.append(importance)
+
+    stability = cr_compare_explanation_stability(attribution_runs)
+    pairwise = stability["pairwise_stability"].copy()
+    state_by_run = dict(enumerate(resample_states, start=1))
+    pairwise.insert(1, "Resample state A", pairwise["run_a"].map(state_by_run))
+    pairwise.insert(3, "Resample state B", pairwise["run_b"].map(state_by_run))
+    summary = pd.DataFrame(
+        [
+            {
+                **stability["summary"],
+                "training_fraction": training_fraction,
+                "resample_states": ";".join(map(str, resample_states)),
+                "evaluation_rows": len(evaluation_frame),
+                "background_rows": len(background_frame),
+                "background_source": "training partition",
+                "preprocessing_fit": "full training partition, fixed across resamples",
+                "estimator_random_state": 42,
+            }
+        ]
+    )
+    output = Path(output_dir)
+    output.mkdir(parents=True, exist_ok=True)
+    summary.to_csv(output / "training_subsample_stability_summary.csv", index=False)
+    pairwise.to_csv(
+        output / "training_subsample_stability_pairwise.csv", index=False
+    )
+    stability["feature_importance_by_run"].to_csv(
+        output / "training_subsample_feature_ranks.csv", index=False
+    )
+    pd.concat(importance_tables, ignore_index=True).to_csv(
+        output / "training_subsample_global_importance_by_run.csv", index=False
+    )
+    return {"summary": summary, "pairwise_stability": pairwise}
+
+
+def cr_run_saved_split_explanation_resampling(
+    output_root: str | Path = "outputs/credit_risk",
+    *,
+    training_fraction: float = 0.70,
+    resample_states: tuple[int, ...] = (42, 43, 44, 45, 46),
+) -> dict[str, dict[str, Any]]:
+    """Run the training-row resampling stability check on all saved datasets."""
+
+    root = Path(output_root)
+    results = {}
+    for dataset, target in (
+        ("give_me_some_credit", GIVE_ME_SOME_CREDIT_TARGET),
+        ("credit_card_default", CREDIT_CARD_TARGET),
+        ("home_credit", HOME_CREDIT_TARGET),
+    ):
+        run_dir = root / dataset / "completion_run"
+        prepared_dir = run_dir / "prepared"
+        train = pd.read_csv(prepared_dir / "train_processed.csv")
+        test = pd.read_csv(prepared_dir / "test_processed.csv")
+        if dataset == "home_credit":
+            template = cr_create_home_credit_random_forest(
+                train,
+                target_column=target,
+            )
+        else:
+            template = Pipeline(
+                [
+                    (
+                        "classifier",
+                        RandomForestClassifier(
+                            n_estimators=200,
+                            class_weight="balanced",
+                            random_state=42,
+                            n_jobs=-1,
+                        ),
+                    )
+                ]
+            )
+        output_dir = (
+            run_dir
+            if dataset == "give_me_some_credit"
+            else run_dir / "explainability"
+        )
+        results[dataset] = cr_run_training_subsample_explanation_stability(
+            template,
+            train,
+            test.drop(columns=[target]),
+            output_dir,
+            target_column=target,
+            training_fraction=training_fraction,
+            resample_states=resample_states,
+            sample_size=100,
+            background_size=100,
+        )
+    return results
+
+
+def cr_run_saved_split_group_calibration(
+    output_root: str | Path = "outputs/credit_risk",
+    *,
+    random_state: int = 42,
+) -> dict[str, pd.DataFrame]:
+    """Audit held-out subgroup calibration and estimate within-group intervals."""
+
+    root = Path(output_root)
+    configurations = {
+        "give_me_some_credit": {
+            "target": GIVE_ME_SOME_CREDIT_TARGET,
+            "trainers": {
+                "Logistic Regression": cr_train_logistic_regression,
+                "Random Forest": cr_train_random_forest,
+            },
+            "metrics_dir": Path("completion_run"),
+        },
+        "credit_card_default": {
+            "target": CREDIT_CARD_TARGET,
+            "trainers": {
+                "Logistic Regression": cr_train_credit_card_logistic_regression,
+                "Random Forest": cr_train_credit_card_random_forest,
+            },
+            "metrics_dir": Path("completion_run/metrics"),
+        },
+        "home_credit": {
+            "target": HOME_CREDIT_TARGET,
+            "trainers": {
+                "Logistic Regression": cr_train_home_credit_logistic_regression,
+                "Random Forest": cr_train_home_credit_random_forest,
+            },
+            "metrics_dir": Path("completion_run/metrics"),
+        },
+    }
+    results = {}
+    for dataset_index, (dataset, config) in enumerate(configurations.items()):
+        run_dir = root / dataset / "completion_run"
+        prepared_dir = run_dir / "prepared"
+        train = pd.read_csv(prepared_dir / "train_processed.csv")
+        test = pd.read_csv(prepared_dir / "test_processed.csv")
+        target = config["target"]
+        if dataset == "give_me_some_credit":
+            groups = pd.DataFrame(
+                {
+                    "age": test["age"],
+                    "dependents": test["NumberOfDependents"].map(
+                        lambda value: "0"
+                        if value == 0
+                        else ("1" if value == 1 else "2+")
+                    ),
+                }
+            )
+        else:
+            groups = pd.read_csv(prepared_dir / "test_groups.csv")
+
+        metric_tables = []
+        bin_tables = []
+        interval_tables = []
+        predictors = [column for column in train.columns if column != target]
+        for model_index, (model_name, trainer) in enumerate(config["trainers"].items()):
+            model = trainer(train, target_column=target)
+            positive_index = list(model.classes_).index(1)
+            probability = model.predict_proba(test[predictors])[:, positive_index]
+            for attribute_index, attribute in enumerate(groups.columns):
+                group_values = groups[attribute]
+                if str(attribute).strip().lower() in {"age", "age_years"}:
+                    group_values = cr_bin_age_groups(group_values)
+                summary = cr_group_calibration_summary(
+                    test[target],
+                    probability,
+                    group_values,
+                    attribute_name=str(attribute),
+                )
+                metrics = summary["group_metrics"].copy()
+                metrics.insert(0, "Model", model_name)
+                metric_tables.append(metrics)
+                intervals = cr_bootstrap_group_calibration(
+                    test[target],
+                    probability,
+                    group_values,
+                    attribute_name=str(attribute),
+                    n_bootstrap=1000,
+                    random_state=(
+                        random_state
+                        + dataset_index * 1000
+                        + model_index * 100
+                        + attribute_index
+                    ),
+                )
+                intervals.insert(0, "Model", model_name)
+                interval_tables.append(intervals)
+                bins = summary["calibration_bins"].copy()
+                bins.insert(0, "Model", model_name)
+                bin_tables.append(bins)
+
+        metrics = pd.concat(metric_tables, ignore_index=True)
+        bins = pd.concat(bin_tables, ignore_index=True)
+        intervals = pd.concat(interval_tables, ignore_index=True)
+        output_dir = root / dataset / config["metrics_dir"]
+        output_dir.mkdir(parents=True, exist_ok=True)
+        metrics.to_csv(output_dir / "subgroup_calibration_metrics.csv", index=False)
+        bins.to_csv(output_dir / "subgroup_calibration_bins.csv", index=False)
+        intervals.to_csv(
+            output_dir / "subgroup_calibration_confidence_intervals.csv",
+            index=False,
+        )
+        results[dataset] = metrics
+    return results
+
+
 def cr_run_extended_dataset_analyses(
     output_root: str | Path = "outputs/credit_risk",
+    *,
+    include_explanation_stability: bool = True,
 ) -> dict[str, Any]:
-    """Run the pending Taiwan and Home Credit ablation/stability analyses.
+    """Run saved-split ablations and optionally Home Credit explanation stability.
 
     This uses the saved leakage-aware split files. Thresholds are selected on
     each scenario's validation predictions, and held-out test partitions are
@@ -284,6 +631,56 @@ def cr_run_extended_dataset_analyses(
 
     root = Path(output_root)
     results: dict[str, Any] = {}
+
+    # Give Me Some Credit feature ablations are already part of the completed
+    # run. Refit the same scenarios only to attach held-out subgroup results.
+    gmsc_dir = root / "give_me_some_credit" / "completion_run"
+    gmsc_prepared = gmsc_dir / "prepared"
+    gmsc_train = pd.read_csv(gmsc_prepared / "train_processed.csv")
+    gmsc_validation = pd.read_csv(gmsc_prepared / "validation_processed.csv")
+    gmsc_test = pd.read_csv(gmsc_prepared / "test_processed.csv")
+    gmsc_groups = pd.DataFrame(
+        {
+            "age": gmsc_test["age"],
+            "dependents": gmsc_test["NumberOfDependents"].map(
+                lambda value: "0" if value == 0 else ("1" if value == 1 else "2+")
+            ),
+        }
+    )
+    gmsc_feature_groups = {
+        "delinquency_aggregate": [
+            "TotalDelinquencyCount",
+            "SevereDelinquencyCount",
+        ],
+        "account_aggregate": ["TotalOpenCreditAccounts"],
+        "dependents_indicator": ["HasDependents"],
+    }
+    results["give_me_some_credit_ablation_subgroups"] = (
+        cr_run_validation_selected_feature_ablation(
+            gmsc_train,
+            gmsc_validation,
+            gmsc_test,
+            gmsc_feature_groups,
+            trainer=cr_train_random_forest,
+            model_name="Random Forest",
+            target_column=GIVE_ME_SOME_CREDIT_TARGET,
+            test_groups=gmsc_groups,
+            subgroup_output_path=gmsc_dir / "feature_ablation_subgroup_metrics.csv",
+            subgroup_calibration_output_path=(
+                gmsc_dir / "feature_ablation_subgroup_calibration.csv"
+            ),
+            subgroup_calibration_bins_output_path=(
+                gmsc_dir / "feature_ablation_subgroup_calibration_bins.csv"
+            ),
+            paired_comparison_output_path=(
+                gmsc_dir / "feature_ablation_paired_comparison_confidence_intervals.csv"
+            ),
+            paired_fairness_comparison_output_path=(
+                gmsc_dir
+                / "feature_ablation_paired_fairness_gap_confidence_intervals.csv"
+            ),
+        )
+    )
 
     credit_card_dir = root / "credit_card_default" / "completion_run"
     credit_card_prepared = credit_card_dir / "prepared"
@@ -295,6 +692,9 @@ def cr_run_extended_dataset_analyses(
     )
     credit_card_test = pd.read_csv(
         credit_card_prepared / "test_processed.csv"
+    )
+    credit_card_test_groups = pd.read_csv(
+        credit_card_prepared / "test_groups.csv"
     )
     credit_card_target = CREDIT_CARD_TARGET
     credit_card_features = [
@@ -327,6 +727,24 @@ def cr_run_extended_dataset_analyses(
             model_name="Random Forest",
             target_column=credit_card_target,
             output_path=credit_card_dir / "metrics" / "feature_ablation.csv",
+            test_groups=credit_card_test_groups,
+            subgroup_output_path=credit_card_dir / "metrics" / "feature_ablation_subgroup_metrics.csv",
+            subgroup_calibration_output_path=(
+                credit_card_dir / "metrics" / "feature_ablation_subgroup_calibration.csv"
+            ),
+            subgroup_calibration_bins_output_path=(
+                credit_card_dir / "metrics" / "feature_ablation_subgroup_calibration_bins.csv"
+            ),
+            paired_comparison_output_path=(
+                credit_card_dir
+                / "metrics"
+                / "feature_ablation_paired_comparison_confidence_intervals.csv"
+            ),
+            paired_fairness_comparison_output_path=(
+                credit_card_dir
+                / "metrics"
+                / "feature_ablation_paired_fairness_gap_confidence_intervals.csv"
+            ),
         )
     )
 
@@ -337,6 +755,9 @@ def cr_run_extended_dataset_analyses(
         home_credit_prepared / "validation_processed.csv"
     )
     home_credit_test = pd.read_csv(home_credit_prepared / "test_processed.csv")
+    home_credit_test_groups = pd.read_csv(
+        home_credit_prepared / "test_groups.csv"
+    )
     home_credit_features = [
         column for column in home_credit_train.columns
         if column != HOME_CREDIT_TARGET
@@ -364,23 +785,42 @@ def cr_run_extended_dataset_analyses(
             model_name="Random Forest",
             target_column=HOME_CREDIT_TARGET,
             output_path=home_credit_dir / "metrics" / "feature_ablation.csv",
+            test_groups=home_credit_test_groups,
+            subgroup_output_path=home_credit_dir / "metrics" / "feature_ablation_subgroup_metrics.csv",
+            subgroup_calibration_output_path=(
+                home_credit_dir / "metrics" / "feature_ablation_subgroup_calibration.csv"
+            ),
+            subgroup_calibration_bins_output_path=(
+                home_credit_dir / "metrics" / "feature_ablation_subgroup_calibration_bins.csv"
+            ),
+            paired_comparison_output_path=(
+                home_credit_dir
+                / "metrics"
+                / "feature_ablation_paired_comparison_confidence_intervals.csv"
+            ),
+            paired_fairness_comparison_output_path=(
+                home_credit_dir
+                / "metrics"
+                / "feature_ablation_paired_fairness_gap_confidence_intervals.csv"
+            ),
         )
     )
 
-    model_template = cr_create_home_credit_random_forest(
-        home_credit_train,
-        target_column=HOME_CREDIT_TARGET,
-    )
-    results["home_credit_explanation_stability"] = cr_run_explanation_stability(
-        model_template,
-        home_credit_train,
-        home_credit_test.drop(columns=[HOME_CREDIT_TARGET]),
-        home_credit_dir / "explainability",
-        target_column=HOME_CREDIT_TARGET,
-        random_states=(42, 43, 44),
-        sample_size=100,
-        background_size=100,
-    )
+    if include_explanation_stability:
+        model_template = cr_create_home_credit_random_forest(
+            home_credit_train,
+            target_column=HOME_CREDIT_TARGET,
+        )
+        results["home_credit_explanation_stability"] = cr_run_explanation_stability(
+            model_template,
+            home_credit_train,
+            home_credit_test.drop(columns=[HOME_CREDIT_TARGET]),
+            home_credit_dir / "explainability",
+            target_column=HOME_CREDIT_TARGET,
+            random_states=(42, 43, 44),
+            sample_size=100,
+            background_size=100,
+        )
     return results
 
 
@@ -422,11 +862,15 @@ def cr_run_saved_performance_uncertainty(
         train = pd.read_csv(prepared / "train_processed.csv")
         validation = pd.read_csv(prepared / "validation_processed.csv")
         test = pd.read_csv(prepared / "test_processed.csv")
+        destination = base / ("metrics" if dataset != "give_me_some_credit" else "")
+        destination.mkdir(parents=True, exist_ok=True)
         trainers = {
             "logistic_regression": logistic_trainer,
             "random_forest": forest_trainer,
         }
         rows = []
+        probabilities_by_model: dict[str, np.ndarray] = {}
+        thresholds_by_model: dict[str, float] = {}
         for model_key, trainer in trainers.items():
             model = (
                 trainer(train, target_column=target)
@@ -438,6 +882,8 @@ def cr_run_saved_performance_uncertainty(
             probabilities = model.predict_proba(
                 test.drop(columns=[target])
             )[:, positive_index]
+            probabilities_by_model[model_key] = probabilities
+            thresholds_by_model[model_key] = threshold
             intervals = cr_bootstrap_binary_performance(
                 test[target],
                 probabilities,
@@ -446,13 +892,27 @@ def cr_run_saved_performance_uncertainty(
             )
             intervals.insert(0, "model", model_key)
             intervals.insert(0, "dataset", dataset)
-            destination = base / ("metrics" if dataset != "give_me_some_credit" else "")
-            destination.mkdir(parents=True, exist_ok=True)
             intervals.to_csv(
                 destination / f"{model_key}_performance_confidence_intervals.csv",
                 index=False,
             )
             rows.append(intervals)
+
+        paired_intervals = cr_bootstrap_paired_binary_performance(
+            test[target],
+            probabilities_by_model["logistic_regression"],
+            probabilities_by_model["random_forest"],
+            threshold_a=thresholds_by_model["logistic_regression"],
+            threshold_b=thresholds_by_model["random_forest"],
+            model_a_name="Logistic Regression",
+            model_b_name="Random Forest",
+            random_state=random_state,
+        )
+        paired_intervals.insert(0, "dataset", dataset)
+        paired_intervals.to_csv(
+            destination / "paired_model_comparison_confidence_intervals.csv",
+            index=False,
+        )
         results[dataset] = pd.concat(rows, ignore_index=True)
 
     cr_build_subgroup_support_coverage(
@@ -523,12 +983,27 @@ def main() -> None:
     parser.add_argument(
         "--run-extended-analysis",
         action="store_true",
-        help="Run the saved-split Taiwan/Home Credit ablation and stability analyses.",
+        help="Run saved-split feature ablations for all datasets and Home Credit explanation stability.",
+    )
+    parser.add_argument(
+        "--complete-ablation-uncertainty-review",
+        action="store_true",
+        help="Write paired performance and subgroup-fairness intervals for each feature ablation versus its full-feature model.",
     )
     parser.add_argument(
         "--complete-uncertainty-review",
         action="store_true",
         help="Write held-out performance intervals and subgroup support coverage from saved splits.",
+    )
+    parser.add_argument(
+        "--complete-group-calibration-review",
+        action="store_true",
+        help="Write held-out subgroup calibration metrics, reliability bins, and within-group bootstrap intervals.",
+    )
+    parser.add_argument(
+        "--complete-explanation-resampling-review",
+        action="store_true",
+        help="Compare Random Forest explanations across stratified training-row resamples.",
     )
     args = parser.parse_args()
     has_baseline_input = any(
@@ -538,7 +1013,14 @@ def main() -> None:
             args.home_credit_archive,
         )
     )
-    if not has_baseline_input and not args.run_extended_analysis and not args.complete_uncertainty_review:
+    if (
+        not has_baseline_input
+        and not args.run_extended_analysis
+        and not args.complete_ablation_uncertainty_review
+        and not args.complete_uncertainty_review
+        and not args.complete_group_calibration_review
+        and not args.complete_explanation_resampling_review
+    ):
         parser.error(
             "Provide a dataset input or use --run-extended-analysis with saved splits."
         )
@@ -564,11 +1046,34 @@ def main() -> None:
                 print(result.to_string(index=False))
             else:
                 print(result["summary"])
+    elif args.complete_ablation_uncertainty_review:
+        extended = cr_run_extended_dataset_analyses(
+            args.output_root,
+            include_explanation_stability=False,
+        )
+        for analysis, result in extended.items():
+            if analysis.endswith("ablation") or "ablation" in analysis:
+                print(f"\n{analysis}")
+                if isinstance(result, pd.DataFrame):
+                    print(result.to_string(index=False))
     if args.complete_uncertainty_review:
         uncertainty = cr_run_saved_performance_uncertainty(args.output_root)
         for dataset, table in uncertainty.items():
             print(f"\n{dataset} performance intervals")
             print(table.to_string(index=False))
+    if args.complete_group_calibration_review:
+        calibration = cr_run_saved_split_group_calibration(
+            args.output_root,
+            random_state=args.random_state,
+        )
+        for dataset, table in calibration.items():
+            print(f"\n{dataset} subgroup calibration")
+            print(table.to_string(index=False))
+    if args.complete_explanation_resampling_review:
+        stability = cr_run_saved_split_explanation_resampling(args.output_root)
+        for dataset, result in stability.items():
+            print(f"\n{dataset} explanation stability across training resamples")
+            print(result["summary"].to_string(index=False))
 
 
 if __name__ == "__main__":
