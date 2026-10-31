@@ -526,4 +526,5 @@ with tabs[4]:
             3. **Production Deployment:** No live streaming infrastructure, distributed latency testing, online asynchronous inference, or concurrent drift handling was tested.
             4. **Significance Tests:** Formal statistical significance testing (e.g. paired t-tests across seeds) was not conducted; metrics report empirical sample means and sample standard deviations across 5 seeds.
             """
+        )
 
