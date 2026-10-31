@@ -116,6 +116,49 @@ with tabs[0]:
         f"Simulating label-free drift detection on **{scenario_labels[selected_scenario]}** with **{selected_delay}-day label delay** (Seed {selected_seed})."
     )
 
+    with st.expander("📡 Monitored Drift Signals", expanded=True):
+        sig_c1, sig_c2, sig_c3, sig_c4 = st.columns(4)
+        with sig_c1:
+            st.markdown(
+                """
+                <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-top: 3px solid #0284c7; padding: 10px 12px; border-radius: 6px; min-height: 110px;">
+                    <strong style="color: #0369a1;">📥 Input Shift (Feature PSI)</strong><br>
+                    <span style="font-size: 0.88rem; color: #475569;">Checks if everyday transaction details (amounts, locations) are changing.</span>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+        with sig_c2:
+            st.markdown(
+                """
+                <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-top: 3px solid #8b5cf6; padding: 10px 12px; border-radius: 6px; min-height: 110px;">
+                    <strong style="color: #6d28d9;">📤 Output Shift (Model-Score JS)</strong><br>
+                    <span style="font-size: 0.88rem; color: #475569;">Checks if the distribution of overall fraud risk scores is shifting.</span>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+        with sig_c3:
+            st.markdown(
+                """
+                <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-top: 3px solid #f59e0b; padding: 10px 12px; border-radius: 6px; min-height: 110px;">
+                    <strong style="color: #b45309;">❓ Model Confusion (Entropy)</strong><br>
+                    <span style="font-size: 0.88rem; color: #475569;">Measures if the model is becoming uncertain (50/50 toss-ups).</span>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+        with sig_c4:
+            st.markdown(
+                """
+                <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-top: 3px solid #10b981; padding: 10px 12px; border-radius: 6px; min-height: 110px;">
+                    <strong style="color: #047857;">🧠 Decision Logic (TreeSHAP)</strong><br>
+                    <span style="font-size: 0.88rem; color: #475569;">Checks if the model is relying on new features or reasons to catch fraud.</span>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+
     decisions_df = load_decisions(selected_scenario, selected_delay, selected_seed)
     
     if decisions_df is not None and not decisions_df.empty:
@@ -510,7 +553,11 @@ with tabs[4]:
             """
             - **Strict Non-Leakage Rule:** At decision day $t$ with delay $d$, available labels are strictly $\\text{label\\_day} \\le t - d$.
             - **Temporal Partitioning:** Candidate retraining splits the last 28 matured days into a 21-day candidate training set and a 7-day holdout validation set.
-            - **Calibrated Multi-Signal EWS:** Combines Feature PSI, Score JS Divergence, Binary Entropy, and TreeSHAP Profile Shift.
+            - **Calibrated Multi-Signal EWS:** Combines 4 complementary label-free drift signals:
+              1. **Input Shift (Feature PSI):** Checks if everyday transaction details (amounts, locations) are changing.
+              2. **Output Shift (Model-Score JS):** Checks if the distribution of overall fraud risk scores is shifting.
+              3. **Model Confusion (Entropy):** Measures if the model is becoming uncertain (50/50 toss-ups).
+              4. **Decision Logic (TreeSHAP):** Checks if the model is relying on new features or reasons to catch fraud.
             - **Locked Control Thresholds:** Thresholds ($\theta_1=0.22, \theta_2=0.35$) were calibrated on control streams and locked in `locked_thresholds.json`.
             - **Unit Test Coverage:** All 101 unit tests passing in `tests/fraud_detection/`.
             """
@@ -528,7 +575,3 @@ with tabs[4]:
             """
         )
 
-st.divider()
-st.caption(
-    "Component 04: Fraud Detection Dashboard | Branch: feature/component-04-Early-warning-data-preparation | Unit Tests: 101 passed"
-)
