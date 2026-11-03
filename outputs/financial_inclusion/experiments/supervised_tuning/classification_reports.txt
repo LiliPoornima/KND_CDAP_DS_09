@@ -1,0 +1,40 @@
+=== logistic_regression ===
+              precision    recall  f1-score   support
+
+           0       0.30      0.26      0.28      2022
+           1       0.64      0.48      0.55      4715
+           2       0.33      0.40      0.36      1801
+           3       0.32      0.37      0.34      1756
+           4       0.21      0.36      0.27      1007
+
+    accuracy                           0.40     11301
+   macro avg       0.36      0.38      0.36     11301
+weighted avg       0.44      0.40      0.42     11301
+
+
+=== random_forest ===
+              precision    recall  f1-score   support
+
+           0       0.28      0.27      0.27      2022
+           1       0.64      0.47      0.54      4715
+           2       0.34      0.36      0.35      1801
+           3       0.31      0.37      0.34      1756
+           4       0.20      0.36      0.26      1007
+
+    accuracy                           0.39     11301
+   macro avg       0.35      0.37      0.35     11301
+weighted avg       0.44      0.39      0.41     11301
+
+
+=== xgboost ===
+              precision    recall  f1-score   support
+
+           0       0.32      0.14      0.20      2022
+           1       0.53      0.83      0.65      4715
+           2       0.48      0.23      0.31      1801
+           3       0.33      0.35      0.34      1756
+           4       0.31      0.11      0.17      1007
+
+    accuracy                           0.47     11301
+   macro avg       0.40      0.33      0.33     11301
+weighted avg       0.44      0.47      0.42     11301

@@ -1,0 +1,23 @@
+encoded_feature,importance
+categorical__educ_1.0,0.26467251777648926
+categorical__regionwb_Middle East & North Africa (excluding high income),0.11806844919919968
+categorical__regionwb_Sub-Saharan Africa (excluding high income),0.1114194467663765
+categorical__regionwb_South Asia,0.06667935103178024
+categorical__emp_in_1.0,0.056809719651937485
+categorical__educ_2.0,0.05190947651863098
+categorical__inc_q_5.0,0.04246743768453598
+numeric__age,0.03233226388692856
+categorical__regionwb_Latin America & Caribbean (excluding high income),0.031438689678907394
+categorical__educ_3.0,0.03024601936340332
+categorical__regionwb_East Asia & Pacific (excluding high income),0.025744639337062836
+categorical__inc_q_1.0,0.02486792579293251
+categorical__female_1,0.024811340495944023
+categorical__urbanicity_1.0,0.02405381202697754
+categorical__regionwb_Europe & Central Asia (excluding high income),0.02258041501045227
+categorical__inc_q_4.0,0.02022053487598896
+categorical__inc_q_2.0,0.018306519836187363
+categorical__regionwb_High income,0.016917331144213676
+categorical__inc_q_3.0,0.016453998163342476
+categorical__female_2,0.0
+categorical__urbanicity_2.0,0.0
+categorical__emp_in_2.0,0.0
