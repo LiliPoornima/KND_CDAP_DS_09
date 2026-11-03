@@ -60,16 +60,17 @@ navigation = st.navigation(
         st.Page(_render_home, title="Home", icon="🏠", default=True),
         st.Page("pages/1_Credit_Risk.py", title="Credit Risk", icon="💳"),
         st.Page(
-            "pages/5_Financial_Inclusion_Decision_Support.py",
-            title="Financial Inclusion",
-            icon="🌐",
+            "pages/6_Financial_Inclusion_New_Dashboard.py",
+            title="Financial Inclusion – New Dashboard",
+            icon="💹",
         ),
+
         st.Page("pages/3_Market_Risk.py", title="Market Risk", icon="📈"),
+
         st.Page("pages/4_Fraud_Detection.py",
                 title="Fraud Detection", icon="🛡️"),
-        # Register the consolidated dashboard under the single FI destination.
-        # The legacy Financial Inclusion page remains in the repository but is
-        # intentionally not a second top-level navigation entry.
+        # The new comparison page is separate; the original Financial Inclusion
+        # destination above keeps its existing page and behavior.
 
     ],
     position="sidebar",
