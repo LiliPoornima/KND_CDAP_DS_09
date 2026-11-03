@@ -61,7 +61,7 @@ navigation = st.navigation(
         st.Page("pages/1_Credit_Risk.py", title="Credit Risk", icon="💳"),
         st.Page(
             "pages/6_Financial_Inclusion_New_Dashboard.py",
-            title="Financial Inclusion – New Dashboard",
+            title="Financial Inclusion",
             icon="💹",
         ),
 
