@@ -69,6 +69,8 @@ navigation = st.navigation(
 
         st.Page("pages/4_Fraud_Detection.py",
                 title="Fraud Detection", icon="🛡️"),
+        st.Page("pages/7_Financial_Capability.py",
+                title="Financial Capability", icon="🎓"),
         # The new comparison page is separate; the original Financial Inclusion
         # destination above keeps its existing page and behavior.
 
