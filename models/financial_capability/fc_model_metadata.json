@@ -1,0 +1,844 @@
+{
+  "component": "05 - Explainable Financial Capability Assessment (Phase 1)",
+  "training_date_utc": "2026-11-07T03:10:43+00:00",
+  "quick_run": false,
+  "random_seed": 42,
+  "package_versions": {
+    "python": "3.11.6",
+    "numpy": "2.2.6",
+    "pandas": "2.3.3",
+    "scikit-learn": "1.9.1",
+    "xgboost": "3.1.2",
+    "shap": "0.51.0"
+  },
+  "dataset": {
+    "name": "CFPB National Financial Well-Being Survey (NFWBS) 2016 public-use file",
+    "file_name": "NFWBS_PUF_2016_data.csv",
+    "source_page": "https://www.consumerfinance.gov/data-research/financial-well-being-survey-data/",
+    "direct_link": "https://www.consumerfinance.gov/documents/5614/NFWBS_PUF_2016_data.csv",
+    "file_sha256": "3680d33576549a99a8dfd7f99d5661a36a8fc1aac0d66f2bf2ec5524695304d8",
+    "file_last_modified_utc": "2026-11-05T14:43:42+00:00",
+    "validation": {
+      "n_rows": 6394,
+      "n_columns": 217,
+      "n_duplicate_rows": 0,
+      "n_missing_cells": 0,
+      "missing_required_columns": [],
+      "target_special_code_counts": {
+        "-4": 1,
+        "-1": 4
+      },
+      "n_valid_target_rows": 6389,
+      "target_min": 14.0,
+      "target_max": 95.0,
+      "out_of_codebook_values": {},
+      "refused_or_missing_code_counts": {
+        "SAVEHABIT": 20,
+        "SAVINGSRANGES": 1184,
+        "AUTOMATED_1": 91,
+        "AUTOMATED_2": 98,
+        "FS1_7": 8,
+        "MANAGE1_1": 12,
+        "MANAGE1_2": 12,
+        "MANAGE1_3": 11,
+        "MANAGE1_4": 11,
+        "PROPPLAN_1": 10,
+        "PROPPLAN_2": 10,
+        "FS1_6": 10,
+        "ACT1_1": 24,
+        "SUBKNOWL1": 52,
+        "FS1_3": 12,
+        "FS2_3": 14,
+        "FINGOALS": 76,
+        "PROPPLAN_3": 10,
+        "PROPPLAN_4": 10,
+        "GOALCONF": 28,
+        "ACT1_2": 18,
+        "SCFHORIZON": 82,
+        "FS1_1": 12,
+        "EMPLOY": 116,
+        "HOUSING": 42
+      },
+      "dtype_counts": {
+        "int64": 215,
+        "float64": 2
+      },
+      "warnings": []
+    }
+  },
+  "target": {
+    "source_column": "FWBscore",
+    "class_names": [
+      "Low",
+      "Medium",
+      "High"
+    ],
+    "class_to_int": {
+      "Low": 0,
+      "Medium": 1,
+      "High": 2
+    },
+    "band_rule": {
+      "Low": "score <= 49",
+      "Medium": "50 to 57",
+      "High": "score >= 58"
+    },
+    "band_rule_status": "Proposed 3-class grouping; cut points to be confirmed with supervisor.",
+    "class_distribution_all": {
+      "Low": {
+        "count": 1943,
+        "percent": 30.41
+      },
+      "Medium": {
+        "count": 1513,
+        "percent": 23.68
+      },
+      "High": {
+        "count": 2933,
+        "percent": 45.91
+      }
+    },
+    "class_distribution_train": {
+      "Low": {
+        "count": 1554,
+        "percent": 30.41
+      },
+      "Medium": {
+        "count": 1211,
+        "percent": 23.69
+      },
+      "High": {
+        "count": 2346,
+        "percent": 45.9
+      }
+    },
+    "class_distribution_test": {
+      "Low": {
+        "count": 389,
+        "percent": 30.44
+      },
+      "Medium": {
+        "count": 302,
+        "percent": 23.63
+      },
+      "High": {
+        "count": 587,
+        "percent": 45.93
+      }
+    },
+    "rows_dropped_invalid_target": 5
+  },
+  "features": {
+    "names": [
+      "SAVEHABIT",
+      "SAVINGSRANGES",
+      "AUTOMATED_1",
+      "AUTOMATED_2",
+      "FS1_7",
+      "MANAGE1_1",
+      "MANAGE1_2",
+      "MANAGE1_3",
+      "MANAGE1_4",
+      "PROPPLAN_1",
+      "PROPPLAN_2",
+      "FS1_6",
+      "ACT1_1",
+      "SUBKNOWL1",
+      "LMscore",
+      "FS1_3",
+      "FS2_3",
+      "FINGOALS",
+      "PROPPLAN_3",
+      "PROPPLAN_4",
+      "GOALCONF",
+      "ACT1_2",
+      "SCFHORIZON",
+      "FS1_1",
+      "agecat",
+      "PPINCIMP",
+      "PPEDUC",
+      "EMPLOY",
+      "HOUSING",
+      "PPHHSIZE",
+      "PPMARIT"
+    ],
+    "n_features": 31,
+    "forbidden_columns": [
+      "FWB1_1",
+      "FWB1_2",
+      "FWB1_3",
+      "FWB1_4",
+      "FWB1_5",
+      "FWB1_6",
+      "FWB2_1",
+      "FWB2_2",
+      "FWB2_3",
+      "FWB2_4",
+      "FWBscore",
+      "target",
+      "target_class",
+      "target_band",
+      "ENDSMEET",
+      "COVERCOSTS",
+      "ABSORBSHOCK",
+      "DISTRESS",
+      "SWB_1",
+      "SWB_2",
+      "SWB_3",
+      "MATHARDSHIP_1",
+      "MATHARDSHIP_2",
+      "MATHARDSHIP_3",
+      "MATHARDSHIP_4",
+      "MATHARDSHIP_5",
+      "MATHARDSHIP_6",
+      "COLLECT",
+      "REJECTED_1",
+      "REJECTED_2",
+      "BORROW_1",
+      "BORROW_2",
+      "OUTLOOK_1",
+      "OUTLOOK_2",
+      "HOUSESAT",
+      "HEALTH",
+      "PUF_ID",
+      "sample",
+      "finalwt",
+      "fpl",
+      "PCTLT200FPL",
+      "PPGENDER",
+      "PPETHM"
+    ]
+  },
+  "split": {
+    "test_size": 0.2,
+    "n_train": 5111,
+    "n_test": 1278,
+    "stratified": true,
+    "cv_folds": 5
+  },
+  "tuning": {
+    "rf_best": {
+      "params": {
+        "n_estimators": 300,
+        "max_depth": null,
+        "min_samples_leaf": 3,
+        "max_features": "sqrt"
+      },
+      "cv_macro_f1_mean": 0.6369440774170907,
+      "cv_macro_f1_std": 0.010682038913029998
+    },
+    "xgb_best": {
+      "params": {
+        "n_estimators": 400,
+        "max_depth": 3,
+        "learning_rate": 0.05,
+        "subsample": 0.8,
+        "colsample_bytree": 0.8
+      },
+      "cv_macro_f1_mean": 0.6479097915333456,
+      "cv_macro_f1_std": 0.01116463138287638
+    },
+    "rf_top5": [
+      {
+        "model": "Random Forest",
+        "params": "{'n_estimators': 300, 'max_depth': None, 'min_samples_leaf': 3, 'max_features': 'sqrt'}",
+        "cv_macro_f1_mean": 0.6369440774170907,
+        "cv_macro_f1_std": 0.010682038913029998,
+        "cv_accuracy_mean": 0.6726660583487803
+      },
+      {
+        "model": "Random Forest",
+        "params": "{'n_estimators': 300, 'max_depth': 16, 'min_samples_leaf': 5, 'max_features': 'sqrt'}",
+        "cv_macro_f1_mean": 0.635267669029153,
+        "cv_macro_f1_std": 0.01379861286948385,
+        "cv_accuracy_mean": 0.6683634527205008
+      },
+      {
+        "model": "Random Forest",
+        "params": "{'n_estimators': 300, 'max_depth': 10, 'min_samples_leaf': 1, 'max_features': 'sqrt'}",
+        "cv_macro_f1_mean": 0.6350136802812526,
+        "cv_macro_f1_std": 0.00907759657343883,
+        "cv_accuracy_mean": 0.6687546508580535
+      },
+      {
+        "model": "Random Forest",
+        "params": "{'n_estimators': 300, 'max_depth': None, 'min_samples_leaf': 5, 'max_features': 0.5}",
+        "cv_macro_f1_mean": 0.6349968732443922,
+        "cv_macro_f1_std": 0.01097155615708152,
+        "cv_accuracy_mean": 0.6658188475245479
+      },
+      {
+        "model": "Random Forest",
+        "params": "{'n_estimators': 300, 'max_depth': 10, 'min_samples_leaf': 5, 'max_features': 'sqrt'}",
+        "cv_macro_f1_mean": 0.6347167921298836,
+        "cv_macro_f1_std": 0.011652927838665813,
+        "cv_accuracy_mean": 0.666016072600253
+      }
+    ],
+    "xgb_top5": [
+      {
+        "model": "XGBoost",
+        "params": "{'n_estimators': 400, 'max_depth': 3, 'learning_rate': 0.05, 'subsample': 0.8, 'colsample_bytree': 0.8}",
+        "cv_macro_f1_mean": 0.6479097915333456,
+        "cv_macro_f1_std": 0.01116463138287638,
+        "cv_accuracy_mean": 0.6763811972384663
+      },
+      {
+        "model": "XGBoost",
+        "params": "{'n_estimators': 600, 'max_depth': 3, 'learning_rate': 0.02, 'subsample': 0.8, 'colsample_bytree': 0.8}",
+        "cv_macro_f1_mean": 0.6458526628049184,
+        "cv_macro_f1_std": 0.008009788742207586,
+        "cv_accuracy_mean": 0.6738385049918414
+      },
+      {
+        "model": "XGBoost",
+        "params": "{'n_estimators': 400, 'max_depth': 2, 'learning_rate': 0.05, 'subsample': 0.8, 'colsample_bytree': 0.8}",
+        "cv_macro_f1_mean": 0.6446845389830311,
+        "cv_macro_f1_std": 0.007427454388271346,
+        "cv_accuracy_mean": 0.6714909335766606
+      },
+      {
+        "model": "XGBoost",
+        "params": "{'n_estimators': 400, 'max_depth': 2, 'learning_rate': 0.08, 'subsample': 0.8, 'colsample_bytree': 0.8}",
+        "cv_macro_f1_mean": 0.6442252285889121,
+        "cv_macro_f1_std": 0.011148406382663466,
+        "cv_accuracy_mean": 0.6714897858070638
+      },
+      {
+        "model": "XGBoost",
+        "params": "{'n_estimators': 400, 'max_depth': 3, 'learning_rate': 0.02, 'subsample': 0.8, 'colsample_bytree': 0.8}",
+        "cv_macro_f1_mean": 0.6441670565600817,
+        "cv_macro_f1_std": 0.006759427408064567,
+        "cv_accuracy_mean": 0.6720787829051197
+      }
+    ],
+    "n_rf_candidates": 18,
+    "n_xgb_candidates": 27
+  },
+  "selected_model": "XGBoost",
+  "selection_rule": "Highest mean cross-validated macro-F1 on the training set (test set not used).",
+  "test_metrics": {
+    "Random Forest": {
+      "n_test": 1278,
+      "accuracy": 0.6744913928012519,
+      "balanced_accuracy": 0.6316439071042761,
+      "macro_precision": 0.6282689047667216,
+      "macro_recall": 0.6316439071042761,
+      "macro_f1": 0.6296918235217756,
+      "weighted_f1": 0.6741112232373967,
+      "roc_auc_ovr_macro": 0.83427390144877,
+      "log_loss": 0.7134015229889792,
+      "per_class": {
+        "Low": {
+          "precision": 0.6941747572815534,
+          "recall": 0.7352185089974294,
+          "f1": 0.714107365792759,
+          "support": 389
+        },
+        "Medium": {
+          "precision": 0.376271186440678,
+          "recall": 0.3675496688741722,
+          "f1": 0.37185929648241206,
+          "support": 302
+        },
+        "High": {
+          "precision": 0.8143607705779334,
+          "recall": 0.7921635434412265,
+          "f1": 0.8031088082901554,
+          "support": 587
+        }
+      },
+      "confusion_matrix": [
+        [
+          286,
+          87,
+          16
+        ],
+        [
+          101,
+          111,
+          90
+        ],
+        [
+          25,
+          97,
+          465
+        ]
+      ],
+      "confusion_matrix_labels": [
+        "Low",
+        "Medium",
+        "High"
+      ]
+    },
+    "XGBoost": {
+      "n_test": 1278,
+      "accuracy": 0.662754303599374,
+      "balanced_accuracy": 0.6328080382230447,
+      "macro_precision": 0.6355069019895876,
+      "macro_recall": 0.6328080382230447,
+      "macro_f1": 0.632569023788082,
+      "weighted_f1": 0.6707448574226627,
+      "roc_auc_ovr_macro": 0.8366639081304771,
+      "log_loss": 0.7053658962249756,
+      "per_class": {
+        "Low": {
+          "precision": 0.7069408740359897,
+          "recall": 0.7069408740359897,
+          "f1": 0.7069408740359897,
+          "support": 389
+        },
+        "Medium": {
+          "precision": 0.37815126050420167,
+          "recall": 0.4470198675496689,
+          "f1": 0.40971168437025796,
+          "support": 302
+        },
+        "High": {
+          "precision": 0.8214285714285714,
+          "recall": 0.7444633730834753,
+          "f1": 0.7810545129579982,
+          "support": 587
+        }
+      },
+      "confusion_matrix": [
+        [
+          275,
+          98,
+          16
+        ],
+        [
+          88,
+          135,
+          79
+        ],
+        [
+          26,
+          124,
+          437
+        ]
+      ],
+      "confusion_matrix_labels": [
+        "Low",
+        "Medium",
+        "High"
+      ]
+    }
+  },
+  "majority_baseline": {
+    "strategy": "most_frequent",
+    "accuracy": 0.4593114241001565,
+    "macro_f1": 0.2098302055406613
+  },
+  "subgroup_metrics": [
+    {
+      "family": "Age",
+      "group": "18-34",
+      "n": 302,
+      "accuracy": 0.6423841059602649,
+      "macro_f1": 0.6164961312958134,
+      "note": ""
+    },
+    {
+      "family": "Age",
+      "group": "35-54",
+      "n": 368,
+      "accuracy": 0.6032608695652174,
+      "macro_f1": 0.585416149068323,
+      "note": ""
+    },
+    {
+      "family": "Age",
+      "group": "55-69",
+      "n": 361,
+      "accuracy": 0.7008310249307479,
+      "macro_f1": 0.650089403350273,
+      "note": ""
+    },
+    {
+      "family": "Age",
+      "group": "70+",
+      "n": 247,
+      "accuracy": 0.7206477732793523,
+      "macro_f1": 0.614971767311899,
+      "note": ""
+    },
+    {
+      "family": "Income",
+      "group": "Under $40,000",
+      "n": 354,
+      "accuracy": 0.6129943502824858,
+      "macro_f1": 0.5659231608726588,
+      "note": ""
+    },
+    {
+      "family": "Income",
+      "group": "$40,000-$74,999",
+      "n": 339,
+      "accuracy": 0.6460176991150443,
+      "macro_f1": 0.6228037027984226,
+      "note": ""
+    },
+    {
+      "family": "Income",
+      "group": "$75,000 or more",
+      "n": 585,
+      "accuracy": 0.7025641025641025,
+      "macro_f1": 0.6314227229372344,
+      "note": ""
+    }
+  ],
+  "explanation_stability": {
+    "n_splits": 5,
+    "mean_pairwise_jaccard": 0.8266666666666668,
+    "feature_frequency_in_top_k": {
+      "MANAGE1_1": 5,
+      "PPINCIMP": 5,
+      "FS2_3": 5,
+      "SAVINGSRANGES": 5,
+      "agecat": 5,
+      "GOALCONF": 5,
+      "MANAGE1_2": 4,
+      "MANAGE1_3": 4,
+      "ACT1_2": 1,
+      "SAVEHABIT": 1
+    },
+    "top_k": 8,
+    "per_seed_scores": [
+      {
+        "seed": 11,
+        "accuracy": 0.6768388106416275,
+        "macro_f1": 0.6478678817929567
+      },
+      {
+        "seed": 22,
+        "accuracy": 0.6776212832550861,
+        "macro_f1": 0.6535662461320804
+      },
+      {
+        "seed": 33,
+        "accuracy": 0.6635367762128326,
+        "macro_f1": 0.6363288877784753
+      },
+      {
+        "seed": 44,
+        "accuracy": 0.6768388106416275,
+        "macro_f1": 0.6524714456206867
+      },
+      {
+        "seed": 55,
+        "accuracy": 0.6791862284820032,
+        "macro_f1": 0.6531885541495326
+      }
+    ],
+    "macro_f1_mean": 0.6486846030947464,
+    "macro_f1_std": 0.006508255139830708
+  },
+  "feature_group_ablation": [
+    {
+      "feature_set": "Capability questions only",
+      "n_features": 24,
+      "accuracy": 0.661189358372457,
+      "macro_f1": 0.6315918984249195
+    },
+    {
+      "feature_set": "Background (context) only",
+      "n_features": 7,
+      "accuracy": 0.5571205007824727,
+      "macro_f1": 0.5181025348824485
+    },
+    {
+      "feature_set": "All approved features",
+      "n_features": 31,
+      "accuracy": 0.662754303599374,
+      "macro_f1": 0.632569023788082
+    }
+  ],
+  "global_importance": [
+    {
+      "feature": "SAVINGSRANGES",
+      "label": "Savings balance",
+      "group": "Saving",
+      "mean_abs_shap": 0.2791996779045827,
+      "mean_abs_shap_Low": 0.4911801973953843,
+      "mean_abs_shap_Medium": 0.07712454161024652,
+      "mean_abs_shap_High": 0.2692942947081174
+    },
+    {
+      "feature": "GOALCONF",
+      "label": "Confidence in achieving goals",
+      "group": "Financial Goal Planning",
+      "mean_abs_shap": 0.21957247855653986,
+      "mean_abs_shap_Low": 0.25618616432952696,
+      "mean_abs_shap_Medium": 0.04874908004864119,
+      "mean_abs_shap_High": 0.35378219129145144
+    },
+    {
+      "feature": "agecat",
+      "label": "Age group",
+      "group": "Background (context only)",
+      "mean_abs_shap": 0.14765959313113128,
+      "mean_abs_shap_Low": 0.2045659493833082,
+      "mean_abs_shap_Medium": 0.0556931029483967,
+      "mean_abs_shap_High": 0.1827197270616889
+    },
+    {
+      "feature": "FS2_3",
+      "label": "Struggles to understand financial information",
+      "group": "Basic Financial Knowledge",
+      "mean_abs_shap": 0.13861867151300733,
+      "mean_abs_shap_Low": 0.11605962001532316,
+      "mean_abs_shap_Medium": 0.05507049433561042,
+      "mean_abs_shap_High": 0.24472590018808843
+    },
+    {
+      "feature": "PPINCIMP",
+      "label": "Household income",
+      "group": "Background (context only)",
+      "mean_abs_shap": 0.12778349553616133,
+      "mean_abs_shap_Low": 0.20091811933834106,
+      "mean_abs_shap_Medium": 0.015673192936810666,
+      "mean_abs_shap_High": 0.16675917433333234
+    },
+    {
+      "feature": "SAVEHABIT",
+      "label": "Saving habit",
+      "group": "Saving",
+      "mean_abs_shap": 0.1244750357796438,
+      "mean_abs_shap_Low": 0.17382158384099602,
+      "mean_abs_shap_Medium": 0.055912417588289826,
+      "mean_abs_shap_High": 0.14369110590964557
+    },
+    {
+      "feature": "MANAGE1_1",
+      "label": "Paid all bills on time",
+      "group": "Budgeting",
+      "mean_abs_shap": 0.1150539808559697,
+      "mean_abs_shap_Low": 0.15972096699476243,
+      "mean_abs_shap_Medium": 0.03279839484044351,
+      "mean_abs_shap_High": 0.1526425807327032
+    },
+    {
+      "feature": "ACT1_2",
+      "label": "Follows through on own goals",
+      "group": "Financial Goal Planning",
+      "mean_abs_shap": 0.1029852246446535,
+      "mean_abs_shap_Low": 0.1355048166811466,
+      "mean_abs_shap_Medium": 0.030356120177544653,
+      "mean_abs_shap_High": 0.14309473707526923
+    },
+    {
+      "feature": "FS1_1",
+      "label": "Skill: following through on intentions",
+      "group": "Financial Goal Planning",
+      "mean_abs_shap": 0.09432240622565342,
+      "mean_abs_shap_Low": 0.033122105116432064,
+      "mean_abs_shap_Medium": 0.03947387027737568,
+      "mean_abs_shap_High": 0.21037124328315257
+    },
+    {
+      "feature": "MANAGE1_2",
+      "label": "Stayed within budget",
+      "group": "Budgeting",
+      "mean_abs_shap": 0.09373959179843465,
+      "mean_abs_shap_Low": 0.14236171422153712,
+      "mean_abs_shap_Medium": 0.0281887821185519,
+      "mean_abs_shap_High": 0.11066827905521495
+    },
+    {
+      "feature": "MANAGE1_3",
+      "label": "Paid credit card in full",
+      "group": "Budgeting",
+      "mean_abs_shap": 0.0866982942240429,
+      "mean_abs_shap_Low": 0.07316783328726888,
+      "mean_abs_shap_Medium": 0.02182674905791646,
+      "mean_abs_shap_High": 0.1651003003269434
+    },
+    {
+      "feature": "SCFHORIZON",
+      "label": "Financial planning time horizon",
+      "group": "Financial Goal Planning",
+      "mean_abs_shap": 0.08199285824197673,
+      "mean_abs_shap_Low": 0.0858185872103786,
+      "mean_abs_shap_Medium": 0.014478616533713648,
+      "mean_abs_shap_High": 0.14568137098183798
+    },
+    {
+      "feature": "EMPLOY",
+      "label": "Employment status",
+      "group": "Background (context only)",
+      "mean_abs_shap": 0.0724974429575256,
+      "mean_abs_shap_Low": 0.0716186130401402,
+      "mean_abs_shap_Medium": 0.0461140269151947,
+      "mean_abs_shap_High": 0.09975968891724188
+    },
+    {
+      "feature": "FS1_7",
+      "label": "Skill: making myself save",
+      "group": "Saving",
+      "mean_abs_shap": 0.06851428091884978,
+      "mean_abs_shap_Low": 0.005835647139756475,
+      "mean_abs_shap_Medium": 0.06869152256799861,
+      "mean_abs_shap_High": 0.13101567304879427
+    },
+    {
+      "feature": "PROPPLAN_1",
+      "label": "Consults budget",
+      "group": "Budgeting",
+      "mean_abs_shap": 0.06651824574818602,
+      "mean_abs_shap_Low": 0.057070464158430693,
+      "mean_abs_shap_Medium": 0.05936336760222912,
+      "mean_abs_shap_High": 0.08312090548389824
+    },
+    {
+      "feature": "SUBKNOWL1",
+      "label": "Self-rated financial knowledge",
+      "group": "Basic Financial Knowledge",
+      "mean_abs_shap": 0.06067084155852596,
+      "mean_abs_shap_Low": 0.08603069704503287,
+      "mean_abs_shap_Medium": 0.07690863350965083,
+      "mean_abs_shap_High": 0.019073194120894185
+    },
+    {
+      "feature": "PPMARIT",
+      "label": "Marital status",
+      "group": "Background (context only)",
+      "mean_abs_shap": 0.05183126373247554,
+      "mean_abs_shap_Low": 0.09205713129971992,
+      "mean_abs_shap_Medium": 0.025107172684787658,
+      "mean_abs_shap_High": 0.038329487212919046
+    },
+    {
+      "feature": "PROPPLAN_2",
+      "label": "Plans to stick to budget",
+      "group": "Budgeting",
+      "mean_abs_shap": 0.051484660009155046,
+      "mean_abs_shap_Low": 0.040301611694390886,
+      "mean_abs_shap_Medium": 0.039134209100040604,
+      "mean_abs_shap_High": 0.07501815923303366
+    },
+    {
+      "feature": "FS1_3",
+      "label": "Skill: complex financial decisions",
+      "group": "Basic Financial Knowledge",
+      "mean_abs_shap": 0.04384457075791822,
+      "mean_abs_shap_Low": 0.034400550259568265,
+      "mean_abs_shap_Medium": 0.022737775281071664,
+      "mean_abs_shap_High": 0.07439538673311472
+    },
+    {
+      "feature": "PPEDUC",
+      "label": "Education",
+      "group": "Background (context only)",
+      "mean_abs_shap": 0.043760832036306964,
+      "mean_abs_shap_Low": 0.030556632491745405,
+      "mean_abs_shap_Medium": 0.03789241381108877,
+      "mean_abs_shap_High": 0.06283344980608672
+    },
+    {
+      "feature": "ACT1_1",
+      "label": "Follows through on commitments to others",
+      "group": "Budgeting",
+      "mean_abs_shap": 0.037564180114791575,
+      "mean_abs_shap_Low": 0.02803286167170154,
+      "mean_abs_shap_Medium": 0.04018699371558614,
+      "mean_abs_shap_High": 0.04447268495708704
+    },
+    {
+      "feature": "AUTOMATED_2",
+      "label": "Automatic saving: other savings account",
+      "group": "Saving",
+      "mean_abs_shap": 0.03501259991665332,
+      "mean_abs_shap_Low": 0.052445271391421557,
+      "mean_abs_shap_Medium": 0.006005844150175107,
+      "mean_abs_shap_High": 0.046586684208363295
+    },
+    {
+      "feature": "PPHHSIZE",
+      "label": "Household size",
+      "group": "Background (context only)",
+      "mean_abs_shap": 0.03239298854085306,
+      "mean_abs_shap_Low": 0.04173041858326178,
+      "mean_abs_shap_Medium": 0.025821222416008822,
+      "mean_abs_shap_High": 0.029627324623288587
+    },
+    {
+      "feature": "LMscore",
+      "label": "Basic financial knowledge quiz (0-3 correct)",
+      "group": "Basic Financial Knowledge",
+      "mean_abs_shap": 0.03211800798756303,
+      "mean_abs_shap_Low": 0.030427057874971068,
+      "mean_abs_shap_Medium": 0.051885102056898176,
+      "mean_abs_shap_High": 0.014041864030819851
+    },
+    {
+      "feature": "FS1_6",
+      "label": "Skill: avoiding overspending",
+      "group": "Budgeting",
+      "mean_abs_shap": 0.028778570953125988,
+      "mean_abs_shap_Low": 0.021683789616654393,
+      "mean_abs_shap_Medium": 0.024570001842686907,
+      "mean_abs_shap_High": 0.04008192140003666
+    },
+    {
+      "feature": "PROPPLAN_4",
+      "label": "Has a clear action plan",
+      "group": "Financial Goal Planning",
+      "mean_abs_shap": 0.028520414758192295,
+      "mean_abs_shap_Low": 0.019600501514301868,
+      "mean_abs_shap_Medium": 0.06026544564188225,
+      "mean_abs_shap_High": 0.005695297118392773
+    },
+    {
+      "feature": "MANAGE1_4",
+      "label": "Checked statements for errors",
+      "group": "Budgeting",
+      "mean_abs_shap": 0.026812845410041822,
+      "mean_abs_shap_Low": 0.04480167647683993,
+      "mean_abs_shap_Medium": 0.013206302457139827,
+      "mean_abs_shap_High": 0.02243055729614571
+    },
+    {
+      "feature": "PROPPLAN_3",
+      "label": "Sets financial goals",
+      "group": "Financial Goal Planning",
+      "mean_abs_shap": 0.02533724744426824,
+      "mean_abs_shap_Low": 0.01799835859629093,
+      "mean_abs_shap_Medium": 0.043660399794724074,
+      "mean_abs_shap_High": 0.014352983941789717
+    },
+    {
+      "feature": "FINGOALS",
+      "label": "Has a current or recent financial goal",
+      "group": "Financial Goal Planning",
+      "mean_abs_shap": 0.025148621249536516,
+      "mean_abs_shap_Low": 0.01856472342921188,
+      "mean_abs_shap_Medium": 0.026075438798870892,
+      "mean_abs_shap_High": 0.030805701520526783
+    },
+    {
+      "feature": "HOUSING",
+      "label": "Housing situation",
+      "group": "Background (context only)",
+      "mean_abs_shap": 0.022124640518510808,
+      "mean_abs_shap_Low": 0.014290429022461467,
+      "mean_abs_shap_Medium": 0.02048533876161673,
+      "mean_abs_shap_High": 0.03159815377145424
+    },
+    {
+      "feature": "AUTOMATED_1",
+      "label": "Automatic saving: retirement account",
+      "group": "Saving",
+      "mean_abs_shap": 0.008328286521233774,
+      "mean_abs_shap_Low": 0.00543608042827691,
+      "mean_abs_shap_Medium": 0.00443436547688907,
+      "mean_abs_shap_High": 0.015114413658535341
+    }
+  ],
+  "limitations": [
+    "US adults surveyed in 2016; validity for Sri Lankan users has not been established.",
+    "Cross-sectional survey: associations only, no causal claims.",
+    "Self-reported answers; capability rules are proposed and need expert review.",
+    "Results are educational support, not financial advice or a diagnosis."
+  ]
+}

@@ -1,0 +1,187 @@
+column,reason
+PUF_ID,"Identifier, survey weight or sampling-frame field"
+sample,"Identifier, survey weight or sampling-frame field"
+fpl,"Identifier, survey weight or sampling-frame field"
+SWB_1,Outcome-like hardship / stress / well-being measure (not a capability input)
+SWB_2,Outcome-like hardship / stress / well-being measure (not a capability input)
+SWB_3,Outcome-like hardship / stress / well-being measure (not a capability input)
+FWBscore,Leakage: target or target-derived field
+FWB1_1,Leakage: one of the 10 items summed into the FWB score (target)
+FWB1_2,Leakage: one of the 10 items summed into the FWB score (target)
+FWB1_3,Leakage: one of the 10 items summed into the FWB score (target)
+FWB1_4,Leakage: one of the 10 items summed into the FWB score (target)
+FWB1_5,Leakage: one of the 10 items summed into the FWB score (target)
+FWB1_6,Leakage: one of the 10 items summed into the FWB score (target)
+FWB2_1,Leakage: one of the 10 items summed into the FWB score (target)
+FWB2_2,Leakage: one of the 10 items summed into the FWB score (target)
+FWB2_3,Leakage: one of the 10 items summed into the FWB score (target)
+FWB2_4,Leakage: one of the 10 items summed into the FWB score (target)
+FSscore,Not selected: not part of the approved capability/context feature set
+FS1_2,Not selected: not part of the approved capability/context feature set
+FS1_4,Not selected: not part of the approved capability/context feature set
+FS1_5,Not selected: not part of the approved capability/context feature set
+FS2_1,Not selected: not part of the approved capability/context feature set
+FS2_2,Not selected: not part of the approved capability/context feature set
+FRUGALITY,Not selected: not part of the approved capability/context feature set
+ASK1_1,Not selected: not part of the approved capability/context feature set
+ASK1_2,Not selected: not part of the approved capability/context feature set
+SUBNUMERACY2,Not selected: not part of the approved capability/context feature set
+SUBNUMERACY1,Not selected: not part of the approved capability/context feature set
+CHANGEABLE,Not selected: not part of the approved capability/context feature set
+FINKNOWL1,Not selected: not part of the approved capability/context feature set
+FINKNOWL2,Not selected: not part of the approved capability/context feature set
+FINKNOWL3,Not selected: not part of the approved capability/context feature set
+FK1correct,Not selected: not part of the approved capability/context feature set
+FK2correct,Not selected: not part of the approved capability/context feature set
+FK3correct,Not selected: not part of the approved capability/context feature set
+KHscore,Not selected: not part of the approved capability/context feature set
+KHKNOWL1,Not selected: not part of the approved capability/context feature set
+KHKNOWL2,Not selected: not part of the approved capability/context feature set
+KHKNOWL3,Not selected: not part of the approved capability/context feature set
+KHKNOWL4,Not selected: not part of the approved capability/context feature set
+KHKNOWL5,Not selected: not part of the approved capability/context feature set
+KHKNOWL6,Not selected: not part of the approved capability/context feature set
+KHKNOWL7,Not selected: not part of the approved capability/context feature set
+KHKNOWL8,Not selected: not part of the approved capability/context feature set
+KHKNOWL9,Not selected: not part of the approved capability/context feature set
+KH1correct,Not selected: not part of the approved capability/context feature set
+KH2correct,Not selected: not part of the approved capability/context feature set
+KH3correct,Not selected: not part of the approved capability/context feature set
+KH4correct,Not selected: not part of the approved capability/context feature set
+KH5correct,Not selected: not part of the approved capability/context feature set
+KH6correct,Not selected: not part of the approved capability/context feature set
+KH7correct,Not selected: not part of the approved capability/context feature set
+KH8correct,Not selected: not part of the approved capability/context feature set
+KH9correct,Not selected: not part of the approved capability/context feature set
+ENDSMEET,Outcome-like hardship / stress / well-being measure (not a capability input)
+LIVINGARRANGEMENT,Not selected: not part of the approved capability/context feature set
+HOUSERANGES,Not selected: not part of the approved capability/context feature set
+IMPUTATION_FLAG,Not selected: not part of the approved capability/context feature set
+VALUERANGES,Not selected: not part of the approved capability/context feature set
+MORTGAGE,Not selected: not part of the approved capability/context feature set
+PRODHAVE_1,Not selected: not part of the approved capability/context feature set
+PRODHAVE_2,Not selected: not part of the approved capability/context feature set
+PRODHAVE_3,Not selected: not part of the approved capability/context feature set
+PRODHAVE_4,Not selected: not part of the approved capability/context feature set
+PRODHAVE_5,Not selected: not part of the approved capability/context feature set
+PRODHAVE_6,Not selected: not part of the approved capability/context feature set
+PRODHAVE_7,Not selected: not part of the approved capability/context feature set
+PRODHAVE_8,Not selected: not part of the approved capability/context feature set
+PRODHAVE_9,Not selected: not part of the approved capability/context feature set
+PRODUSE_1,Not selected: not part of the approved capability/context feature set
+PRODUSE_2,Not selected: not part of the approved capability/context feature set
+PRODUSE_3,Not selected: not part of the approved capability/context feature set
+PRODUSE_4,Not selected: not part of the approved capability/context feature set
+PRODUSE_5,Not selected: not part of the approved capability/context feature set
+PRODUSE_6,Not selected: not part of the approved capability/context feature set
+CONSPROTECT1,Not selected: not part of the approved capability/context feature set
+CONSPROTECT2,Not selected: not part of the approved capability/context feature set
+CONSPROTECT3,Not selected: not part of the approved capability/context feature set
+EARNERS,Not selected: not part of the approved capability/context feature set
+VOLATILITY,Not selected: not part of the approved capability/context feature set
+SNAP,Not selected: not part of the approved capability/context feature set
+MATHARDSHIP_1,Outcome-like hardship / stress / well-being measure (not a capability input)
+MATHARDSHIP_2,Outcome-like hardship / stress / well-being measure (not a capability input)
+MATHARDSHIP_3,Outcome-like hardship / stress / well-being measure (not a capability input)
+MATHARDSHIP_4,Outcome-like hardship / stress / well-being measure (not a capability input)
+MATHARDSHIP_5,Outcome-like hardship / stress / well-being measure (not a capability input)
+MATHARDSHIP_6,Outcome-like hardship / stress / well-being measure (not a capability input)
+COLLECT,Outcome-like hardship / stress / well-being measure (not a capability input)
+REJECTED_1,Outcome-like hardship / stress / well-being measure (not a capability input)
+REJECTED_2,Outcome-like hardship / stress / well-being measure (not a capability input)
+ABSORBSHOCK,Outcome-like hardship / stress / well-being measure (not a capability input)
+BENEFITS_1,Not selected: not part of the approved capability/context feature set
+BENEFITS_2,Not selected: not part of the approved capability/context feature set
+BENEFITS_3,Not selected: not part of the approved capability/context feature set
+BENEFITS_4,Not selected: not part of the approved capability/context feature set
+BENEFITS_5,Not selected: not part of the approved capability/context feature set
+FRAUD2,Not selected: not part of the approved capability/context feature set
+COVERCOSTS,Outcome-like hardship / stress / well-being measure (not a capability input)
+BORROW_1,Outcome-like hardship / stress / well-being measure (not a capability input)
+BORROW_2,Outcome-like hardship / stress / well-being measure (not a capability input)
+SHOCKS_1,Not selected: not part of the approved capability/context feature set
+SHOCKS_2,Not selected: not part of the approved capability/context feature set
+SHOCKS_3,Not selected: not part of the approved capability/context feature set
+SHOCKS_4,Not selected: not part of the approved capability/context feature set
+SHOCKS_5,Not selected: not part of the approved capability/context feature set
+SHOCKS_6,Not selected: not part of the approved capability/context feature set
+SHOCKS_7,Not selected: not part of the approved capability/context feature set
+SHOCKS_8,Not selected: not part of the approved capability/context feature set
+SHOCKS_9,Not selected: not part of the approved capability/context feature set
+SHOCKS_10,Not selected: not part of the approved capability/context feature set
+SHOCKS_11,Not selected: not part of the approved capability/context feature set
+SHOCKS_12,Not selected: not part of the approved capability/context feature set
+MANAGE2,Not selected: not part of the approved capability/context feature set
+PAIDHELP,Not selected: not part of the approved capability/context feature set
+HSLOC,Not selected: not part of the approved capability/context feature set
+PAREDUC,Not selected: not part of the approved capability/context feature set
+FINSOC2_1,Not selected: not part of the approved capability/context feature set
+FINSOC2_2,Not selected: not part of the approved capability/context feature set
+FINSOC2_3,Not selected: not part of the approved capability/context feature set
+FINSOC2_4,Not selected: not part of the approved capability/context feature set
+FINSOC2_5,Not selected: not part of the approved capability/context feature set
+FINSOC2_6,Not selected: not part of the approved capability/context feature set
+FINSOC2_7,Not selected: not part of the approved capability/context feature set
+OBJNUMERACY1,Not selected: not part of the approved capability/context feature set
+ON2correct,Not selected: not part of the approved capability/context feature set
+ON1correct,Not selected: not part of the approved capability/context feature set
+MATERIALISM_1,Not selected: not part of the approved capability/context feature set
+MATERIALISM_2,Not selected: not part of the approved capability/context feature set
+MATERIALISM_3,Not selected: not part of the approved capability/context feature set
+CONNECT,Not selected: not part of the approved capability/context feature set
+HEALTH,Outcome-like hardship / stress / well-being measure (not a capability input)
+DISCOUNT,Not selected: not part of the approved capability/context feature set
+MEMLOSS,Not selected: not part of the approved capability/context feature set
+DISTRESS,Outcome-like hardship / stress / well-being measure (not a capability input)
+SELFCONTROL_1,Not selected: not part of the approved capability/context feature set
+SELFCONTROL_2,Not selected: not part of the approved capability/context feature set
+SELFCONTROL_3,Not selected: not part of the approved capability/context feature set
+OUTLOOK_1,Outcome-like hardship / stress / well-being measure (not a capability input)
+OUTLOOK_2,Outcome-like hardship / stress / well-being measure (not a capability input)
+INTERCONNECTIONS_1,Not selected: not part of the approved capability/context feature set
+INTERCONNECTIONS_2,Not selected: not part of the approved capability/context feature set
+INTERCONNECTIONS_3,Not selected: not part of the approved capability/context feature set
+INTERCONNECTIONS_4,Not selected: not part of the approved capability/context feature set
+INTERCONNECTIONS_5,Not selected: not part of the approved capability/context feature set
+INTERCONNECTIONS_6,Not selected: not part of the approved capability/context feature set
+INTERCONNECTIONS_7,Not selected: not part of the approved capability/context feature set
+INTERCONNECTIONS_8,Not selected: not part of the approved capability/context feature set
+INTERCONNECTIONS_9,Not selected: not part of the approved capability/context feature set
+INTERCONNECTIONS_10,Not selected: not part of the approved capability/context feature set
+PEM,Not selected: not part of the approved capability/context feature set
+HOUSESAT,Outcome-like hardship / stress / well-being measure (not a capability input)
+SOCSEC1,Not selected: not part of the approved capability/context feature set
+SOCSEC2,Not selected: not part of the approved capability/context feature set
+SOCSEC3,Not selected: not part of the approved capability/context feature set
+LIFEEXPECT,Not selected: not part of the approved capability/context feature set
+HHEDUC,Not selected: not part of the approved capability/context feature set
+KIDS_NoChildren,Not selected: not part of the approved capability/context feature set
+KIDS_1,Not selected: not part of the approved capability/context feature set
+KIDS_2,Not selected: not part of the approved capability/context feature set
+KIDS_3,Not selected: not part of the approved capability/context feature set
+KIDS_4,Not selected: not part of the approved capability/context feature set
+EMPLOY1_1,Not selected: not part of the approved capability/context feature set
+EMPLOY1_2,Not selected: not part of the approved capability/context feature set
+EMPLOY1_3,Not selected: not part of the approved capability/context feature set
+EMPLOY1_4,Not selected: not part of the approved capability/context feature set
+EMPLOY1_5,Not selected: not part of the approved capability/context feature set
+EMPLOY1_6,Not selected: not part of the approved capability/context feature set
+EMPLOY1_7,Not selected: not part of the approved capability/context feature set
+EMPLOY1_8,Not selected: not part of the approved capability/context feature set
+EMPLOY1_9,Not selected: not part of the approved capability/context feature set
+RETIRE,Not selected: not part of the approved capability/context feature set
+MILITARY,Not selected: not part of the approved capability/context feature set
+Military_Status,Not selected: not part of the approved capability/context feature set
+generation,Not selected: not part of the approved capability/context feature set
+PPETHM,Sensitive demographic attribute kept out of the model
+PPGENDER,Sensitive demographic attribute kept out of the model
+PPMSACAT,Not selected: not part of the approved capability/context feature set
+PPREG4,Not selected: not part of the approved capability/context feature set
+PPREG9,Not selected: not part of the approved capability/context feature set
+PPT01,Not selected: not part of the approved capability/context feature set
+PPT25,Not selected: not part of the approved capability/context feature set
+PPT612,Not selected: not part of the approved capability/context feature set
+PPT1317,Not selected: not part of the approved capability/context feature set
+PPT18OV,Not selected: not part of the approved capability/context feature set
+PCTLT200FPL,"Identifier, survey weight or sampling-frame field"
+finalwt,"Identifier, survey weight or sampling-frame field"
