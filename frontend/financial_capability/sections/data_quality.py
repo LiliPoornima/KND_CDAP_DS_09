@@ -17,7 +17,7 @@ from frontend.financial_capability.data_loader import get_metadata, show_not_tra
 
 
 def render() -> None:
-    st.subheader("Dataset & Data Quality")
+    st.subheader("Stages 1 & 2 – CFPB Financial Well-being Dataset & Data Preparation")
     meta = get_metadata()
     if meta is None:
         show_not_trained()

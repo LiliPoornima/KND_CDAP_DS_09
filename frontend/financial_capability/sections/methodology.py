@@ -53,28 +53,30 @@ def render() -> None:
         "same features and split. No resampling (e.g. SMOTE) is used.\n"
         "- The fitted pipeline is saved locally and loaded by this page; the page never retrains.")
 
-    st.markdown("### Explanations, rules and what-if")
+    st.markdown("### Explanations, Capability Profile, Bank Officer Guidance and What-if")
     st.markdown(
-        "- **SHAP** explains the model's behaviour (global and individual). It does not prove "
-        "causation or a person's real ability.\n"
-        "- **Capability gaps** are found by separate, readable rules on the person's own answers "
-        "(codebook meaning), not from SHAP. Thresholds are proposed and need expert review.\n"
-        "- **Learning categories** are labels only (Saving, Budgeting, Basic Financial Knowledge, "
-        "Financial Goal Planning). There are no lessons, quizzes or progress tracking in Phase 1.\n"
-        "- **What-if** re-runs the same saved model with changed answers. It is a model simulation, "
-        "not causal evidence.")
+        "- **SHAP** explains the model's behaviour (global and individual applicant). It does not prove "
+        "causation or predict loan repayment.\n"
+        "- **Capability strengths & gaps** are identified by transparent, readable rules on the applicant's "
+        "actual answers (using official CFPB codebook meanings), independent of SHAP.\n"
+        "- **Bank Officer Guidance & Follow-up Questions** provide practical discussion points for the loan "
+        "consultation across Saving, Budgeting, Basic Financial Knowledge, and Financial Goal Planning. "
+        "Customer learning platforms, videos, lessons, and quizzes are excluded from Component 04.\n"
+        "- **What-if** re-runs the same saved model with hypothetically modified capability answers without "
+        "altering the applicant's original responses.")
 
-    st.markdown("### Limitations")
+    st.markdown("### Limitations & Bank Decision-Support Governance")
     for item in (meta["limitations"] if meta else [
         "US adults surveyed in 2016; validity for Sri Lankan users has not been established.",
         "Cross-sectional survey: associations only, no causal claims.",
         "Self-reported answers; capability rules are proposed and need expert review.",
-        "Results are educational support, not financial advice or a diagnosis.",
+        "Supplementary decision support only — not an automatic loan approval or rejection.",
     ]):
         st.markdown(f"- {item}")
     st.markdown(
-        "- Ground-truth labels for 'best lesson' do not exist in this dataset, so category "
-        "suggestions cannot be validated here; user evaluation would be needed.\n"
-        "- The Medium class (a narrow score band) is the hardest to predict; see the per-class "
+        "- **Supplementary Role in Loan Assessment**: Component 04 does not replace the bank's normal "
+        "identity/income verification, credit score/history check, or repayment capacity (DTI) calculation.\n"
+        "- **Component Independence**: Component 04 is completely independent of Components 01, 02, and 03.\n"
+        "- The Medium class (a narrow score band, 50–57) is the hardest to predict; see the per-class "
         "metrics and confusion matrices.")
 

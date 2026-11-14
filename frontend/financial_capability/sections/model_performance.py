@@ -16,7 +16,7 @@ METRIC_LABELS = {
 
 
 def render() -> None:
-    st.subheader("Model Performance")
+    st.subheader("Stage 3 – Model Training & Evaluation (Random Forest vs XGBoost)")
     bundle = require_bundle()
     if bundle is None:
         return

@@ -23,22 +23,29 @@ SHAP_DISCLAIMER = (
 
 
 def render() -> None:
-    """Render the enhanced SHAP Explainability section."""
-    st.subheader("Explainable AI: SHAP Feature Attribution")
+    """Render Stage 4 – Explainable AI (SHAP Feature Attribution) for the Bank Officer."""
+    st.subheader("Stage 4 – Explainability (SHAP): Global & Individual Applicant Factors")
     bundle = require_bundle()
     if bundle is None:
         return
 
     st.info(f"ℹ️ {SHAP_DISCLAIMER}")
 
-    # Tabs for Local (Personal) vs Global (Model-Wide) Explanations
-    tab_local, tab_global = st.tabs(["🔍 Individual Explanation (Your Assessment)", "🌐 Global Feature Importance (Model-Wide)"])
+    # Tabs for Local (Applicant) vs Global (Model-Wide) Explanations
+    tab_local, tab_global = st.tabs(
+        [
+            "🔍 Individual Applicant Explanation",
+            "🌐 Global Feature Importance (Model-Wide)",
+        ]
+    )
 
     with tab_local:
-        st.markdown("### Why this prediction? (your current assessment)")
+        st.markdown("### Why this prediction? (Applicant's current assessment)")
         response = require_response()
         if response is None:
-            st.info("Complete an assessment in the **Individual Assessment** section to view your personalized feature attributions.")
+            st.info(
+                "Complete an applicant assessment in the **Individual Assessment** section to view personalized SHAP feature attributions."
+            )
             return
 
         explainer = get_explainer()

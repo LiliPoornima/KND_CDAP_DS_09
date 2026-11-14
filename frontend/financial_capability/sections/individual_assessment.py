@@ -1,9 +1,10 @@
-"""Individual Assessment section: Redesigned modern fintech assessment & capability insights."""
+"""Bank Officer Dashboard (Individual Assessment): Complete 8-section loan applicant financial well-being review."""
 
 from __future__ import annotations
 
 from datetime import date
 import html
+import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
 
@@ -11,11 +12,13 @@ from backend.src.financial_capability.fc_capability_rules import (
     STATUS_GAP,
     STATUS_INSUFFICIENT,
     STATUS_NONE,
+    extract_resilience_indicators,
+    generate_officer_guidance,
+    generate_officer_questions,
     identify_capability_gaps,
-    map_gaps_to_categories,
+    identify_capability_strengths,
 )
 from backend.src.financial_capability.fc_config import (
-    CAPABILITY_GROUPS,
     CLASS_NAMES,
     FEATURE_SPECS,
     GROUP_BUDGETING,
@@ -32,17 +35,23 @@ from backend.src.financial_capability.fc_predictor import (
 )
 from backend.src.financial_capability.fc_what_if import run_what_if
 from frontend.financial_capability.constants import (
+    BANK_LOAN_NOTICE,
+    COMPONENT_TITLE,
     DISCLAIMER,
     EXAMPLE_RESPONSE,
     SESSION_RESPONSE_KEY,
     WIDGET_PREFIX,
 )
 from frontend.financial_capability.data_loader import get_explainer, require_bundle
-from frontend.financial_capability.pdf_report import build_capability_assessment_pdf
+from frontend.financial_capability.pdf_report import (
+    REPORT_TITLE,
+    build_capability_assessment_pdf,
+    build_capability_assessment_txt,
+)
 
 
 def _fill_example() -> None:
-    """Callback: fill illustrative answers into form widgets."""
+    """Callback: fill illustrative loan applicant answers into form widgets."""
     for name, value in EXAMPLE_RESPONSE.items():
         st.session_state[WIDGET_PREFIX + name] = value
 
@@ -68,8 +77,11 @@ def _question(spec) -> None:
     )
 
 
-def probability_chart(probabilities: dict, title: str = "Class Probabilities") -> go.Figure:
-    """Create a modern fintech probability distribution bar chart."""
+def probability_chart(
+    probabilities: dict,
+    title: str = "Model Prediction Probability Distribution (Financial Well-being)",
+) -> go.Figure:
+    """Create a banking-grade probability distribution bar chart."""
     colors = [
         "#EF4444" if c == "Low" else "#F59E0B" if c == "Medium" else "#10B981"
         for c in probabilities
@@ -87,31 +99,94 @@ def probability_chart(probabilities: dict, title: str = "Class Probabilities") -
     )
     fig.update_layout(
         title=dict(text=title, font=dict(size=14, color="#0F172A", family="sans-serif")),
-        yaxis=dict(range=[0, 1], title="Probability", gridcolor="#F1F5F9"),
+        yaxis=dict(range=[0, 1], title="Model Probability", gridcolor="#F1F5F9"),
         xaxis=dict(title="", showgrid=False),
         plot_bgcolor="#FFFFFF",
         paper_bgcolor="#FFFFFF",
         margin=dict(l=20, r=20, t=40, b=20),
-        height=220,
+        height=230,
     )
     return fig
 
 
-def _render_insights_grid(gaps: list) -> None:
-    """Render the 2x2 Financial Capability Insights card grid (matching user mockup Image 1)."""
-    st.markdown("### Financial Capability Insights")
-    st.caption("Your personalized assessment results • Phase 1")
+def _render_section_2_wellbeing_result(result: dict, response: dict, total_count: int) -> None:
+    """Render Section 2 – Applicant Financial Well-being Result."""
+    st.markdown("### Section 2 – Applicant Financial Well-being Result")
+    pred = result["predicted_class"]
+    conf = result["confidence"]
 
-    # Map areas to specific metadata
+    badge_color = "#DC2626" if pred == "Low" else "#D97706" if pred == "Medium" else "#059669"
+    badge_bg = "#FEF2F2" if pred == "Low" else "#FFFBEB" if pred == "Medium" else "#ECFDF5"
+    level_explanation = {
+        "Low": (
+            "The applicant's reported indicators align with the Low financial well-being band "
+            "(CFPB score ≤ 49). Closer review of emergency buffers, cash-flow margin, and debt load is advised."
+        ),
+        "Medium": (
+            "The applicant's reported indicators align with the Medium financial well-being band "
+            "(CFPB score 50–57). Moderate day-to-day financial stability is indicated, with specific capability areas to review."
+        ),
+        "High": (
+            "The applicant's reported indicators align with the High financial well-being band "
+            "(CFPB score ≥ 58). Strong saving, budgeting, and planning behaviors are indicated."
+        ),
+    }.get(pred, "")
+
+    res_col1, res_col2 = st.columns([1.15, 1.85])
+    with res_col1:
+        st.metric("Predicted financial well-being category", pred)
+        st.metric("Model prediction probability", f"{conf:.1%}")
+        st.markdown(
+            f"""
+            <div style="background: {badge_bg}; border-left: 4px solid {badge_color};
+                        padding: 10px 12px; border-radius: 6px; margin-top: 6px; font-size: 0.85rem; color: #1E293B;">
+                <b>Visual Indicator: <span style="color: {badge_color};">{pred} Financial Well-being</span></b><br/>
+                {html.escape(level_explanation)}
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+        st.caption(
+            f"📌 **Label Notice**: The percentage above is the **model prediction probability** for the "
+            f"applicant's financial well-being class ({len(response)} of {total_count} questions answered). "
+            f"It is **not** a loan repayment probability or default probability."
+        )
+        if result["low_confidence"]:
+            st.warning("Model prediction probability is below 50%. Treat this classification with extra caution.")
+    with res_col2:
+        st.plotly_chart(probability_chart(result["probabilities"]), use_container_width=True)
+
+    missing_count = total_count - len(response)
+    if missing_count == 0:
+        st.success("✅ **Complete Questionnaire**: All 31 approved indicator questions were answered directly.")
+    else:
+        st.warning(
+            f"⚠️ **Completeness Notice**: {missing_count} of {total_count} questions were left unanswered. "
+            "Standard training-set median baseline values were imputed by the pipeline."
+        )
+
+
+def _render_section_3_capability_profile(
+    gaps: list,
+    strengths: dict,
+    officer_guidance: dict,
+) -> None:
+    """Render Section 3 – Financial Capability Profile (Four Attractive Cards)."""
+    st.markdown("### Section 3 – Financial Capability Profile (Four Core Dimensions)")
+    st.caption(
+        "Evaluated independently across Saving, Budgeting, Basic Financial Knowledge, and Financial Goal Planning "
+        "using transparent CFPB codebook rules."
+    )
+
     meta = {
         GROUP_SAVING: {"icon": "🐷", "color": "#D97706", "label": "Saving"},
         GROUP_BUDGETING: {"icon": "👛", "color": "#2563EB", "label": "Budgeting"},
-        GROUP_GOALS: {"icon": "🎯", "color": "#0F172A", "label": "Goal Planning"},
-        GROUP_KNOWLEDGE: {"icon": "📖", "color": "#059669", "label": "Financial Knowledge"},
+        GROUP_KNOWLEDGE: {"icon": "📖", "color": "#059669", "label": "Basic Financial Knowledge"},
+        GROUP_GOALS: {"icon": "🎯", "color": "#0F172A", "label": "Financial Goal Planning"},
     }
 
     gap_dict = {g.area: g for g in gaps}
-    ordered_areas = [GROUP_SAVING, GROUP_BUDGETING, GROUP_GOALS, GROUP_KNOWLEDGE]
+    ordered_areas = [GROUP_SAVING, GROUP_BUDGETING, GROUP_KNOWLEDGE, GROUP_GOALS]
 
     row1_col1, row1_col2 = st.columns(2)
     row2_col1, row2_col2 = st.columns(2)
@@ -121,196 +196,170 @@ def _render_insights_grid(gaps: list) -> None:
         col = grid_cols[i]
         g = gap_dict.get(area)
         m = meta.get(area, {"icon": "📊", "color": "#0F172A", "label": area})
+        area_strengths = strengths.get(area, [])
+        guidance_txt = officer_guidance.get(area, "")
 
         if g is None or g.status == STATUS_INSUFFICIENT:
-            issue_text = "N/A"
-            subtext = "Insufficient information"
-            badge_html = '<span class="fc-badge badge-insufficient">Incomplete</span>'
-            count_color = "#64748B"
+            badge_html = '<span class="fc-badge badge-insufficient">Insufficient Data</span>'
+            assess_txt = "Insufficient answers provided"
         elif g.status == STATUS_GAP:
-            n_issues = len(g.triggered)
-            issue_text = f"{n_issues} issue" if n_issues == 1 else f"{n_issues} issues"
-            subtext = "Possible improvement indicator" if n_issues == 1 else "Possible improvement indicators"
-            count_color = m["color"]
             if "Stronger" in g.strength:
-                badge_html = '<span class="fc-badge badge-high-priority">High priority</span>'
+                badge_html = '<span class="fc-badge badge-high-priority">Attention Needed (Stronger Signal)</span>'
             else:
-                badge_html = '<span class="fc-badge badge-lower-priority">Lower priority</span>'
+                badge_html = '<span class="fc-badge badge-lower-priority">Attention Needed (1 Indicator)</span>'
+            assess_txt = f"{len(g.triggered)} capability gap indicator(s) flagged"
         else:
-            issue_text = "0 issues"
-            subtext = "No improvement area indicated"
-            count_color = "#059669"
-            badge_html = '<span class="fc-badge badge-good">Good indicators</span>'
+            badge_html = '<span class="fc-badge badge-good">Healthy Indicators</span>'
+            assess_txt = "No capability gap indicators flagged"
+
+        strengths_html = (
+            "".join(f"<li>{html.escape(s)}</li>" for s in area_strengths)
+            if area_strengths
+            else "<li><i>No positive strength triggers flagged from current responses.</i></li>"
+        )
+        gaps_html = (
+            "".join(f"<li>{html.escape(r)}</li>" for r in g.triggered)
+            if (g and g.triggered)
+            else "<li><i>No gap indicators triggered under current codebook rules.</i></li>"
+        )
 
         card_html = f"""
-        <div class="fc-insight-card">
+        <div class="fc-insight-card" style="min-height: 285px;">
             <div class="fc-insight-header">
-                <span class="fc-insight-title">{m['icon']} {m['label']}</span>
+                <span class="fc-insight-title">{m['icon']} {html.escape(m['label'])}</span>
                 {badge_html}
             </div>
-            <div class="fc-insight-count" style="color: {count_color};">{issue_text}</div>
-            <div class="fc-insight-label">{subtext}</div>
+            <div style="font-size: 0.86rem; font-weight: 600; color: {m['color']}; margin-bottom: 8px;">
+                Current Assessment: {html.escape(assess_txt)}
+            </div>
+            <div style="font-size: 0.82rem; color: #15803D; font-weight: 600; margin-top: 6px;">👍 Strengths:</div>
+            <ul style="font-size: 0.80rem; color: #334155; margin: 2px 0 8px 0; padding-left: 18px;">
+                {strengths_html}
+            </ul>
+            <div style="font-size: 0.82rem; color: #B45309; font-weight: 600;">⚠️ Gap Areas:</div>
+            <ul style="font-size: 0.80rem; color: #334155; margin: 2px 0 8px 0; padding-left: 18px;">
+                {gaps_html}
+            </ul>
+            <div style="background: #F8FAFC; border-left: 3px solid {m['color']}; padding: 7px 10px;
+                        border-radius: 4px; font-size: 0.80rem; color: #1E293B; margin-top: 6px;">
+                <b>🏦 Practical Guidance for Bank Officer:</b> {html.escape(guidance_txt)}
+            </div>
         </div>
         """
         col.markdown(card_html, unsafe_allow_html=True)
 
 
-def _render_priorities_section(gaps: list) -> None:
-    """Render Your Top Improvement Priority hero card and secondary cards (matching user mockup Images 1, 2, 3)."""
-    # Filter gap areas and healthy areas
-    gap_areas = [g for g in gaps if g.status == STATUS_GAP]
-    healthy_areas = [g for g in gaps if g.status == STATUS_NONE]
+def _render_section_4_shap_explanation(bundle, response: dict, result: dict) -> list[str]:
+    """Render Section 4 – SHAP Explanation (Individual + Global summary)."""
+    st.markdown("### Section 4 – SHAP Explanation (Key Prediction Factors)")
+    st.caption(
+        "Explains which applicant answers pushed the machine-learning model toward or away from the predicted "
+        "financial well-being level."
+    )
 
-    # Sort gaps: Stronger signal first, then Weaker signal
-    gap_areas.sort(key=lambda x: 0 if "Stronger" in x.strength else 1)
+    shap_reasons: list[str] = []
+    col_local, col_global = st.columns([1.25, 1])
 
-    if not gap_areas and not healthy_areas:
-        st.info("Insufficient information across all capability areas. Please answer more questions.")
-        return
+    with col_local:
+        try:
+            explainer = get_explainer()
+            row_df = validate_response(response)
+            local_res = explainer.explain_individual(row_df)
+            shap_reasons = describe_local_explanation(local_res, top_n=5)
 
-    # Render Top Priority (Hero Card)
-    if gap_areas:
-        top = gap_areas[0]
-        st.markdown("### Your Top Improvement Priority")
-        
-        icon = "🐷" if top.area == GROUP_SAVING else "👛" if top.area == GROUP_BUDGETING else "🎯" if top.area == GROUP_GOALS else "📖"
-        badge_text = "Priority 01 • Stronger signal" if "Stronger" in top.strength else "Priority 01 • Weaker signal"
+            with st.container(border=True):
+                st.markdown(
+                    f"**Individual Applicant Explanation (Predicted Class: `{result['predicted_class']}`)**"
+                )
+                for r in shap_reasons:
+                    st.markdown(f"• {r}")
+                st.caption(
+                    "⚠️ *SHAP describes how each answer influenced the model's prediction. "
+                    "It does not prove causation.*"
+                )
+        except Exception as exc:
+            st.caption(f"SHAP explanation details unavailable: {exc}")
 
-        reasons_list = "".join([f"<li>{html.escape(r)}</li>" for r in top.triggered])
+    with col_global:
+        with st.container(border=True):
+            st.markdown("**Top Global Model Drivers (Across All Survey Respondents)**")
+            imp = pd.DataFrame(bundle.metadata.get("global_importance", [])).head(5)
+            if not imp.empty:
+                for _, row_imp in imp.iterrows():
+                    st.markdown(
+                        f"• **{row_imp['label']}** (*{row_imp['group']}*) — Mean |SHAP|: `{row_imp['mean_abs_shap']:.3f}`"
+                    )
+            st.caption("Open the **SHAP Explanation** tab above for full interactive local and global charts.")
 
-        hero_html = f"""
-        <div class="fc-hero-card">
-            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
-                <div style="display: flex; gap: 12px; align-items: center;">
-                    <div style="background: #FEF3C7; padding: 10px 14px; border-radius: 10px; font-size: 1.4rem;">
-                        {icon}
-                    </div>
-                    <div>
-                        <div style="font-size: 1.15rem; font-weight: 700; color: #0F172A;">{html.escape(top.area)} habits</div>
-                        <div style="font-size: 0.85rem; color: #64748B;">{badge_text}</div>
-                    </div>
-                </div>
-                <span class="fc-badge fc-hero-badge">Focus first</span>
+    return shap_reasons
+
+
+def _render_section_5_resilience_info(resilience_items: list) -> None:
+    """Render Section 5 – Financial Resilience Information (Supported by Actual Survey Variables)."""
+    st.markdown("### Section 5 – Financial Resilience Information")
+    st.caption(
+        "Derived strictly from supported CFPB survey variables in the 31 approved features "
+        "(liquid savings buffer, saving habit, bill timeliness, budget control, and planning horizon)."
+    )
+
+    cols = st.columns(3)
+    for idx, item in enumerate(resilience_items):
+        badge_cls = (
+            "badge-good"
+            if item.status == "Supportive"
+            else "badge-high-priority"
+            if item.status == "Watch"
+            else "badge-insufficient"
+        )
+        card_html = f"""
+        <div class="fc-secondary-card" style="min-height: 145px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                <span style="font-weight: 700; font-size: 0.90rem; color: #0F172A;">
+                    {html.escape(item.indicator_label)}
+                </span>
+                <span class="fc-badge {badge_cls}">{html.escape(item.status)}</span>
             </div>
-            <div style="font-weight: 600; color: #0F172A; margin: 12px 0 6px 0;">Why was this identified?</div>
-            <ul style="color: #334155; margin-bottom: 14px; padding-left: 20px;">
-                {reasons_list}
-            </ul>
-            <div class="fc-hero-box">
-                <div style="font-weight: 600; color: #92400E; margin-bottom: 4px;">Your suggested focus</div>
-                <div style="color: #78350F; font-size: 0.9rem;">
-                    {html.escape(top.area)}: building regular habits and understanding effective practical methods.
-                </div>
+            <div style="font-size: 0.85rem; color: #1E3A8A; font-weight: 600; margin-bottom: 5px;">
+                Response: {html.escape(item.applicant_response)}
+            </div>
+            <div style="font-size: 0.79rem; color: #475569;">
+                {html.escape(item.officer_note)}
             </div>
         </div>
         """
-        st.markdown(hero_html, unsafe_allow_html=True)
-
-    # Render Other Improvement Areas
-    other_gaps = gap_areas[1:]
-    if other_gaps:
-        st.markdown("### Your Other Improvement Areas")
-        for g in other_gaps:
-            icon = "👛" if g.area == GROUP_BUDGETING else "🎯" if g.area == GROUP_GOALS else "🐷" if g.area == GROUP_SAVING else "📖"
-            badge = '<span class="fc-badge badge-high-priority">High priority</span>' if "Stronger" in g.strength else '<span class="fc-badge badge-lower-priority">Lower priority</span>'
-            reasons_summary = "; ".join(g.triggered)
-
-            card_html = f"""
-            <div class="fc-secondary-card">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                    <div style="font-weight: 600; font-size: 1.05rem; color: #0F172A;">{icon} {html.escape(g.area)}</div>
-                    {badge}
-                </div>
-                <div style="color: #475569; font-size: 0.9rem; margin-bottom: 8px;">
-                    {html.escape(reasons_summary)}
-                </div>
-                <div style="font-size: 0.9rem; font-weight: 600; color: #2563EB;">
-                    Suggested focus: {html.escape(g.learning_category)}
-                </div>
-            </div>
-            """
-            st.markdown(card_html, unsafe_allow_html=True)
-
-    # Render Healthy Areas (Strengths)
-    if healthy_areas:
-        st.markdown("### Healthy Areas & Strengths")
-        for h in healthy_areas:
-            icon = "✅"
-            healthy_html = f"""
-            <div class="fc-healthy-card">
-                <div style="display: flex; gap: 8px; align-items: center; font-weight: 600; font-size: 1.05rem; color: #15803D; margin-bottom: 6px;">
-                    <span>{icon}</span> <span>{html.escape(h.area)}</span>
-                </div>
-                <div style="color: #166534; font-size: 0.9rem;">
-                    Your current answers do not indicate an improvement area under the selected rules.
-                </div>
-            </div>
-            """
-            st.markdown(healthy_html, unsafe_allow_html=True)
+        cols[idx % 3].markdown(card_html, unsafe_allow_html=True)
 
 
-def _render_shap_local_summary(bundle, response: dict, result: dict) -> None:
-    """Render plain-language SHAP drivers and attribution summary."""
-    st.markdown("### Why Did the Model Predict This?")
-    st.caption("SHAP attributions reveal which answers had the greatest influence on this prediction.")
-
-    try:
-        explainer = get_explainer()
-        row_df = validate_response(response)
-        local_res = explainer.explain_individual(row_df)
-        reasons = describe_local_explanation(local_res, top_n=4)
-
-        with st.container(border=True):
-            st.markdown(f"**Key factors influencing the {result['predicted_class']} prediction:**")
-            for r in reasons:
-                st.markdown(f"• {r}")
-            st.caption(
-                "⚠️ *SHAP explains how individual answers influence the model's prediction. "
-                "These explanations do not prove that one factor causes a person's financial well-being.*"
-            )
-    except Exception as exc:
-        st.caption(f"SHAP explanation details unavailable: {exc}")
-
-
-def _render_learning_categories(gaps: list) -> None:
-    """Render the recommended learning categories with Phase 1 disclaimer."""
-    st.markdown("### Recommended Learning Categories")
-    categories = map_gaps_to_categories(gaps)
-
-    if categories:
-        cols = st.columns(len(categories))
-        for i, cat in enumerate(categories):
-            with cols[i].container(border=True):
-                st.markdown(f"#### 📚 {cat}")
-                st.caption("Identified based on your reported behavioral indicators.")
-    else:
-        st.success("No critical learning categories identified under current rules.")
-
-    st.info(
-        "ℹ️ **Phase 1 Notice**: Phase 1 identifies suitable learning categories only. "
-        "Actual lessons, videos, quizzes, and learning progress tracking are planned for Phase 2."
+def _render_section_6_whatif_preview(bundle, response: dict, result: dict) -> None:
+    """Render Section 6 – What-if Simulation preview."""
+    st.markdown("### Section 6 – What-if Simulation (Hypothetical Scenario Check)")
+    st.caption(
+        "Simulate how hypothetical changes in the applicant's financial habits or liquid savings buffer would "
+        "affect the model's financial well-being prediction (original applicant answers remain unchanged)."
     )
-
-
-def _render_whatif_preview(bundle, response: dict, result: dict) -> None:
-    """Render interactive quick what-if simulation preview."""
-    st.markdown("### What-if Simulation: Test Potential Improvements")
-    st.write("See how modifying specific capability behaviors impacts your well-being prediction:")
 
     with st.container(border=True):
         c1, c2 = st.columns(2)
         with c1:
             test_saving = st.selectbox(
-                "What if you adopted a regular saving habit?",
+                "Hypothetical change: Regular saving habit (SAVEHABIT)",
                 options=[None, 1, 3, 5],
-                format_func=lambda x: "Current Answer" if x is None else {1: "Disagree strongly", 3: "Somewhat agree", 5: "Agree strongly"}[x],
+                format_func=lambda x: (
+                    "Keep Applicant's Original Answer"
+                    if x is None
+                    else {1: "Strongly disagree (1)", 3: "Disagree slightly (3)", 5: "Agree strongly (5)"}[x]
+                ),
                 key="ui_quick_saving",
             )
         with c2:
             test_balance = st.selectbox(
-                "What if your savings balance increased?",
+                "Hypothetical change: Liquid savings balance (SAVINGSRANGES)",
                 options=[None, 2, 4, 6],
-                format_func=lambda x: "Current Answer" if x is None else {2: "$100 - $999", 4: "$5,000 - $19,999", 6: "$75,000 or more"}[x],
+                format_func=lambda x: (
+                    "Keep Applicant's Original Answer"
+                    if x is None
+                    else {2: "$1 – $99", 4: "$1,000 – $4,999", 6: "$20,000 – $74,999"}[x]
+                ),
                 key="ui_quick_balance",
             )
 
@@ -325,82 +374,168 @@ def _render_whatif_preview(bundle, response: dict, result: dict) -> None:
             st.divider()
             r1, r2 = st.columns(2)
             with r1:
-                st.metric("Original Prediction", result["predicted_class"], f"{result['confidence']:.1%}")
+                st.metric(
+                    "Original Applicant Prediction",
+                    result["predicted_class"],
+                    f"Model Probability: {result['confidence']:.1%}",
+                )
             with r2:
                 st.metric(
-                    "Simulated Prediction",
+                    "Simulated Scenario Prediction",
                     sim_res["what_if"]["predicted_class"],
-                    f"{sim_res['what_if']['confidence']:.1%}",
+                    f"Model Probability: {sim_res['what_if']['confidence']:.1%}",
                 )
             diff_text = ", ".join([f"{k}: {v:+.1%}" for k, v in sim_res["probability_change"].items()])
-            st.caption(f"Probability shifts: {diff_text}")
+            st.caption(f"Simulated class probability shifts: {diff_text}")
         else:
-            st.caption("Select an alternative answer above to preview simulated well-being shifts.")
+            st.caption(
+                "Select a hypothetical answer above (or open the **What-if Analysis** tab) to compare original vs. simulated outcomes."
+            )
 
-        st.caption("⚠️ *Model-based scenario: What-if results do not prove that changing a behavior will cause real-world financial improvement.*")
+        st.caption(
+            "⚠️ *Simulation Disclaimer: What-if results show how the model responds to hypothetical inputs. "
+            "They do not guarantee real-world outcomes or loan repayment performance.*"
+        )
 
 
-def _render_download_section(bundle, response: dict, result: dict, gaps: list) -> None:
-    """Render Step 8: Downloadable Assessment Report (PDF)."""
-    st.markdown("### 📥 Download Assessment Report")
+def _render_section_7_loan_support_summary(
+    result: dict,
+    gaps: list,
+    strengths: dict,
+    resilience_items: list,
+    officer_questions: list[str],
+) -> None:
+    """Render Section 7 – Loan Assessment Support Summary."""
+    st.markdown("### Section 7 – Loan Assessment Support Summary")
+
+    all_strengths = [s for area_list in strengths.values() for s in area_list]
+    gap_areas = [g for g in gaps if g.status == STATUS_GAP]
+    watch_resilience = [r for r in resilience_items if r.status == "Watch"]
+    supportive_resilience = [r for r in resilience_items if r.status == "Supportive"]
+
+    with st.container(border=True):
+        st.markdown("#### 🏦 Component 04 – Additional Financial Well-being Information for Loan Assessment")
+        st.caption(
+            "Supplementary summary prepared for the Bank Officer to review alongside the bank's normal "
+            "identity/income verification, credit history/score, and repayment capacity (DTI) checks."
+        )
+
+        col_a, col_b = st.columns(2)
+        with col_a:
+            st.markdown("**1. Financial Strengths**")
+            if all_strengths:
+                for s in all_strengths[:6]:
+                    st.markdown(f"- ✅ {s}")
+            else:
+                st.markdown("- *No distinct capability strengths triggered from the current responses.*")
+
+            st.markdown("**2. Financial Resilience Summary**")
+            st.markdown(
+                f"- **Supportive Indicators**: `{len(supportive_resilience)}` of `{len(resilience_items)}` "
+                f"| **Watch Indicators**: `{len(watch_resilience)}` of `{len(resilience_items)}`"
+            )
+            for item in resilience_items[:3]:
+                st.markdown(f"- **{item.indicator_label}**: {item.applicant_response} (*{item.status}*)")
+
+        with col_b:
+            st.markdown("**3. Areas for Further Discussion**")
+            if gap_areas:
+                for g in gap_areas:
+                    reasons_joined = "; ".join(g.triggered)
+                    st.markdown(f"- ⚠️ **{g.area}** ({g.strength}): {reasons_joined}")
+            else:
+                st.markdown("- ✅ *No capability gap areas flagged under the codebook rules.*")
+
+            st.markdown("**4. Suggested Questions for the Bank Officer**")
+            for q in officer_questions:
+                st.markdown(f"- 💬 *{q}*")
+
+        st.info(f"ℹ️ **Bank Officer Decision Governance**: {BANK_LOAN_NOTICE}")
+
+
+def _render_section_8_report_downloads(
+    bundle,
+    response: dict,
+    result: dict,
+    gaps: list,
+    shap_reasons: list[str],
+    strengths: dict,
+    resilience_items: list,
+    officer_questions: list[str],
+    officer_guidance: dict,
+) -> None:
+    """Render Section 8 – Assessment Report (Preview + PDF & TXT Downloads)."""
+    st.markdown("### Section 8 – Financial Well-being Assessment Report (PDF & TXT)")
     st.write(
-        "Keep a personal copy of your financial capability assessment results, "
-        "including your predicted category, capability gaps, identified strengths, and SHAP drivers."
+        "Generate and download the formal **Component 04 Financial Well-being Assessment Report** to attach "
+        "as supplementary supporting documentation for the loan file."
     )
 
-    shap_reasons = []
-    try:
-        explainer = get_explainer()
-        row_df = validate_response(response)
-        local_res = explainer.explain_individual(row_df)
-        shap_reasons = describe_local_explanation(local_res, top_n=4)
-    except Exception:
-        pass
+    selected_model_name = bundle.metadata.get("selected_model", "XGBoost")
+    today = date.today()
 
     pdf_data = build_capability_assessment_pdf(
         response=response,
         result=result,
         gaps=gaps,
         shap_reasons=shap_reasons,
-        assessment_date=date.today(),
+        assessment_date=today,
+        strengths=strengths,
+        resilience_items=resilience_items,
+        officer_questions=officer_questions,
+        officer_guidance=officer_guidance,
+        selected_model_name=selected_model_name,
     )
 
-    d1, d2, _ = st.columns([1.5, 1.5, 3])
+    txt_data = build_capability_assessment_txt(
+        response=response,
+        result=result,
+        gaps=gaps,
+        shap_reasons=shap_reasons,
+        assessment_date=today,
+        strengths=strengths,
+        resilience_items=resilience_items,
+        officer_questions=officer_questions,
+        officer_guidance=officer_guidance,
+        selected_model_name=selected_model_name,
+    )
+
+    with st.expander("📋 Preview Assessment Report Content (Component 04)", expanded=False):
+        st.markdown(f"**Report Title**: `{REPORT_TITLE}`")
+        st.code(txt_data, language="markdown")
+
+    d1, d2, _ = st.columns([1.6, 1.6, 2.8])
     with d1:
         st.download_button(
             label="📄 Download Report (PDF)",
             data=pdf_data,
-            file_name=f"financial_capability_report_{date.today().isoformat()}.pdf",
+            file_name=f"component04_wellbeing_report_{today.isoformat()}.pdf",
             mime="application/pdf",
             type="primary",
             key="btn_download_assessment_pdf",
         )
     with d2:
-        # Also provide a clean Markdown text summary for download
-        summary_md = f"""# Financial Capability Assessment Report
-Date: {date.today().isoformat()}
-Model: {bundle.metadata.get('selected_model', 'XGBoost')}
-Predicted Category: {result['predicted_class']} (Confidence: {result['confidence']:.1%})
-Probabilities: Low {result['probabilities']['Low']:.1%}, Medium {result['probabilities']['Medium']:.1%}, High {result['probabilities']['High']:.1%}
-
-## Identified Capability Areas:
-""" + "\n".join([f"- {g.area}: {g.status} ({len(g.triggered)} issues)" for g in gaps])
         st.download_button(
-            label="📝 Download Summary (TXT)",
-            data=summary_md,
-            file_name=f"financial_capability_summary_{date.today().isoformat()}.txt",
+            label="📝 Download Report (TXT)",
+            data=txt_data,
+            file_name=f"component04_wellbeing_report_{today.isoformat()}.txt",
             mime="text/plain",
             key="btn_download_assessment_txt",
         )
 
 
 def render() -> None:
-    """Render the main Individual Assessment page with interactive questionnaire and complete capability report."""
-    st.subheader("Individual Assessment")
+    """Render the main Bank Officer Dashboard with all 8 structured decision-support sections."""
+    st.subheader("Section 1 – Bank Officer Dashboard: Applicant Financial Well-being Assessment")
     bundle = require_bundle()
     if bundle is None:
         return
 
+    st.markdown(
+        f"**{COMPONENT_TITLE}**  \n"
+        "Use this interface to assess a loan applicant's financial well-being and financial capability profile "
+        "as **supplementary supporting information** alongside the bank's standard credit, income, and affordability checks."
+    )
     st.caption(DISCLAIMER)
 
     # Count answered questions
@@ -416,26 +551,25 @@ def render() -> None:
     with p_col1:
         st.progress(progress_val)
     with p_col2:
-        st.markdown(f"**{answered_count} of {total_count}** completed ({progress_val:.0%})")
+        st.markdown(f"**Questionnaire Progress: {answered_count} of {total_count}** ({progress_val:.0%})")
 
     st.markdown(
-        "Answer the questions below to evaluate your financial capability and well-being. "
-        "Optional questions may be left as *Not answered* — standard median baseline values will be used. "
-        "Answers stay in this browser session only; no personal data is stored."
+        "Enter the loan applicant's questionnaire responses below. Unanswered items default to training-set "
+        "median values during inference. Responses remain in the active browser session only."
     )
 
-    b1, b2, _ = st.columns([1, 1, 3])
+    b1, b2, _ = st.columns([1.2, 1.2, 2.6])
     b1.button("Use example answers", on_click=_fill_example)
     b2.button("Clear answers", on_click=_clear_answers)
 
     # Form with 5 structured groups
     with st.form("fc_assessment_form"):
         groups = [
-            (GROUP_SAVING, "🐷 Saving", True),
-            (GROUP_BUDGETING, "👛 Budgeting", True),
-            (GROUP_KNOWLEDGE, "📖 Basic Financial Knowledge", True),
-            (GROUP_GOALS, "🎯 Financial Goal Planning", True),
-            (GROUP_CONTEXT, "👤 Background Information (Context Only)", False),
+            (GROUP_SAVING, "🐷 Saving Indicators", True),
+            (GROUP_BUDGETING, "👛 Budgeting & Bill Management Indicators", True),
+            (GROUP_KNOWLEDGE, "📖 Basic Financial Knowledge Indicators", True),
+            (GROUP_GOALS, "🎯 Financial Goal Planning Indicators", True),
+            (GROUP_CONTEXT, "👤 Applicant Background Context (Demographics & Household)", False),
         ]
 
         for grp_id, title, expanded in groups:
@@ -463,63 +597,65 @@ def render() -> None:
 
     response = st.session_state.get(SESSION_RESPONSE_KEY)
     if not response:
-        st.info("Press **Run assessment** to view your financial capability insights and report.")
+        st.info("Click **Run assessment** above to generate the Applicant Financial Well-being Assessment and Bank Officer Decision Support summary.")
         return
 
     result = predict_assessment(bundle, response)
-    st.divider()
-
-    # 1. Executive Prediction & Distribution
-    res_col1, res_col2 = st.columns([1, 2])
-    with res_col1:
-        st.metric("Predicted financial well-being category", result["predicted_class"])
-        st.metric("Model confidence", f"{result['confidence']:.1%}")
-        st.caption(f"{len(response)} of {total_count} questions answered.")
-        if result["low_confidence"]:
-            st.warning("The model confidence is below 50%. Treat this prediction with caution.")
-    with res_col2:
-        st.plotly_chart(probability_chart(result["probabilities"]), use_container_width=True)
-
-    # 2. Data Completeness Notice
-    missing_count = total_count - len(response)
-    if missing_count == 0:
-        st.success("✅ **Complete Assessment**: All 31 questions answered directly without imputation.")
-    else:
-        st.warning(
-            f"⚠️ **Assessment Notice**: {missing_count} of {total_count} questions were left unanswered. "
-            "Typical baseline values were imputed by the model. For maximum reliability, answer all questions."
-        )
-
-    # 3. Capability Gaps Evaluation
     row_dict = validate_response(response).iloc[0].to_dict()
     gaps = identify_capability_gaps(row_dict)
+    strengths = identify_capability_strengths(row_dict)
+    resilience_items = extract_resilience_indicators(row_dict)
+    officer_guidance = generate_officer_guidance(gaps)
+    officer_questions = generate_officer_questions(gaps, row_dict)
 
     st.divider()
 
-    # 4. Render 2x2 Financial Capability Insights Grid (Mockup Image 1)
-    _render_insights_grid(gaps)
+    # Section 2 – Applicant Financial Well-being Result
+    _render_section_2_wellbeing_result(result, response, total_count)
 
     st.divider()
 
-    # 5. Render Priorities (Mockup Images 1, 2, 3)
-    _render_priorities_section(gaps)
+    # Section 3 – Financial Capability Profile (4 Cards)
+    _render_section_3_capability_profile(gaps, strengths, officer_guidance)
 
     st.divider()
 
-    # 6. Render SHAP Local Drivers
-    _render_shap_local_summary(bundle, response, result)
+    # Section 4 – SHAP Explanation
+    shap_reasons = _render_section_4_shap_explanation(bundle, response, result)
 
     st.divider()
 
-    # 7. Render Recommended Learning Categories
-    _render_learning_categories(gaps)
+    # Section 5 – Financial Resilience Information
+    _render_section_5_resilience_info(resilience_items)
 
     st.divider()
 
-    # 8. Render Quick What-If Simulation
-    _render_whatif_preview(bundle, response, result)
+    # Section 6 – What-if Simulation
+    _render_section_6_whatif_preview(bundle, response, result)
 
     st.divider()
 
-    # 9. Download Assessment Report (PDF / TXT)
-    _render_download_section(bundle, response, result, gaps)
+    # Section 7 – Loan Assessment Support Summary
+    _render_section_7_loan_support_summary(
+        result=result,
+        gaps=gaps,
+        strengths=strengths,
+        resilience_items=resilience_items,
+        officer_questions=officer_questions,
+    )
+
+    st.divider()
+
+    # Section 8 – Assessment Report (Preview + PDF & TXT Downloads)
+    _render_section_8_report_downloads(
+        bundle=bundle,
+        response=response,
+        result=result,
+        gaps=gaps,
+        shap_reasons=shap_reasons,
+        strengths=strengths,
+        resilience_items=resilience_items,
+        officer_questions=officer_questions,
+        officer_guidance=officer_guidance,
+    )
+

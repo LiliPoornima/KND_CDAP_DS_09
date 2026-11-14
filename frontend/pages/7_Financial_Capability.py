@@ -1,4 +1,4 @@
-"""Streamlit page for Component 05: Explainable Financial Capability Assessment.
+"""Streamlit page for Component 04: Explainable Financial Well-being Assessment System for Bank Loan Decision Support.
 
 Thin entry point: all logic lives in ``frontend/financial_capability`` and
 ``backend/src/financial_capability``. Can be run standalone with
@@ -17,7 +17,12 @@ _ROOT = Path(__file__).resolve().parents[2]
 if str(_ROOT) not in sys.path:
     sys.path.insert(0, str(_ROOT))
 
-from frontend.financial_capability.constants import SECTIONS  # noqa: E402
+from frontend.financial_capability.constants import (  # noqa: E402
+    BANK_LOAN_NOTICE,
+    COMPONENT_SUBTITLE,
+    COMPONENT_TITLE,
+    SECTIONS,
+)
 from frontend.financial_capability.styles import inject_fintech_styles  # noqa: E402
 from frontend.financial_capability.sections import (  # noqa: E402
     capability_gaps,
@@ -31,15 +36,18 @@ from frontend.financial_capability.sections import (  # noqa: E402
 )
 
 try:  # the main app already sets the page config; standalone runs set it here
-    st.set_page_config(page_title="Financial Capability Assessment", page_icon="🎓", layout="wide")
+    st.set_page_config(
+        page_title="Component 04 – Bank Loan Decision Support",
+        page_icon="🏦",
+        layout="wide",
+    )
 except st.errors.StreamlitAPIException:
     pass
 
 inject_fintech_styles()
 
-st.title("Explainable Financial Capability Assessment")
-st.caption("Component 05 - Phase 1 | CFPB NFWBS 2016 | Random Forest / XGBoost | SHAP | "
-           "transparent capability rules")
+st.title(COMPONENT_TITLE)
+st.caption(COMPONENT_SUBTITLE)
 
 section = st.radio("Dashboard section", SECTIONS, horizontal=True, key="financial_capability_section")
 st.divider()
@@ -57,5 +65,6 @@ RENDERERS = {
 RENDERERS[section]()
 
 st.divider()
-st.caption("Component 05 | Educational support only, not financial advice | US 2016 survey data.")
+st.caption(f"Component 04 | {BANK_LOAN_NOTICE} | Trained on CFPB NFWBS 2016 public survey data.")
+
 

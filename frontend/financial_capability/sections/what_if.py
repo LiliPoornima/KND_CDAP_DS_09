@@ -57,8 +57,8 @@ def _comparison_chart(original_probs: dict, simulated_probs: dict) -> go.Figure:
 
 
 def render() -> None:
-    """Render the redesigned What-if Simulation Lab."""
-    st.subheader("What-if Simulation Lab")
+    """Render the redesigned What-if Simulation Lab for Bank Officer Scenario Testing."""
+    st.subheader("What-if Simulation Lab — Applicant Scenario Comparison")
     st.info(f"ℹ️ {WHAT_IF_DISCLAIMER}")
 
     bundle = require_bundle()
@@ -66,13 +66,13 @@ def render() -> None:
         return
     response = require_response()
     if response is None:
-        st.info("Please complete the **Individual Assessment** first to establish your baseline.")
+        st.info("Please complete the **Individual Assessment** first to establish the loan applicant's baseline.")
         return
 
-    st.markdown("### 1. Select Capability Behaviors to Modify")
+    st.markdown("### 1. Select Applicant Capability Indicators to Modify")
     st.write(
-        "Explore how changes in your saving, budgeting, knowledge, or goal planning habits "
-        "affect the machine learning model's prediction. Background demographics remain fixed."
+        "Explore how hypothetical changes in the applicant's saving, budgeting, financial knowledge, or goal planning "
+        "indicators affect the machine-learning model's financial well-being prediction. Background demographics remain fixed."
     )
 
     fields = st.multiselect(
