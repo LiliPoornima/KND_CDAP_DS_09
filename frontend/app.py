@@ -39,15 +39,20 @@ def _render_home() -> None:
     with left:
         st.markdown("### Credit Risk")
         st.write("Explore credit-risk research findings and evaluation.")
+        st.markdown("### Financial Inclusion")
+        st.write(
+            "Explore saved inclusion profiles, explainable model outputs, "
+            "population gaps, and individual assessment."
+        )
         st.markdown("### Market Risk")
         st.write("Explore market-risk research findings and evaluation.")
     with right:
         st.markdown("### Fraud Detection")
         st.write("Explore fraud-detection research findings and evaluation.")
-        st.markdown("### Financial Inclusion")
+        st.markdown("### Component 04 – Financial Well-being Assessment")
         st.write(
-            "Explore saved inclusion profiles, explainable model outputs, "
-            "population gaps, and individual assessment."
+            "Independent Explainable Financial Well-being Assessment System for "
+            "Bank Loan Decision Support (Saving, Budgeting, Knowledge, Goal Planning, SHAP & Report)."
         )
     st.info(
         "The components are developed independently. Select a component in "
@@ -70,7 +75,7 @@ navigation = st.navigation(
         st.Page("pages/4_Fraud_Detection.py",
                 title="Fraud Detection", icon="🛡️"),
         st.Page("pages/7_Financial_Capability.py",
-                title="Financial Capability", icon="🎓"),
+                title="Financial Well-being (Component 04)", icon="🏦"),
         # The new comparison page is separate; the original Financial Inclusion
         # destination above keeps its existing page and behavior.
 

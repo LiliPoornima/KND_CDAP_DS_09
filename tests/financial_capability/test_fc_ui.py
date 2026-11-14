@@ -53,14 +53,26 @@ def test_every_section_renders_with_trained_model(section):
 @pytest.mark.skipif(not TRAINED, reason="model not trained")
 def test_assessment_flow_end_to_end():
     at = AppTest.from_file(PAGE, default_timeout=120).run()
+    # Verify Overview displays Diagram A and Diagram B (Bank Loan Scenario)
+    overview_text = _page_text(at)
+    assert "Component 04" in overview_text
+    assert "Bank's Normal Loan Check" in overview_text
+    assert "Component 04 does not automatically approve or reject the loan" in overview_text
+
     at.radio[0].set_value("Individual Assessment").run()
     next(b for b in at.button if b.label == "Use example answers").click().run()
     next(b for b in at.button if b.label == "Run assessment").click().run()
     assert not at.exception
     metrics = {m.label: m.value for m in at.metric}
     assert metrics["Predicted financial well-being category"] in {"Low", "Medium", "High"}
+    assert "Model prediction probability" in metrics
+    assess_text = _page_text(at)
+    assert "Additional Financial Well-being Information for Loan Assessment" in assess_text
+    assert "Financial Resilience Information" in assess_text
+
     at.radio[0].set_value("SHAP Explanation").run()
     assert any("Why this prediction" in m.value for m in at.markdown)
     for section in ("Capability Gaps & Suggested Categories", "What-if Analysis"):
         at.radio[0].set_value(section).run()
         assert not at.exception, f"{section} crashed after an assessment"
+
