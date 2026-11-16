@@ -1,0 +1,26 @@
+cluster_id,profile_name,dimension,full_reference_mean,full_reference_median,test_reference_mean,test_reference_median,heldout_mean_across_seeds,heldout_mean_sd_across_seeds,heldout_median_across_seeds
+0,"Digitally Active, Safety Gap",score_connectivity,0.7653111704759078,1.0,0.7628639735890775,1.0,0.7628639735890775,0.006086225187148445,1.0
+0,"Digitally Active, Safety Gap",score_digital_financial_usage,1.0,1.0,1.0,1.0,1.0,0.0,1.0
+0,"Digitally Active, Safety Gap",score_digital_safety,0.0,0.0,0.0,0.0,0.0,0.0,0.0
+0,"Digitally Active, Safety Gap",score_financial_access,1.0,1.0,1.0,1.0,1.0,0.0,1.0
+0,"Digitally Active, Safety Gap",score_financial_resilience,0.5340358167606609,0.5555555555555555,0.5354436065907681,0.5555555555555555,0.5354436065907681,0.002011973435771666,0.5555555555555555
+1,Connected and Digitally Included,score_connectivity,0.9521930940867057,1.0,0.9520691337585173,1.0,0.9520691337585173,0.0024418738497164493,1.0
+1,Connected and Digitally Included,score_digital_financial_usage,1.0,1.0,1.0,1.0,1.0,0.0,1.0
+1,Connected and Digitally Included,score_digital_safety,1.0,1.0,1.0,1.0,1.0,0.0,1.0
+1,Connected and Digitally Included,score_financial_access,1.0,1.0,1.0,1.0,1.0,0.0,1.0
+1,Connected and Digitally Included,score_financial_resilience,0.5928235438288887,0.611111111111111,0.5923173792768891,0.611111111111111,0.5923173792768891,0.0023992356259306203,0.611111111111111
+2,"Connected, Financially Excluded",score_connectivity,0.9093836757357023,1.0,0.9090008592265522,1.0,0.9090008592265522,0.003970108145021784,1.0
+2,"Connected, Financially Excluded",score_digital_financial_usage,0.0,0.0,0.0,0.0,0.0,0.0,0.0
+2,"Connected, Financially Excluded",score_digital_safety,1.0,1.0,1.0,1.0,1.0,0.0,1.0
+2,"Connected, Financially Excluded",score_financial_access,0.0,0.0,0.0,0.0,0.0,0.0,0.0
+2,"Connected, Financially Excluded",score_financial_resilience,0.429909309642791,0.3888888888888888,0.43267081919828226,0.3999999999999999,0.43267081919828226,0.004478610671554125,0.3999999999999999
+3,Multi-Dimensional Inclusion Gap,score_connectivity,0.7035075731693429,0.5,0.7013962107494117,0.5,0.7013962107494117,0.004477592425591892,0.5
+3,Multi-Dimensional Inclusion Gap,score_digital_financial_usage,0.0,0.0,0.0,0.0,0.0,0.0,0.0
+3,Multi-Dimensional Inclusion Gap,score_digital_safety,0.0,0.0,0.0,0.0,0.0,0.0,0.0
+3,Multi-Dimensional Inclusion Gap,score_financial_access,0.0,0.0,0.0,0.0,0.0,0.0,0.0
+3,Multi-Dimensional Inclusion Gap,score_financial_resilience,0.38599121841349376,0.3333333333333333,0.3841143591279498,0.3333333333333333,0.3841143591279498,0.0023934618556515443,0.3333333333333333
+4,Access Without Digital Usage,score_connectivity,0.8338959491660047,1.0,0.8302805247384489,1.0,0.8302805247384489,0.007405809130160501,1.0
+4,Access Without Digital Usage,score_digital_financial_usage,0.0,0.0,0.0,0.0,0.0,0.0,0.0
+4,Access Without Digital Usage,score_digital_safety,0.5321683876092137,1.0,0.530544711654465,1.0,0.530544711654465,0.011544286691681411,1.0
+4,Access Without Digital Usage,score_financial_access,1.0,1.0,1.0,1.0,1.0,0.0,1.0
+4,Access Without Digital Usage,score_financial_resilience,0.4425469949695525,0.4444444444444444,0.44304667730104674,0.4333333333333333,0.44304667730104674,0.008099282597283474,0.4333333333333333
