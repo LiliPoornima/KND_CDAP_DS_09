@@ -11,7 +11,7 @@ import plotly.graph_objects as go
 import streamlit as st
 
 from . import data_loader as loader
-from .constants import CLUSTER_IDS, CLUSTER_LABELS
+from .constants import CLUSTER_IDS, CLUSTER_LABELS, CLUSTER_NAMES
 from .sections import (
     distribution,
     gaps,
@@ -78,11 +78,11 @@ def _inject_styles() -> None:
         """
         <style>
         .st-key-new_fi_dark_dashboard {
-          --fi-bg: #0e1117; --fi-card: #171b24; --fi-card-alt: #202631;
-          --fi-text: #ffffff; --fi-muted: #b8c0cc; --fi-border: #343b46;
-          --fi-accent: #14b8a6;
+          --fi-bg: #f4f7fb; --fi-card: #ffffff; --fi-card-alt: #f8fafc;
+          --fi-text: #172b4d; --fi-muted: #64748b; --fi-border: #cbd5e1;
+          --fi-accent: #0d9488;
           background: var(--fi-bg); color: var(--fi-text); padding: 1rem;
-          border: 1px solid #252b35; border-radius: 18px;
+          border: 1px solid var(--fi-border); border-radius: 18px;
         }
         .st-key-new_fi_dark_dashboard,
         .st-key-new_fi_dark_dashboard [data-testid="stMarkdownContainer"],
@@ -125,17 +125,13 @@ def _inject_styles() -> None:
         .st-key-new_fi_dark_dashboard [data-testid="stTable"] {
           background: var(--fi-card); border: 1px solid var(--fi-border); border-radius: 10px;
         }
-        .st-key-new_fi_dark_dashboard [data-baseweb="select"] > div {
-          background: var(--fi-card-alt); border-color: var(--fi-border); color: var(--fi-text);
-        }
-        .st-key-new_fi_dark_dashboard input[type="radio"] { accent-color: var(--fi-accent); }
         .st-key-new_fi_dark_dashboard div[data-testid="stRadio"] > div { gap: .45rem; }
         .st-key-new_fi_dark_dashboard div[data-testid="stRadio"] label {
           background: var(--fi-card-alt); padding: .45rem .8rem; border-radius: 999px;
           border: 1px solid var(--fi-border);
         }
         .st-key-new_fi_dark_dashboard div[data-testid="stRadio"] label:has(input:checked) {
-          background: #123b3b; border-color: var(--fi-accent); color: var(--fi-text);
+          background: #e6f4f3; border-color: var(--fi-accent); color: var(--fi-text);
         }
         .st-key-new_fi_dark_dashboard [data-testid="stPlotlyChart"] { background: var(--fi-card); border-radius: 12px; }
         .st-key-new_fi_dark_dashboard .js-plotly-plot .bg { fill: var(--fi-card) !important; stroke: var(--fi-border) !important; }
@@ -196,18 +192,18 @@ def _stakeholder_dimensions(df: pd.DataFrame) -> None:
             fillcolor="rgba(15,118,110,.16)", name="Mean dimension score",
         ))
         radar.update_layout(
-            paper_bgcolor="#171b24",
-            plot_bgcolor="#171b24",
+            paper_bgcolor="#ffffff",
+            plot_bgcolor="#ffffff",
             polar={
-                "bgcolor": "#171b24",
+                "bgcolor": "#ffffff",
                 "radialaxis": {
                     "visible": True, "range": [0, 1],
-                    "tickfont": {"size": 10, "color": "#b8c0cc"},
-                    "gridcolor": "#343b46", "linecolor": "#343b46",
+                    "tickfont": {"size": 10, "color": "#64748b"},
+                    "gridcolor": "#e2e8f0", "linecolor": "#cbd5e1",
                 },
                 "angularaxis": {
-                    "tickfont": {"color": "#b8c0cc"},
-                    "gridcolor": "#343b46", "linecolor": "#343b46",
+                    "tickfont": {"color": "#64748b"},
+                    "gridcolor": "#e2e8f0", "linecolor": "#cbd5e1",
                 },
             },
             showlegend=False, height=360, margin={"l": 35, "r": 35, "t": 25, "b": 25},
@@ -495,7 +491,46 @@ def _research_view(df: pd.DataFrame) -> None:
         _findings()
 
 
+def _profile_overview_cards() -> None:
+    """Show the saved K-Means profiles as context before the individual form."""
+    definitions = _read_json(
+        CLUSTER_REPORTS / "fi_clustering_profile_labels_5D_k5.json"
+    ).get("cluster_profiles", {})
+    icons = ("🔐", "🌐", "🏦", "🧭", "📲")
+    accents = ("#477DA8", "#2A9D8F", "#5C7CBA", "#C1843D", "#68758A")
+
+    st.subheader("Five possible financial inclusion profiles")
+    st.caption(
+        "These saved profile descriptions provide context. The assessment below "
+        "assigns a profile using the existing model; these cards do not select one."
+    )
+    cards = st.columns(5, gap="small")
+    for cluster_id, card in zip(CLUSTER_IDS, cards):
+        definition = definitions.get(str(cluster_id), {})
+        name = definition.get("name", CLUSTER_NAMES[cluster_id])
+        description = definition.get("description", "Saved descriptive profile of observed inclusion dimensions.")
+        with card:
+            with st.container(border=True):
+                st.markdown(f"<span style='color:{accents[cluster_id]};font-size:1.35rem'>{icons[cluster_id]}</span>", unsafe_allow_html=True)
+                st.markdown(f"**{name}**")
+                st.caption(description)
+
+
+def render_home_assessment() -> None:
+    """Render the redesigned individual assessment inside the Home page."""
+    st.title("Digital Financial Inclusion Assessment")
+    st.write(
+        "Understand an individual's digital financial inclusion profile, identify "
+        "gaps across five important dimensions, and explore explainable assessment insights."
+    )
+    st.caption("Component 02 · Financial Inclusion Decision Support")
+    _profile_overview_cards()
+    st.divider()
+    individual_assessment.render(redesigned=True)
+
+
 def render() -> None:
+    """Render the established Component 02 stakeholder/research dashboard."""
     with st.container(key="new_fi_dark_dashboard"):
         _inject_styles()
         try:
