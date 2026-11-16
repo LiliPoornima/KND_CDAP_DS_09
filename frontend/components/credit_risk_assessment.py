@@ -61,11 +61,30 @@ def _validate_application(raw: pd.DataFrame) -> tuple[list[str], list[str]]:
     return errors, warnings
 
 
-def _risk_band(probability: float) -> tuple[str, str]:
+def _risk_band(
+    probability: float,
+    raw: pd.DataFrame | None = None,
+) -> tuple[str, str]:
+    """Return a presentation band using model risk plus affordability stress."""
+    affordability_high = False
+    affordability_elevated = False
+    if raw is not None:
+        row = raw.iloc[0]
+        income = float(row["AMT_INCOME_TOTAL"])
+        monthly_income = income / 12 if income > 0 else 0.0
+        installment = float(row["AMT_ANNUITY"])
+        loan_to_income = (
+            float(row["AMT_CREDIT"]) / income if income > 0 else np.inf
+        )
+        affordability_high = monthly_income == 0 or installment > monthly_income or loan_to_income >= 5
+        affordability_elevated = installment >= monthly_income * 0.4 or loan_to_income >= 2
+
+    if probability >= 0.50 or affordability_high:
+        return "High", "red"
+    if probability >= 0.20 or affordability_elevated:
+        return "Medium", "orange"
     if probability < 0.20:
         return "Low", "green"
-    if probability < 0.50:
-        return "Medium", "orange"
     return "High", "red"
 
 
@@ -212,8 +231,13 @@ def _render_affordability_summary(
     monthly_income = income / 12
     monthly_installment_ratio = annuity / monthly_income if monthly_income else np.nan
     summary_cols[1].metric(
-        "Installment / annual income", f"{row['ANNUITY_TO_INCOME_RATIO']:.1%}",
-        help="The model's source-data ratio. Monthly repayment burden is shown below.",
+        "Installment / annual income (source ratio)",
+        f"{row['ANNUITY_TO_INCOME_RATIO']:.1%}",
+        help=(
+            "This is the ratio used by the trained model. Because the installment "
+            "is monthly and income is annual in the source data, use the monthly "
+            "income indicator below for affordability review."
+        ),
     )
     summary_cols[2].metric(
         "Loan-to-purchase ratio", f"{row['CREDIT_TO_GOODS_RATIO']:.1%}"
@@ -222,13 +246,13 @@ def _render_affordability_summary(
     reasons: list[str] = []
     if income <= 0:
         reasons.append("Annual income is zero or missing, so affordability cannot be assessed reliably.")
-    elif row["ANNUITY_TO_INCOME_RATIO"] >= 0.4:
+    elif monthly_installment_ratio >= 0.4:
         reasons.append(
-            "The proposed installment is a relatively large share of the entered annual income."
+            "The proposed installment is a relatively large share of the estimated monthly income."
         )
-    elif row["ANNUITY_TO_INCOME_RATIO"] <= 0.2:
+    elif monthly_installment_ratio <= 0.2:
         reasons.append(
-            "The proposed installment is a relatively small share of the entered annual income."
+            "The proposed installment is a relatively small share of the estimated monthly income."
         )
     if row["CREDIT_TO_INCOME_RATIO"] >= 5:
         reasons.append("The requested loan is large compared with the entered annual income.")
@@ -267,7 +291,13 @@ def _render_next_steps(
         "Review existing monthly obligations and essential household expenses separately.",
         "Collect existing loan balances, monthly repayments, and previous missed-payment information; these are not available in this form.",
     ]
-    if row["ANNUITY_TO_INCOME_RATIO"] >= 0.4:
+    monthly_income = float(raw.loc[0, "AMT_INCOME_TOTAL"]) / 12
+    monthly_installment_ratio = (
+        float(raw.loc[0, "AMT_ANNUITY"]) / monthly_income
+        if monthly_income
+        else np.nan
+    )
+    if monthly_installment_ratio >= 0.4:
         checks.append("Consider whether a smaller installment or a longer repayment plan is affordable.")
     if row["CREDIT_TO_INCOME_RATIO"] >= 5:
         checks.append("Consider whether the requested amount can be reduced or supported by additional resources.")
@@ -721,11 +751,26 @@ def render_credit_risk_assessment() -> None:
         bundle = _load_application_only_model(str(prepared_dir), signature)
         applicant = cr_prepare_home_credit_application(raw)
         probability = cr_predict_home_credit_application(bundle, applicant)
+        alternative_probability = None
+        if compare_scenario:
+            alternative_raw = raw.copy()
+            alternative_raw.loc[0, "AMT_CREDIT"] = alternative_credit
+            alternative_raw.loc[0, "AMT_ANNUITY"] = alternative_annuity
+            alternative_errors, _ = _validate_application(alternative_raw)
+            if alternative_errors:
+                st.error("The alternative scenario cannot be assessed:")
+                for error in alternative_errors:
+                    st.write(f"- {error}")
+                return
+            alternative = cr_prepare_home_credit_application(alternative_raw)
+            alternative_probability = cr_predict_home_credit_application(
+                bundle, alternative
+            )
     except (ValueError, KeyError, OSError) as exc:
         st.error(f"Could not assess this application: {exc}")
         return
 
-    band, band_color = _risk_band(probability)
+    band, band_color = _risk_band(probability, raw)
     decision = (
         "Higher payment-difficulty likelihood"
         if probability >= bundle["threshold"]
@@ -737,11 +782,12 @@ def render_credit_risk_assessment() -> None:
     result_cols[1].metric("Predicted payment-difficulty probability", f"{probability:.1%}")
     result_cols[2].metric("Risk category", band)
     result_cols[3].metric("Assessment status", "Completed")
-    st.markdown(f"**Prediction:** {decision}")
+    st.markdown(f"**Model threshold comparison:** {decision}")
     st.caption(
-        "The probability and prediction come from the trained model. The risk "
-        "category is a presentation band derived from that probability; this "
-        "model does not produce a separate confidence score."
+        "The probability and threshold comparison come from the trained model. "
+        "The risk category is a screening band that combines the model probability "
+        "with affordability stress from the values entered in this form. It is not "
+        "a lender approval or rejection and is not a confidence score."
     )
     band_messages = {
         "green": st.success,
@@ -751,6 +797,28 @@ def render_credit_risk_assessment() -> None:
     band_messages[band_color](
         f"Risk category: **{band}**. This category is for research decision support only."
     )
+    if alternative_probability is not None:
+        alternative_band, _ = _risk_band(alternative_probability, alternative_raw)
+        st.subheader("Alternative scenario comparison")
+        comparison = pd.DataFrame(
+            [
+                {
+                    "Scenario": "Current application",
+                    "Loan amount": requested_credit,
+                    "Installment": annuity,
+                    "Payment-difficulty probability": f"{probability:.1%}",
+                    "Risk category": band,
+                },
+                {
+                    "Scenario": "Alternative",
+                    "Loan amount": alternative_credit,
+                    "Installment": alternative_annuity,
+                    "Payment-difficulty probability": f"{alternative_probability:.1%}",
+                    "Risk category": alternative_band,
+                },
+            ]
+        )
+        st.dataframe(comparison, hide_index=True, use_container_width=True)
     if validation_warnings:
         st.warning("Please review these affordability notes:")
         for warning in validation_warnings:
