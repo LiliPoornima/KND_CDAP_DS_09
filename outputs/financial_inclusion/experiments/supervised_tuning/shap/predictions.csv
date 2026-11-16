@@ -1,0 +1,101 @@
+row_index,predicted_cluster_id,predicted_cluster_label,predicted_cluster_probability
+0,1,Connected and Digitally Included,0.5606921631832147
+1,1,Connected and Digitally Included,0.351855231911689
+2,2,"Connected, Financially Excluded",0.26693136723133143
+3,2,"Connected, Financially Excluded",0.32601352317534743
+4,1,Connected and Digitally Included,0.38557847115304106
+5,3,Multi-Dimensional Inclusion Gap,0.30162957991790185
+6,3,Multi-Dimensional Inclusion Gap,0.31058359720937834
+7,2,"Connected, Financially Excluded",0.29791676690881747
+8,2,"Connected, Financially Excluded",0.29348152944337813
+9,1,Connected and Digitally Included,0.4466101585123723
+10,1,Connected and Digitally Included,0.3750001437187542
+11,2,"Connected, Financially Excluded",0.28215148276114976
+12,4,Access Without Digital Usage,0.25737036110756706
+13,2,"Connected, Financially Excluded",0.32998776075617337
+14,4,Access Without Digital Usage,0.4457952631062176
+15,4,Access Without Digital Usage,0.5039391024555634
+16,3,Multi-Dimensional Inclusion Gap,0.30162957991790185
+17,2,"Connected, Financially Excluded",0.3782171920809192
+18,1,Connected and Digitally Included,0.30581466210865293
+19,1,Connected and Digitally Included,0.48337107566249266
+20,4,Access Without Digital Usage,0.4063664164944394
+21,4,Access Without Digital Usage,0.2892311844216021
+22,0,"Digitally Active, Safety Gap",0.3665741192808453
+23,1,Connected and Digitally Included,0.3472075581924794
+24,1,Connected and Digitally Included,0.4185707868354983
+25,3,Multi-Dimensional Inclusion Gap,0.26898711621147736
+26,2,"Connected, Financially Excluded",0.4623293763135903
+27,1,Connected and Digitally Included,0.40058026827346727
+28,2,"Connected, Financially Excluded",0.2427579840484287
+29,4,Access Without Digital Usage,0.5047364469928882
+30,2,"Connected, Financially Excluded",0.25560143829195625
+31,1,Connected and Digitally Included,0.3475921365585994
+32,4,Access Without Digital Usage,0.25092989747182587
+33,0,"Digitally Active, Safety Gap",0.35399367980941454
+34,3,Multi-Dimensional Inclusion Gap,0.2953977388006618
+35,1,Connected and Digitally Included,0.5628406165809174
+36,1,Connected and Digitally Included,0.43198643772352696
+37,3,Multi-Dimensional Inclusion Gap,0.28873985492986187
+38,1,Connected and Digitally Included,0.339819852653246
+39,1,Connected and Digitally Included,0.28287245028532804
+40,1,Connected and Digitally Included,0.34000556487985306
+41,1,Connected and Digitally Included,0.42970218381897834
+42,4,Access Without Digital Usage,0.43467119447631647
+43,1,Connected and Digitally Included,0.3821648786499929
+44,3,Multi-Dimensional Inclusion Gap,0.30024919216662593
+45,3,Multi-Dimensional Inclusion Gap,0.46775481126083934
+46,0,"Digitally Active, Safety Gap",0.45683508432550174
+47,2,"Connected, Financially Excluded",0.30163778992159845
+48,2,"Connected, Financially Excluded",0.3560721383059484
+49,0,"Digitally Active, Safety Gap",0.2984480057446157
+50,0,"Digitally Active, Safety Gap",0.3122742168175524
+51,2,"Connected, Financially Excluded",0.5750673495161733
+52,2,"Connected, Financially Excluded",0.28776711612162165
+53,3,Multi-Dimensional Inclusion Gap,0.3311798946078427
+54,1,Connected and Digitally Included,0.38950301101885165
+55,2,"Connected, Financially Excluded",0.641994352776652
+56,1,Connected and Digitally Included,0.3918034233251248
+57,1,Connected and Digitally Included,0.402992643936572
+58,1,Connected and Digitally Included,0.4231880914588729
+59,1,Connected and Digitally Included,0.527788046600095
+60,1,Connected and Digitally Included,0.4915700739404298
+61,3,Multi-Dimensional Inclusion Gap,0.4332360352302563
+62,3,Multi-Dimensional Inclusion Gap,0.3167085434003236
+63,3,Multi-Dimensional Inclusion Gap,0.3527344796565764
+64,4,Access Without Digital Usage,0.2962777774954692
+65,0,"Digitally Active, Safety Gap",0.24904161632377916
+66,1,Connected and Digitally Included,0.3475921365585994
+67,4,Access Without Digital Usage,0.33874390691143574
+68,0,"Digitally Active, Safety Gap",0.2661513267124282
+69,2,"Connected, Financially Excluded",0.522328178283522
+70,1,Connected and Digitally Included,0.4225319233702882
+71,1,Connected and Digitally Included,0.44572664025111736
+72,1,Connected and Digitally Included,0.4445029005211337
+73,2,"Connected, Financially Excluded",0.5802469989342265
+74,0,"Digitally Active, Safety Gap",0.4293765274023046
+75,0,"Digitally Active, Safety Gap",0.26172749152572466
+76,1,Connected and Digitally Included,0.41376118695864045
+77,4,Access Without Digital Usage,0.3467583197824478
+78,0,"Digitally Active, Safety Gap",0.35989586352815783
+79,0,"Digitally Active, Safety Gap",0.4648721938881224
+80,2,"Connected, Financially Excluded",0.35864907981643307
+81,3,Multi-Dimensional Inclusion Gap,0.3262352598287895
+82,0,"Digitally Active, Safety Gap",0.2471812857093145
+83,3,Multi-Dimensional Inclusion Gap,0.35448954479791056
+84,2,"Connected, Financially Excluded",0.31788850554129483
+85,1,Connected and Digitally Included,0.526931568706627
+86,1,Connected and Digitally Included,0.43538993365508666
+87,0,"Digitally Active, Safety Gap",0.3293321697674499
+88,1,Connected and Digitally Included,0.3377129744534303
+89,1,Connected and Digitally Included,0.3027423846844924
+90,0,"Digitally Active, Safety Gap",0.37257667428170316
+91,4,Access Without Digital Usage,0.3184071723050924
+92,3,Multi-Dimensional Inclusion Gap,0.38669127922473245
+93,1,Connected and Digitally Included,0.3565786374724995
+94,0,"Digitally Active, Safety Gap",0.3128217661922416
+95,1,Connected and Digitally Included,0.3484895408824205
+96,2,"Connected, Financially Excluded",0.4497014720905685
+97,4,Access Without Digital Usage,0.4125130432912732
+98,2,"Connected, Financially Excluded",0.5223325037761878
+99,0,"Digitally Active, Safety Gap",0.33440646514014016

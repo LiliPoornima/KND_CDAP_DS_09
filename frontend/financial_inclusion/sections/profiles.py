@@ -21,8 +21,10 @@ def _render_clustering_evaluation() -> None:
     try:
         evidence = loader.load_clustering_evidence()
         candidates = pd.read_csv(loader.CLUSTER_SELECTION_MATRIX_PATH)
-        decision = loader.CLUSTER_SELECTION_DECISION_PATH.read_text(encoding="utf-8")
-        metadata = json.loads(loader.CLUSTER_MODEL_METADATA_PATH.read_text(encoding="utf-8"))
+        decision = loader.CLUSTER_SELECTION_DECISION_PATH.read_text(
+            encoding="utf-8")
+        metadata = json.loads(
+            loader.CLUSTER_MODEL_METADATA_PATH.read_text(encoding="utf-8"))
     except (OSError, ValueError, KeyError, TypeError):
         st.warning(
             "Saved clustering evaluation evidence is missing or inconsistent. "
@@ -42,12 +44,16 @@ def _render_clustering_evaluation() -> None:
         f"**Selected solution: {algorithm} · {cluster_count} clusters · {scaling}**"
     )
     metric_columns = st.columns(3)
-    metric_columns[0].metric("Silhouette score", f"{evidence['silhouette_score']:.3f}")
-    metric_columns[1].metric("Davies–Bouldin index", f"{evidence['davies_bouldin_score']:.3f}")
-    metric_columns[2].metric("Calinski–Harabasz score", f"{evidence['calinski_harabasz_score']:,.1f}")
+    metric_columns[0].metric(
+        "Silhouette score", f"{evidence['silhouette_score']:.3f}")
+    metric_columns[1].metric("Davies–Bouldin index",
+                             f"{evidence['davies_bouldin_score']:.3f}")
+    metric_columns[2].metric("Calinski–Harabasz score",
+                             f"{evidence['calinski_harabasz_score']:,.1f}")
     for column, helper in zip(
         metric_columns,
-        ("Higher is generally better.", "Lower is generally better.", "Higher is generally better."),
+        ("Higher is generally better.", "Lower is generally better.",
+         "Higher is generally better."),
     ):
         column.caption(helper)
 
@@ -64,12 +70,15 @@ def _render_clustering_evaluation() -> None:
             f"min {evidence['min_pairwise_ari']:.3f}"
         )
     consistency_columns[0].metric("Stability across 10 runs", stability_value)
-    consistency_columns[0].caption("Mean and minimum agreement across saved seed runs.")
+    consistency_columns[0].caption(
+        "Mean and minimum agreement across saved seed runs.")
     consistency_columns[1].metric(
         "K-Means / GMM agreement", f"ARI {evidence['kmeans_gmm_ari']:.3f}"
     )
-    consistency_columns[1].caption("Agreement between saved cluster assignments.")
-    st.caption("ARI measures agreement between assignments; it does not establish substantive validity.")
+    consistency_columns[1].caption(
+        "Agreement between saved cluster assignments.")
+    st.caption(
+        "ARI measures agreement between assignments; it does not establish substantive validity.")
 
     with st.expander("Why were five clusters selected?"):
         same_population = candidates.loc[
@@ -110,7 +119,8 @@ def _render_clustering_evaluation() -> None:
                 width="stretch",
             )
         else:
-            st.warning("Candidate comparison metrics are incomplete in the saved selection matrix.")
+            st.warning(
+                "Candidate comparison metrics are incomplete in the saved selection matrix.")
         rationale = decision.split("## Selection rationale", 1)
         if len(rationale) == 2:
             st.markdown(rationale[1].split("\n\n-", 1)[0].strip())
@@ -120,19 +130,16 @@ def _render_clustering_evaluation() -> None:
         if len(alternatives) == 2:
             st.markdown(alternatives[1].split("\n## ", 1)[0].strip())
         else:
-            st.warning("The saved candidate-selection rationale is unavailable.")
-        st.markdown(
-            "The selected solution does not have the best value on every metric. "
-            "The decision balances clustering quality, consistency, cluster sizes, "
-            "interpretability, and research relevance."
-        )
+            st.warning(
+                "The saved candidate-selection rationale is unavailable.")
 
     with st.expander("Technical details"):
         st.caption(
             f"Initialization count: {metadata.get('n_init', 'Not recorded')} · "
             f"Random seed: {metadata.get('random_state', 'Not recorded')}."
         )
-        selected_row = candidates.loc[candidates["candidate"] == evidence["candidate"]]
+        selected_row = candidates.loc[candidates["candidate"]
+                                      == evidence["candidate"]]
         if (
             len(selected_row) == 1
             and {"sample_size", "economies"}.issubset(selected_row.columns)
@@ -153,7 +160,6 @@ def _render_clustering_evaluation() -> None:
 
 
 def render(df: pd.DataFrame) -> None:
-    
 
     # ---------------------------------------------------------
     # 1. Load saved profile summaries
@@ -304,10 +310,6 @@ def render(df: pd.DataFrame) -> None:
 
     valid_values = values.dropna(subset=["Mean score"]).copy()
 
-    
-
-    
-
     # ---------------------------------------------------------
     # 6. Horizontal dimension-mean bar chart
     # ---------------------------------------------------------
@@ -338,7 +340,6 @@ def render(df: pd.DataFrame) -> None:
             config={"responsive": True},
         )
 
-       
     else:
         st.warning("Dimension means are unavailable for this profile.")
 
