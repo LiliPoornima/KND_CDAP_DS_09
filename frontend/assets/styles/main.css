@@ -1,19 +1,229 @@
-/* Shared frontend styles. */
+/* Shared banking theme for the research dashboard. */
 
+:root {
+    --bank-navy: #0b1f3a;
+    --bank-blue: #123d6a;
+    --bank-teal: #008c95;
+    --bank-teal-light: #e8f6f7;
+    --bank-ink: #1c2b3a;
+    --bank-muted: #607286;
+    --bank-surface: #ffffff;
+    --bank-background: #f3f6fa;
+    --bank-border: #dce5ee;
+    --bank-success: #18794e;
+    --bank-warning: #a76400;
+    --bank-danger: #b42318;
+}
 
-/* Shared styles for the research dashboard */
+.stApp {
+    background: var(--bank-background);
+    color: var(--bank-ink);
+}
+
+[data-testid="stAppViewContainer"] {
+    background: var(--bank-background);
+}
+
+[data-testid="stAppViewContainer"] [data-testid="stMarkdownContainer"] p,
+[data-testid="stAppViewContainer"] [data-testid="stWidgetLabel"] *,
+[data-testid="stAppViewContainer"] label,
+[data-testid="stAppViewContainer"] [data-testid="stCaptionContainer"] {
+    color: var(--bank-ink);
+}
+
+[data-testid="stAppViewContainer"] [data-testid="stCaptionContainer"] {
+    color: var(--bank-muted);
+}
+
+[data-testid="stHeader"] {
+    background: transparent;
+}
+
+[data-testid="stSidebar"] {
+    background: var(--bank-navy);
+    border-right: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+[data-testid="stSidebar"] * {
+    color: #f5f8fc;
+}
+
+[data-testid="stSidebar"] [data-testid="stMarkdownContainer"] p {
+    color: #d7e5f2;
+}
 
 .block-container {
-    padding-top: 2rem;
-    padding-bottom: 3rem;
+    max-width: 1440px;
+    padding-top: 2.25rem;
+    padding-bottom: 3.5rem;
 }
 
 h1, h2, h3 {
-    letter-spacing: -0.02em;
+    color: var(--bank-navy);
+    letter-spacing: -0.025em;
+    font-weight: 700;
 }
 
+h1 {
+    border-left: 5px solid var(--bank-teal);
+    padding-left: 0.8rem;
+}
+
+h2, h3 {
+    margin-top: 1.4rem;
+}
+
+/* Metric cards are the primary decision-support visual. */
 [data-testid="stMetric"] {
-    border: 1px solid rgba(128, 128, 128, 0.25);
-    padding: 1rem;
-    border-radius: 0.75rem;
+    background: var(--bank-surface);
+    border: 1px solid var(--bank-border);
+    border-top: 4px solid var(--bank-teal);
+    padding: 1rem 1.1rem;
+    min-height: 7rem;
+    border-radius: 0.65rem;
+    box-shadow: 0 3px 12px rgba(11, 31, 58, 0.06);
+}
+
+[data-testid="stMetricLabel"] {
+    color: var(--bank-muted);
+    font-weight: 600;
+}
+
+[data-testid="stMetricValue"] {
+    color: var(--bank-navy);
+    font-weight: 750;
+}
+
+/* Keep input controls consistent and easy to scan. */
+[data-testid="stTextInput"] input,
+[data-testid="stNumberInput"] input,
+[data-testid="stSelectbox"] [data-baseweb="select"],
+[data-testid="stTextArea"] textarea {
+    background: var(--bank-surface);
+    color: var(--bank-ink);
+    border-color: var(--bank-border);
+    border-radius: 0.45rem;
+}
+
+[data-testid="stSelectbox"] [data-baseweb="select"],
+[data-testid="stSelectbox"] [data-baseweb="select"] > div,
+[data-testid="stSelectbox"] [data-baseweb="select"] [role="combobox"] {
+    background: var(--bank-surface) !important;
+    color: var(--bank-ink) !important;
+}
+
+[data-testid="stSelectbox"] [data-baseweb="select"] * {
+    color: var(--bank-ink) !important;
+}
+
+[data-testid="stTextInput"] input::placeholder,
+[data-testid="stNumberInput"] input::placeholder,
+[data-testid="stTextArea"] textarea::placeholder {
+    color: var(--bank-muted);
+}
+
+[data-testid="stSelectbox"] [data-baseweb="select"] *,
+[data-testid="stNumberInput"] button {
+    color: var(--bank-ink);
+}
+
+[data-testid="stNumberInput"] button {
+    background: var(--bank-surface) !important;
+    border-left: 1px solid var(--bank-border);
+}
+
+[data-testid="stNumberInput"] button:hover {
+    background: var(--bank-teal-light) !important;
+    color: var(--bank-navy) !important;
+}
+
+[data-testid="stCheckbox"] label {
+    color: var(--bank-ink) !important;
+}
+
+[data-testid="stCheckbox"] input:checked + div {
+    background: var(--bank-teal);
+    border-color: var(--bank-teal);
+}
+
+[data-testid="stTextInput"] input:focus,
+[data-testid="stNumberInput"] input:focus,
+[data-testid="stTextArea"] textarea:focus {
+    border-color: var(--bank-teal);
+    box-shadow: 0 0 0 1px var(--bank-teal);
+}
+
+/* Primary actions use teal; secondary controls use navy. */
+button[kind="primary"],
+[data-testid="stFormSubmitButton"] button {
+    background: var(--bank-teal);
+    border: 1px solid var(--bank-teal);
+    color: #ffffff;
+    font-weight: 700;
+    border-radius: 0.45rem;
+}
+
+button[kind="primary"]:hover,
+[data-testid="stFormSubmitButton"] button:hover {
+    background: #00747b;
+    border-color: #00747b;
+}
+
+[data-testid="stDownloadButton"] button {
+    background: var(--bank-navy);
+    border: 1px solid var(--bank-navy);
+    color: #ffffff;
+    font-weight: 650;
+    border-radius: 0.45rem;
+}
+
+[data-testid="stDownloadButton"] button:hover {
+    background: var(--bank-blue);
+    border-color: var(--bank-blue);
+}
+
+/* Sections and tables use quiet surfaces rather than heavy decoration. */
+[data-testid="stExpander"] {
+    background: var(--bank-surface);
+    border: 1px solid var(--bank-border);
+    border-radius: 0.65rem;
+    box-shadow: 0 2px 8px rgba(11, 31, 58, 0.04);
+}
+
+[data-testid="stDataFrame"] {
+    border: 1px solid var(--bank-border);
+    border-radius: 0.45rem;
+}
+
+[data-testid="stAlert"] {
+    border-radius: 0.55rem;
+    border-left-width: 4px;
+}
+
+[data-testid="stAlert"] p,
+[data-testid="stAlert"] li {
+    color: var(--bank-ink);
+}
+
+[data-testid="stAlert"][kind="warning"] {
+    background: #fff7e6;
+    border-left-color: var(--bank-warning);
+}
+
+[data-testid="stAlert"][kind="success"] {
+    background: #eaf7ef;
+    border-left-color: var(--bank-success);
+}
+
+[data-testid="stAlert"][kind="error"] {
+    background: #fff0ef;
+    border-left-color: var(--bank-danger);
+}
+
+hr {
+    border-color: var(--bank-border);
+}
+
+small, [data-testid="stCaptionContainer"] {
+    color: var(--bank-muted);
 }
