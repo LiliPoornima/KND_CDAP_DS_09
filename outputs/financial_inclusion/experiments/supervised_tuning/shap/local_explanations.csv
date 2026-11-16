@@ -1,0 +1,701 @@
+row_index,predicted_cluster_id,predicted_cluster_label,explained_class_id,feature,shap_decision_score_contribution
+0,1,Connected and Digitally Included,1,female,0.08368440747123211
+0,1,Connected and Digitally Included,1,educ,0.7301750161621958
+0,1,Connected and Digitally Included,1,inc_q,0.2367823768938033
+0,1,Connected and Digitally Included,1,emp_in,0.14294584367623028
+0,1,Connected and Digitally Included,1,urbanicity,-0.09237361998715815
+0,1,Connected and Digitally Included,1,regionwb,0.12090139864188247
+0,1,Connected and Digitally Included,1,age,0.11788170003540713
+1,1,Connected and Digitally Included,1,female,0.08368440747123211
+1,1,Connected and Digitally Included,1,educ,0.1301378642354416
+1,1,Connected and Digitally Included,1,inc_q,-0.011473258020179747
+1,1,Connected and Digitally Included,1,emp_in,0.14294584367623028
+1,1,Connected and Digitally Included,1,urbanicity,0.17931349762213053
+1,1,Connected and Digitally Included,1,regionwb,0.12090139864188247
+1,1,Connected and Digitally Included,1,age,-0.04932638512119873
+2,2,"Connected, Financially Excluded",2,female,0.007642954980385491
+2,2,"Connected, Financially Excluded",2,educ,0.06767553888473514
+2,2,"Connected, Financially Excluded",2,inc_q,0.05436061002703983
+2,2,"Connected, Financially Excluded",2,emp_in,-0.09909869698477217
+2,2,"Connected, Financially Excluded",2,urbanicity,0.022992566992032934
+2,2,"Connected, Financially Excluded",2,regionwb,-0.20861234108417887
+2,2,"Connected, Financially Excluded",2,age,0.5973572048333913
+3,2,"Connected, Financially Excluded",2,female,0.007642954980385491
+3,2,"Connected, Financially Excluded",2,educ,0.041965907193646186
+3,2,"Connected, Financially Excluded",2,inc_q,0.08346286966037417
+3,2,"Connected, Financially Excluded",2,emp_in,-0.09909869698477217
+3,2,"Connected, Financially Excluded",2,urbanicity,0.022992566992032934
+3,2,"Connected, Financially Excluded",2,regionwb,0.20128487973944273
+3,2,"Connected, Financially Excluded",2,age,0.4390749565998483
+4,1,Connected and Digitally Included,1,female,0.08368440747123211
+4,1,Connected and Digitally Included,1,educ,0.1301378642354416
+4,1,Connected and Digitally Included,1,inc_q,0.2367823768938033
+4,1,Connected and Digitally Included,1,emp_in,0.14294584367623028
+4,1,Connected and Digitally Included,1,urbanicity,0.17931349762213053
+4,1,Connected and Digitally Included,1,regionwb,-0.18078776940552033
+4,1,Connected and Digitally Included,1,age,0.14176856934349366
+5,3,Multi-Dimensional Inclusion Gap,3,female,0.07880792582755947
+5,3,Multi-Dimensional Inclusion Gap,3,educ,0.6088303780813835
+5,3,Multi-Dimensional Inclusion Gap,3,inc_q,0.0864866843780539
+5,3,Multi-Dimensional Inclusion Gap,3,emp_in,-0.08127275428965994
+5,3,Multi-Dimensional Inclusion Gap,3,urbanicity,0.05397637605904888
+5,3,Multi-Dimensional Inclusion Gap,3,regionwb,0.09953443756237906
+5,3,Multi-Dimensional Inclusion Gap,3,age,-0.21112091494351057
+6,3,Multi-Dimensional Inclusion Gap,3,female,0.07880792582755947
+6,3,Multi-Dimensional Inclusion Gap,3,educ,0.6088303780813835
+6,3,Multi-Dimensional Inclusion Gap,3,inc_q,0.0864866843780539
+6,3,Multi-Dimensional Inclusion Gap,3,emp_in,-0.08127275428965994
+6,3,Multi-Dimensional Inclusion Gap,3,urbanicity,-0.10477767117344783
+6,3,Multi-Dimensional Inclusion Gap,3,regionwb,0.09953443756237906
+6,3,Multi-Dimensional Inclusion Gap,3,age,-0.009243844791185413
+7,2,"Connected, Financially Excluded",2,female,-0.007954912326523676
+7,2,"Connected, Financially Excluded",2,educ,0.041965907193646186
+7,2,"Connected, Financially Excluded",2,inc_q,-0.07547741758551066
+7,2,"Connected, Financially Excluded",2,emp_in,0.23123029296446834
+7,2,"Connected, Financially Excluded",2,urbanicity,-0.011844655723168483
+7,2,"Connected, Financially Excluded",2,regionwb,-0.20861234108417887
+7,2,"Connected, Financially Excluded",2,age,0.5973572048333913
+8,2,"Connected, Financially Excluded",2,female,-0.007954912326523676
+8,2,"Connected, Financially Excluded",2,educ,0.041965907193646186
+8,2,"Connected, Financially Excluded",2,inc_q,0.08346286966037417
+8,2,"Connected, Financially Excluded",2,emp_in,0.23123029296446834
+8,2,"Connected, Financially Excluded",2,urbanicity,-0.011844655723168483
+8,2,"Connected, Financially Excluded",2,regionwb,-0.04242340102622169
+8,2,"Connected, Financially Excluded",2,age,0.2174798090728881
+9,1,Connected and Digitally Included,1,female,0.08368440747123211
+9,1,Connected and Digitally Included,1,educ,0.1301378642354416
+9,1,Connected and Digitally Included,1,inc_q,0.2367823768938033
+9,1,Connected and Digitally Included,1,emp_in,0.14294584367623028
+9,1,Connected and Digitally Included,1,urbanicity,-0.09237361998715815
+9,1,Connected and Digitally Included,1,regionwb,0.17381811655450913
+9,1,Connected and Digitally Included,1,age,0.16565543865158022
+10,1,Connected and Digitally Included,1,female,-0.08710009757209873
+10,1,Connected and Digitally Included,1,educ,0.1301378642354416
+10,1,Connected and Digitally Included,1,inc_q,0.2367823768938033
+10,1,Connected and Digitally Included,1,emp_in,0.14294584367623028
+10,1,Connected and Digitally Included,1,urbanicity,-0.09237361998715815
+10,1,Connected and Digitally Included,1,regionwb,0.12090139864188247
+10,1,Connected and Digitally Included,1,age,0.16565543865158022
+11,2,"Connected, Financially Excluded",2,female,0.007642954980385491
+11,2,"Connected, Financially Excluded",2,educ,0.06767553888473514
+11,2,"Connected, Financially Excluded",2,inc_q,0.06063820306122575
+11,2,"Connected, Financially Excluded",2,emp_in,-0.09909869698477217
+11,2,"Connected, Financially Excluded",2,urbanicity,-0.011844655723168483
+11,2,"Connected, Financially Excluded",2,regionwb,-0.20861234108417887
+11,2,"Connected, Financially Excluded",2,age,0.6923265537735172
+12,4,Access Without Digital Usage,4,female,-0.0226984863530968
+12,4,Access Without Digital Usage,4,educ,-0.028611760457831547
+12,4,Access Without Digital Usage,4,inc_q,0.0030013658518086433
+12,4,Access Without Digital Usage,4,emp_in,-0.03625149610547984
+12,4,Access Without Digital Usage,4,urbanicity,0.03678680796349102
+12,4,Access Without Digital Usage,4,regionwb,0.34016193820805574
+12,4,Access Without Digital Usage,4,age,0.02159254447305484
+13,2,"Connected, Financially Excluded",2,female,0.007642954980385491
+13,2,"Connected, Financially Excluded",2,educ,0.041965907193646186
+13,2,"Connected, Financially Excluded",2,inc_q,0.00502378850378718
+13,2,"Connected, Financially Excluded",2,emp_in,0.23123029296446834
+13,2,"Connected, Financially Excluded",2,urbanicity,0.022992566992032934
+13,2,"Connected, Financially Excluded",2,regionwb,-0.20861234108417887
+13,2,"Connected, Financially Excluded",2,age,0.6290136544800999
+14,4,Access Without Digital Usage,4,female,-0.0226984863530968
+14,4,Access Without Digital Usage,4,educ,-0.028611760457831547
+14,4,Access Without Digital Usage,4,inc_q,0.02812162492674953
+14,4,Access Without Digital Usage,4,emp_in,-0.03625149610547984
+14,4,Access Without Digital Usage,4,urbanicity,0.03678680796349102
+14,4,Access Without Digital Usage,4,regionwb,1.0450620972787295
+14,4,Access Without Digital Usage,4,age,-0.018956834819066917
+15,4,Access Without Digital Usage,4,female,0.023624955183835443
+15,4,Access Without Digital Usage,4,educ,0.055532737349716726
+15,4,Access Without Digital Usage,4,inc_q,0.02812162492674953
+15,4,Access Without Digital Usage,4,emp_in,0.08458682424611963
+15,4,Access Without Digital Usage,4,urbanicity,-0.0714096860467767
+15,4,Access Without Digital Usage,4,regionwb,1.0450620972787295
+15,4,Access Without Digital Usage,4,age,0.2750261650488159
+16,3,Multi-Dimensional Inclusion Gap,3,female,0.07880792582755947
+16,3,Multi-Dimensional Inclusion Gap,3,educ,0.6088303780813835
+16,3,Multi-Dimensional Inclusion Gap,3,inc_q,0.0864866843780539
+16,3,Multi-Dimensional Inclusion Gap,3,emp_in,-0.08127275428965994
+16,3,Multi-Dimensional Inclusion Gap,3,urbanicity,0.05397637605904888
+16,3,Multi-Dimensional Inclusion Gap,3,regionwb,0.09953443756237906
+16,3,Multi-Dimensional Inclusion Gap,3,age,-0.21112091494351057
+17,2,"Connected, Financially Excluded",2,female,-0.007954912326523676
+17,2,"Connected, Financially Excluded",2,educ,0.06767553888473514
+17,2,"Connected, Financially Excluded",2,inc_q,0.00502378850378718
+17,2,"Connected, Financially Excluded",2,emp_in,-0.09909869698477217
+17,2,"Connected, Financially Excluded",2,urbanicity,-0.011844655723168483
+17,2,"Connected, Financially Excluded",2,regionwb,0.20128487973944273
+17,2,"Connected, Financially Excluded",2,age,0.7239830034202257
+18,1,Connected and Digitally Included,1,female,0.08368440747123211
+18,1,Connected and Digitally Included,1,educ,0.1301378642354416
+18,1,Connected and Digitally Included,1,inc_q,0.2367823768938033
+18,1,Connected and Digitally Included,1,emp_in,0.14294584367623028
+18,1,Connected and Digitally Included,1,urbanicity,-0.09237361998715815
+18,1,Connected and Digitally Included,1,regionwb,-0.15173610469409782
+18,1,Connected and Digitally Included,1,age,-0.02543951581311218
+19,1,Connected and Digitally Included,1,female,0.08368440747123211
+19,1,Connected and Digitally Included,1,educ,0.1301378642354416
+19,1,Connected and Digitally Included,1,inc_q,0.2367823768938033
+19,1,Connected and Digitally Included,1,emp_in,0.14294584367623028
+19,1,Connected and Digitally Included,1,urbanicity,0.17931349762213053
+19,1,Connected and Digitally Included,1,regionwb,0.12090139864188247
+19,1,Connected and Digitally Included,1,age,0.11788170003540713
+20,4,Access Without Digital Usage,4,female,-0.0226984863530968
+20,4,Access Without Digital Usage,4,educ,0.055532737349716726
+20,4,Access Without Digital Usage,4,inc_q,-0.06062016834287759
+20,4,Access Without Digital Usage,4,emp_in,-0.03625149610547984
+20,4,Access Without Digital Usage,4,urbanicity,-0.0714096860467767
+20,4,Access Without Digital Usage,4,regionwb,1.0450620972787295
+20,4,Access Without Digital Usage,4,age,-0.059506214111188685
+21,4,Access Without Digital Usage,4,female,-0.0226984863530968
+21,4,Access Without Digital Usage,4,educ,-0.028611760457831547
+21,4,Access Without Digital Usage,4,inc_q,0.02812162492674953
+21,4,Access Without Digital Usage,4,emp_in,-0.03625149610547984
+21,4,Access Without Digital Usage,4,urbanicity,-0.0714096860467767
+21,4,Access Without Digital Usage,4,regionwb,0.2347086615795308
+21,4,Access Without Digital Usage,4,age,0.325712889163968
+22,0,"Digitally Active, Safety Gap",0,female,0.00708854283384045
+22,0,"Digitally Active, Safety Gap",0,educ,-0.06167934592027732
+22,0,"Digitally Active, Safety Gap",0,inc_q,-0.16142799412581904
+22,0,"Digitally Active, Safety Gap",0,emp_in,0.07367710370368168
+22,0,"Digitally Active, Safety Gap",0,urbanicity,-0.026118707393939223
+22,0,"Digitally Active, Safety Gap",0,regionwb,0.47080052326660154
+22,0,"Digitally Active, Safety Gap",0,age,0.4140426153699504
+23,1,Connected and Digitally Included,1,female,0.08368440747123211
+23,1,Connected and Digitally Included,1,educ,0.7301750161621958
+23,1,Connected and Digitally Included,1,inc_q,-0.2286512503599693
+23,1,Connected and Digitally Included,1,emp_in,-0.333540301911204
+23,1,Connected and Digitally Included,1,urbanicity,-0.09237361998715815
+23,1,Connected and Digitally Included,1,regionwb,0.17381811655450913
+23,1,Connected and Digitally Included,1,age,0.18954230795966676
+24,1,Connected and Digitally Included,1,female,-0.08710009757209873
+24,1,Connected and Digitally Included,1,educ,0.7301750161621958
+24,1,Connected and Digitally Included,1,inc_q,0.2367823768938033
+24,1,Connected and Digitally Included,1,emp_in,-0.333540301911204
+24,1,Connected and Digitally Included,1,urbanicity,0.17931349762213053
+24,1,Connected and Digitally Included,1,regionwb,0.12090139864188247
+24,1,Connected and Digitally Included,1,age,-0.02543951581311218
+25,3,Multi-Dimensional Inclusion Gap,3,female,-0.07571741893236106
+25,3,Multi-Dimensional Inclusion Gap,3,educ,0.6088303780813835
+25,3,Multi-Dimensional Inclusion Gap,3,inc_q,0.14962451753026207
+25,3,Multi-Dimensional Inclusion Gap,3,emp_in,-0.08127275428965994
+25,3,Multi-Dimensional Inclusion Gap,3,urbanicity,-0.10477767117344783
+25,3,Multi-Dimensional Inclusion Gap,3,regionwb,0.02731566258457338
+25,3,Multi-Dimensional Inclusion Gap,3,age,-0.019868953746570946
+26,2,"Connected, Financially Excluded",2,female,0.007642954980385491
+26,2,"Connected, Financially Excluded",2,educ,0.041965907193646186
+26,2,"Connected, Financially Excluded",2,inc_q,-0.07547741758551066
+26,2,"Connected, Financially Excluded",2,emp_in,-0.09909869698477217
+26,2,"Connected, Financially Excluded",2,urbanicity,0.022992566992032934
+26,2,"Connected, Financially Excluded",2,regionwb,0.9066503212596803
+26,2,"Connected, Financially Excluded",2,age,0.4074185069531397
+27,1,Connected and Digitally Included,1,female,-0.08710009757209873
+27,1,Connected and Digitally Included,1,educ,0.7301750161621958
+27,1,Connected and Digitally Included,1,inc_q,-0.29552059324714497
+27,1,Connected and Digitally Included,1,emp_in,0.14294584367623028
+27,1,Connected and Digitally Included,1,urbanicity,0.17931349762213053
+27,1,Connected and Digitally Included,1,regionwb,-0.15173610469409782
+27,1,Connected and Digitally Included,1,age,0.22537261192179658
+28,2,"Connected, Financially Excluded",2,female,-0.007954912326523676
+28,2,"Connected, Financially Excluded",2,educ,0.041965907193646186
+28,2,"Connected, Financially Excluded",2,inc_q,0.05436061002703983
+28,2,"Connected, Financially Excluded",2,emp_in,0.23123029296446834
+28,2,"Connected, Financially Excluded",2,urbanicity,0.022992566992032934
+28,2,"Connected, Financially Excluded",2,regionwb,-0.04242340102622169
+28,2,"Connected, Financially Excluded",2,age,-0.0041153384540721285
+29,4,Access Without Digital Usage,4,female,0.023624955183835443
+29,4,Access Without Digital Usage,4,educ,-0.028611760457831547
+29,4,Access Without Digital Usage,4,inc_q,0.02812162492674953
+29,4,Access Without Digital Usage,4,emp_in,0.08458682424611963
+29,4,Access Without Digital Usage,4,urbanicity,0.03678680796349102
+29,4,Access Without Digital Usage,4,regionwb,1.0450620972787295
+29,4,Access Without Digital Usage,4,age,-0.02909417964209736
+30,2,"Connected, Financially Excluded",2,female,0.007642954980385491
+30,2,"Connected, Financially Excluded",2,educ,0.041965907193646186
+30,2,"Connected, Financially Excluded",2,inc_q,0.00502378850378718
+30,2,"Connected, Financially Excluded",2,emp_in,0.23123029296446834
+30,2,"Connected, Financially Excluded",2,urbanicity,-0.011844655723168483
+30,2,"Connected, Financially Excluded",2,regionwb,-0.20861234108417887
+30,2,"Connected, Financially Excluded",2,age,0.31244915801301393
+31,1,Connected and Digitally Included,1,female,0.08368440747123211
+31,1,Connected and Digitally Included,1,educ,0.1301378642354416
+31,1,Connected and Digitally Included,1,inc_q,0.2367823768938033
+31,1,Connected and Digitally Included,1,emp_in,-0.333540301911204
+31,1,Connected and Digitally Included,1,urbanicity,0.17931349762213053
+31,1,Connected and Digitally Included,1,regionwb,0.12090139864188247
+31,1,Connected and Digitally Included,1,age,0.09399483072732055
+32,4,Access Without Digital Usage,4,female,-0.0226984863530968
+32,4,Access Without Digital Usage,4,educ,-0.028611760457831547
+32,4,Access Without Digital Usage,4,inc_q,0.02812162492674953
+32,4,Access Without Digital Usage,4,emp_in,-0.03625149610547984
+32,4,Access Without Digital Usage,4,urbanicity,0.03678680796349102
+32,4,Access Without Digital Usage,4,regionwb,0.35820942573443815
+32,4,Access Without Digital Usage,4,age,-0.0392315244651278
+33,0,"Digitally Active, Safety Gap",0,female,0.00708854283384045
+33,0,"Digitally Active, Safety Gap",0,educ,-0.019094851715740054
+33,0,"Digitally Active, Safety Gap",0,inc_q,-0.0654631273535539
+33,0,"Digitally Active, Safety Gap",0,emp_in,0.07367710370368168
+33,0,"Digitally Active, Safety Gap",0,urbanicity,0.013455091687786875
+33,0,"Digitally Active, Safety Gap",0,regionwb,0.06585897385486539
+33,0,"Digitally Active, Safety Gap",0,age,0.5053923374592941
+34,3,Multi-Dimensional Inclusion Gap,3,female,-0.07571741893236106
+34,3,Multi-Dimensional Inclusion Gap,3,educ,0.6088303780813835
+34,3,Multi-Dimensional Inclusion Gap,3,inc_q,0.14962451753026207
+34,3,Multi-Dimensional Inclusion Gap,3,emp_in,-0.08127275428965994
+34,3,Multi-Dimensional Inclusion Gap,3,urbanicity,0.05397637605904888
+34,3,Multi-Dimensional Inclusion Gap,3,regionwb,0.09953443756237906
+34,3,Multi-Dimensional Inclusion Gap,3,age,-0.14737026121119737
+35,1,Connected and Digitally Included,1,female,0.08368440747123211
+35,1,Connected and Digitally Included,1,educ,0.7301750161621958
+35,1,Connected and Digitally Included,1,inc_q,0.2367823768938033
+35,1,Connected and Digitally Included,1,emp_in,0.14294584367623028
+35,1,Connected and Digitally Included,1,urbanicity,0.17931349762213053
+35,1,Connected and Digitally Included,1,regionwb,-0.15173610469409782
+35,1,Connected and Digitally Included,1,age,0.02233422280306092
+36,1,Connected and Digitally Included,1,female,0.08368440747123211
+36,1,Connected and Digitally Included,1,educ,0.1301378642354416
+36,1,Connected and Digitally Included,1,inc_q,0.2367823768938033
+36,1,Connected and Digitally Included,1,emp_in,0.14294584367623028
+36,1,Connected and Digitally Included,1,urbanicity,-0.09237361998715815
+36,1,Connected and Digitally Included,1,regionwb,0.12090139864188247
+36,1,Connected and Digitally Included,1,age,0.20148574261371002
+37,3,Multi-Dimensional Inclusion Gap,3,female,-0.07571741893236106
+37,3,Multi-Dimensional Inclusion Gap,3,educ,0.6088303780813835
+37,3,Multi-Dimensional Inclusion Gap,3,inc_q,0.0864866843780539
+37,3,Multi-Dimensional Inclusion Gap,3,emp_in,-0.08127275428965994
+37,3,Multi-Dimensional Inclusion Gap,3,urbanicity,0.05397637605904888
+37,3,Multi-Dimensional Inclusion Gap,3,regionwb,0.09953443756237906
+37,3,Multi-Dimensional Inclusion Gap,3,age,-0.11549493434504078
+38,1,Connected and Digitally Included,1,female,0.08368440747123211
+38,1,Connected and Digitally Included,1,educ,0.1301378642354416
+38,1,Connected and Digitally Included,1,inc_q,-0.011473258020179747
+38,1,Connected and Digitally Included,1,emp_in,0.14294584367623028
+38,1,Connected and Digitally Included,1,urbanicity,-0.09237361998715815
+38,1,Connected and Digitally Included,1,regionwb,0.12090139864188247
+38,1,Connected and Digitally Included,1,age,0.11788170003540713
+39,1,Connected and Digitally Included,1,female,-0.08710009757209873
+39,1,Connected and Digitally Included,1,educ,0.1301378642354416
+39,1,Connected and Digitally Included,1,inc_q,0.2367823768938033
+39,1,Connected and Digitally Included,1,emp_in,0.14294584367623028
+39,1,Connected and Digitally Included,1,urbanicity,-0.09237361998715815
+39,1,Connected and Digitally Included,1,regionwb,-0.15173610469409782
+39,1,Connected and Digitally Included,1,age,0.05816452676519075
+40,1,Connected and Digitally Included,1,female,-0.08710009757209873
+40,1,Connected and Digitally Included,1,educ,0.7301750161621958
+40,1,Connected and Digitally Included,1,inc_q,-0.10350579197828923
+40,1,Connected and Digitally Included,1,emp_in,0.14294584367623028
+40,1,Connected and Digitally Included,1,urbanicity,-0.09237361998715815
+40,1,Connected and Digitally Included,1,regionwb,-0.15173610469409782
+40,1,Connected and Digitally Included,1,age,0.0342776574571042
+41,1,Connected and Digitally Included,1,female,-0.08710009757209873
+41,1,Connected and Digitally Included,1,educ,0.7301750161621958
+41,1,Connected and Digitally Included,1,inc_q,0.2367823768938033
+41,1,Connected and Digitally Included,1,emp_in,0.14294584367623028
+41,1,Connected and Digitally Included,1,urbanicity,0.17931349762213053
+41,1,Connected and Digitally Included,1,regionwb,-0.15173610469409782
+41,1,Connected and Digitally Included,1,age,-0.19264760096971806
+42,4,Access Without Digital Usage,4,female,0.023624955183835443
+42,4,Access Without Digital Usage,4,educ,0.055532737349716726
+42,4,Access Without Digital Usage,4,inc_q,-0.06062016834287759
+42,4,Access Without Digital Usage,4,emp_in,-0.03625149610547984
+42,4,Access Without Digital Usage,4,urbanicity,0.03678680796349102
+42,4,Access Without Digital Usage,4,regionwb,1.0450620972787295
+42,4,Access Without Digital Usage,4,age,-0.13046762787240176
+43,1,Connected and Digitally Included,1,female,0.08368440747123211
+43,1,Connected and Digitally Included,1,educ,0.1301378642354416
+43,1,Connected and Digitally Included,1,inc_q,0.2367823768938033
+43,1,Connected and Digitally Included,1,emp_in,0.14294584367623028
+43,1,Connected and Digitally Included,1,urbanicity,-0.09237361998715815
+43,1,Connected and Digitally Included,1,regionwb,0.12090139864188247
+43,1,Connected and Digitally Included,1,age,0.05816452676519075
+44,3,Multi-Dimensional Inclusion Gap,3,female,-0.07571741893236106
+44,3,Multi-Dimensional Inclusion Gap,3,educ,0.6088303780813835
+44,3,Multi-Dimensional Inclusion Gap,3,inc_q,0.0864866843780539
+44,3,Multi-Dimensional Inclusion Gap,3,emp_in,-0.08127275428965994
+44,3,Multi-Dimensional Inclusion Gap,3,urbanicity,0.05397637605904888
+44,3,Multi-Dimensional Inclusion Gap,3,regionwb,0.09953443756237906
+44,3,Multi-Dimensional Inclusion Gap,3,age,-0.062369389568113096
+45,3,Multi-Dimensional Inclusion Gap,3,female,0.07880792582755947
+45,3,Multi-Dimensional Inclusion Gap,3,educ,0.6088303780813835
+45,3,Multi-Dimensional Inclusion Gap,3,inc_q,0.2810184435456011
+45,3,Multi-Dimensional Inclusion Gap,3,emp_in,0.18963642667587316
+45,3,Multi-Dimensional Inclusion Gap,3,urbanicity,0.05397637605904888
+45,3,Multi-Dimensional Inclusion Gap,3,regionwb,0.09953443756237906
+45,3,Multi-Dimensional Inclusion Gap,3,age,-0.062369389568113096
+46,0,"Digitally Active, Safety Gap",0,female,0.00708854283384045
+46,0,"Digitally Active, Safety Gap",0,educ,-0.06167934592027732
+46,0,"Digitally Active, Safety Gap",0,inc_q,0.013703500197266127
+46,0,"Digitally Active, Safety Gap",0,emp_in,0.07367710370368168
+46,0,"Digitally Active, Safety Gap",0,urbanicity,0.013455091687786875
+46,0,"Digitally Active, Safety Gap",0,regionwb,0.47080052326660154
+46,0,"Digitally Active, Safety Gap",0,age,0.5053923374592941
+47,2,"Connected, Financially Excluded",2,female,-0.007954912326523676
+47,2,"Connected, Financially Excluded",2,educ,0.041965907193646186
+47,2,"Connected, Financially Excluded",2,inc_q,0.00502378850378718
+47,2,"Connected, Financially Excluded",2,emp_in,0.23123029296446834
+47,2,"Connected, Financially Excluded",2,urbanicity,-0.011844655723168483
+47,2,"Connected, Financially Excluded",2,regionwb,-0.20861234108417887
+47,2,"Connected, Financially Excluded",2,age,0.5023878558932655
+48,2,"Connected, Financially Excluded",2,female,0.007642954980385491
+48,2,"Connected, Financially Excluded",2,educ,0.041965907193646186
+48,2,"Connected, Financially Excluded",2,inc_q,-0.07547741758551066
+48,2,"Connected, Financially Excluded",2,emp_in,0.23123029296446834
+48,2,"Connected, Financially Excluded",2,urbanicity,0.022992566992032934
+48,2,"Connected, Financially Excluded",2,regionwb,0.9066503212596803
+48,2,"Connected, Financially Excluded",2,age,-0.38399273421457536
+49,0,"Digitally Active, Safety Gap",0,female,-0.007377871112772711
+49,0,"Digitally Active, Safety Gap",0,educ,-0.019094851715740054
+49,0,"Digitally Active, Safety Gap",0,inc_q,-0.0654631273535539
+49,0,"Digitally Active, Safety Gap",0,emp_in,-0.17191324197525723
+49,0,"Digitally Active, Safety Gap",0,urbanicity,0.013455091687786875
+49,0,"Digitally Active, Safety Gap",0,regionwb,0.47080052326660154
+49,0,"Digitally Active, Safety Gap",0,age,0.1171560185795833
+50,0,"Digitally Active, Safety Gap",0,female,-0.007377871112772711
+50,0,"Digitally Active, Safety Gap",0,educ,-0.019094851715740054
+50,0,"Digitally Active, Safety Gap",0,inc_q,-0.0654631273535539
+50,0,"Digitally Active, Safety Gap",0,emp_in,0.07367710370368168
+50,0,"Digitally Active, Safety Gap",0,urbanicity,0.013455091687786875
+50,0,"Digitally Active, Safety Gap",0,regionwb,0.47080052326660154
+50,0,"Digitally Active, Safety Gap",0,age,-0.0655434255991041
+51,2,"Connected, Financially Excluded",2,female,0.007642954980385491
+51,2,"Connected, Financially Excluded",2,educ,0.06767553888473514
+51,2,"Connected, Financially Excluded",2,inc_q,0.06063820306122575
+51,2,"Connected, Financially Excluded",2,emp_in,-0.09909869698477217
+51,2,"Connected, Financially Excluded",2,urbanicity,0.022992566992032934
+51,2,"Connected, Financially Excluded",2,regionwb,0.9066503212596803
+51,2,"Connected, Financially Excluded",2,age,0.5657007551866827
+52,2,"Connected, Financially Excluded",2,female,0.007642954980385491
+52,2,"Connected, Financially Excluded",2,educ,0.041965907193646186
+52,2,"Connected, Financially Excluded",2,inc_q,0.06063820306122575
+52,2,"Connected, Financially Excluded",2,emp_in,0.23123029296446834
+52,2,"Connected, Financially Excluded",2,urbanicity,-0.011844655723168483
+52,2,"Connected, Financially Excluded",2,regionwb,-0.20861234108417887
+52,2,"Connected, Financially Excluded",2,age,0.3757620573064311
+53,3,Multi-Dimensional Inclusion Gap,3,female,0.07880792582755947
+53,3,Multi-Dimensional Inclusion Gap,3,educ,0.6088303780813835
+53,3,Multi-Dimensional Inclusion Gap,3,inc_q,0.2810184435456011
+53,3,Multi-Dimensional Inclusion Gap,3,emp_in,-0.08127275428965994
+53,3,Multi-Dimensional Inclusion Gap,3,urbanicity,0.05397637605904888
+53,3,Multi-Dimensional Inclusion Gap,3,regionwb,0.02731566258457338
+53,3,Multi-Dimensional Inclusion Gap,3,age,-0.1261200433004263
+54,1,Connected and Digitally Included,1,female,-0.08710009757209873
+54,1,Connected and Digitally Included,1,educ,0.1301378642354416
+54,1,Connected and Digitally Included,1,inc_q,-0.011473258020179747
+54,1,Connected and Digitally Included,1,emp_in,0.14294584367623028
+54,1,Connected and Digitally Included,1,urbanicity,0.17931349762213053
+54,1,Connected and Digitally Included,1,regionwb,0.12090139864188247
+54,1,Connected and Digitally Included,1,age,0.18954230795966676
+55,2,"Connected, Financially Excluded",2,female,0.007642954980385491
+55,2,"Connected, Financially Excluded",2,educ,0.041965907193646186
+55,2,"Connected, Financially Excluded",2,inc_q,0.08346286966037417
+55,2,"Connected, Financially Excluded",2,emp_in,0.23123029296446834
+55,2,"Connected, Financially Excluded",2,urbanicity,-0.011844655723168483
+55,2,"Connected, Financially Excluded",2,regionwb,0.9066503212596803
+55,2,"Connected, Financially Excluded",2,age,0.5340443055399741
+56,1,Connected and Digitally Included,1,female,0.08368440747123211
+56,1,Connected and Digitally Included,1,educ,0.7301750161621958
+56,1,Connected and Digitally Included,1,inc_q,-0.2286512503599693
+56,1,Connected and Digitally Included,1,emp_in,0.14294584367623028
+56,1,Connected and Digitally Included,1,urbanicity,-0.09237361998715815
+56,1,Connected and Digitally Included,1,regionwb,0.12090139864188247
+56,1,Connected and Digitally Included,1,age,0.010390788149017645
+57,1,Connected and Digitally Included,1,female,-0.08710009757209873
+57,1,Connected and Digitally Included,1,educ,0.7301750161621958
+57,1,Connected and Digitally Included,1,inc_q,0.2367823768938033
+57,1,Connected and Digitally Included,1,emp_in,0.14294584367623028
+57,1,Connected and Digitally Included,1,urbanicity,0.17931349762213053
+57,1,Connected and Digitally Included,1,regionwb,-0.5041391857969786
+57,1,Connected and Digitally Included,1,age,0.18954230795966676
+58,1,Connected and Digitally Included,1,female,-0.08710009757209873
+58,1,Connected and Digitally Included,1,educ,0.1301378642354416
+58,1,Connected and Digitally Included,1,inc_q,0.2367823768938033
+58,1,Connected and Digitally Included,1,emp_in,0.14294584367623028
+58,1,Connected and Digitally Included,1,urbanicity,0.17931349762213053
+58,1,Connected and Digitally Included,1,regionwb,0.12090139864188247
+58,1,Connected and Digitally Included,1,age,0.0820513960732773
+59,1,Connected and Digitally Included,1,female,0.08368440747123211
+59,1,Connected and Digitally Included,1,educ,0.7301750161621958
+59,1,Connected and Digitally Included,1,inc_q,-0.2286512503599693
+59,1,Connected and Digitally Included,1,emp_in,0.14294584367623028
+59,1,Connected and Digitally Included,1,urbanicity,0.17931349762213053
+59,1,Connected and Digitally Included,1,regionwb,0.12090139864188247
+59,1,Connected and Digitally Included,1,age,0.14176856934349366
+60,1,Connected and Digitally Included,1,female,0.08368440747123211
+60,1,Connected and Digitally Included,1,educ,0.1301378642354416
+60,1,Connected and Digitally Included,1,inc_q,0.2367823768938033
+60,1,Connected and Digitally Included,1,emp_in,0.14294584367623028
+60,1,Connected and Digitally Included,1,urbanicity,0.17931349762213053
+60,1,Connected and Digitally Included,1,regionwb,0.12090139864188247
+60,1,Connected and Digitally Included,1,age,0.14176856934349366
+61,3,Multi-Dimensional Inclusion Gap,3,female,0.07880792582755947
+61,3,Multi-Dimensional Inclusion Gap,3,educ,0.6088303780813835
+61,3,Multi-Dimensional Inclusion Gap,3,inc_q,0.14962451753026207
+61,3,Multi-Dimensional Inclusion Gap,3,emp_in,0.18963642667587316
+61,3,Multi-Dimensional Inclusion Gap,3,urbanicity,-0.10477767117344783
+61,3,Multi-Dimensional Inclusion Gap,3,regionwb,0.09953443756237906
+61,3,Multi-Dimensional Inclusion Gap,3,age,0.18200811640575426
+62,3,Multi-Dimensional Inclusion Gap,3,female,0.07880792582755947
+62,3,Multi-Dimensional Inclusion Gap,3,educ,0.6088303780813835
+62,3,Multi-Dimensional Inclusion Gap,3,inc_q,0.14962451753026207
+62,3,Multi-Dimensional Inclusion Gap,3,emp_in,-0.08127275428965994
+62,3,Multi-Dimensional Inclusion Gap,3,urbanicity,0.05397637605904888
+62,3,Multi-Dimensional Inclusion Gap,3,regionwb,0.09953443756237906
+62,3,Multi-Dimensional Inclusion Gap,3,age,-0.21112091494351057
+63,3,Multi-Dimensional Inclusion Gap,3,female,-0.07571741893236106
+63,3,Multi-Dimensional Inclusion Gap,3,educ,0.6088303780813835
+63,3,Multi-Dimensional Inclusion Gap,3,inc_q,0.2810184435456011
+63,3,Multi-Dimensional Inclusion Gap,3,emp_in,-0.08127275428965994
+63,3,Multi-Dimensional Inclusion Gap,3,urbanicity,0.05397637605904888
+63,3,Multi-Dimensional Inclusion Gap,3,regionwb,0.09953443756237906
+63,3,Multi-Dimensional Inclusion Gap,3,age,-0.07299449852349862
+64,4,Access Without Digital Usage,4,female,-0.0226984863530968
+64,4,Access Without Digital Usage,4,educ,0.055532737349716726
+64,4,Access Without Digital Usage,4,inc_q,-0.06062016834287759
+64,4,Access Without Digital Usage,4,emp_in,-0.03625149610547984
+64,4,Access Without Digital Usage,4,urbanicity,0.03678680796349102
+64,4,Access Without Digital Usage,4,regionwb,0.35820942573443815
+64,4,Access Without Digital Usage,4,age,0.19392740646457235
+65,0,"Digitally Active, Safety Gap",0,female,-0.007377871112772711
+65,0,"Digitally Active, Safety Gap",0,educ,-0.06167934592027732
+65,0,"Digitally Active, Safety Gap",0,inc_q,0.07496050646991345
+65,0,"Digitally Active, Safety Gap",0,emp_in,0.07367710370368168
+65,0,"Digitally Active, Safety Gap",0,urbanicity,-0.026118707393939223
+65,0,"Digitally Active, Safety Gap",0,regionwb,-0.22665597927595796
+65,0,"Digitally Active, Safety Gap",0,age,0.32269289328060663
+66,1,Connected and Digitally Included,1,female,0.08368440747123211
+66,1,Connected and Digitally Included,1,educ,0.1301378642354416
+66,1,Connected and Digitally Included,1,inc_q,0.2367823768938033
+66,1,Connected and Digitally Included,1,emp_in,-0.333540301911204
+66,1,Connected and Digitally Included,1,urbanicity,0.17931349762213053
+66,1,Connected and Digitally Included,1,regionwb,0.12090139864188247
+66,1,Connected and Digitally Included,1,age,0.09399483072732055
+67,4,Access Without Digital Usage,4,female,0.023624955183835443
+67,4,Access Without Digital Usage,4,educ,-0.028611760457831547
+67,4,Access Without Digital Usage,4,inc_q,0.04786344750856149
+67,4,Access Without Digital Usage,4,emp_in,0.08458682424611963
+67,4,Access Without Digital Usage,4,urbanicity,-0.0714096860467767
+67,4,Access Without Digital Usage,4,regionwb,0.35820942573443815
+67,4,Access Without Digital Usage,4,age,0.23447678575669412
+68,0,"Digitally Active, Safety Gap",0,female,-0.007377871112772711
+68,0,"Digitally Active, Safety Gap",0,educ,-0.019094851715740054
+68,0,"Digitally Active, Safety Gap",0,inc_q,0.013703500197266127
+68,0,"Digitally Active, Safety Gap",0,emp_in,0.07367710370368168
+68,0,"Digitally Active, Safety Gap",0,urbanicity,0.013455091687786875
+68,0,"Digitally Active, Safety Gap",0,regionwb,-0.22665597927595796
+68,0,"Digitally Active, Safety Gap",0,age,0.39120518484761446
+69,2,"Connected, Financially Excluded",2,female,-0.007954912326523676
+69,2,"Connected, Financially Excluded",2,educ,-0.2487499774184831
+69,2,"Connected, Financially Excluded",2,inc_q,0.00502378850378718
+69,2,"Connected, Financially Excluded",2,emp_in,0.23123029296446834
+69,2,"Connected, Financially Excluded",2,urbanicity,0.022992566992032934
+69,2,"Connected, Financially Excluded",2,regionwb,0.9066503212596803
+69,2,"Connected, Financially Excluded",2,age,0.4707314062465569
+70,1,Connected and Digitally Included,1,female,0.08368440747123211
+70,1,Connected and Digitally Included,1,educ,0.1301378642354416
+70,1,Connected and Digitally Included,1,inc_q,-0.011473258020179747
+70,1,Connected and Digitally Included,1,emp_in,0.14294584367623028
+70,1,Connected and Digitally Included,1,urbanicity,0.17931349762213053
+70,1,Connected and Digitally Included,1,regionwb,0.12090139864188247
+70,1,Connected and Digitally Included,1,age,0.14176856934349366
+71,1,Connected and Digitally Included,1,female,0.08368440747123211
+71,1,Connected and Digitally Included,1,educ,0.7301750161621958
+71,1,Connected and Digitally Included,1,inc_q,-0.10350579197828923
+71,1,Connected and Digitally Included,1,emp_in,0.14294584367623028
+71,1,Connected and Digitally Included,1,urbanicity,0.17931349762213053
+71,1,Connected and Digitally Included,1,regionwb,-0.15173610469409782
+71,1,Connected and Digitally Included,1,age,-0.03738295046715545
+72,1,Connected and Digitally Included,1,female,-0.08710009757209873
+72,1,Connected and Digitally Included,1,educ,0.1301378642354416
+72,1,Connected and Digitally Included,1,inc_q,0.2367823768938033
+72,1,Connected and Digitally Included,1,emp_in,0.14294584367623028
+72,1,Connected and Digitally Included,1,urbanicity,0.17931349762213053
+72,1,Connected and Digitally Included,1,regionwb,0.12090139864188247
+72,1,Connected and Digitally Included,1,age,0.14176856934349366
+73,2,"Connected, Financially Excluded",2,female,0.007642954980385491
+73,2,"Connected, Financially Excluded",2,educ,0.041965907193646186
+73,2,"Connected, Financially Excluded",2,inc_q,0.05436061002703983
+73,2,"Connected, Financially Excluded",2,emp_in,0.23123029296446834
+73,2,"Connected, Financially Excluded",2,urbanicity,-0.011844655723168483
+73,2,"Connected, Financially Excluded",2,regionwb,0.9066503212596803
+73,2,"Connected, Financially Excluded",2,age,0.31244915801301393
+74,0,"Digitally Active, Safety Gap",0,female,0.00708854283384045
+74,0,"Digitally Active, Safety Gap",0,educ,-0.06167934592027732
+74,0,"Digitally Active, Safety Gap",0,inc_q,-0.0654631273535539
+74,0,"Digitally Active, Safety Gap",0,emp_in,-0.17191324197525723
+74,0,"Digitally Active, Safety Gap",0,urbanicity,0.013455091687786875
+74,0,"Digitally Active, Safety Gap",0,regionwb,0.47080052326660154
+74,0,"Digitally Active, Safety Gap",0,age,1.0991655310400281
+75,0,"Digitally Active, Safety Gap",0,female,-0.007377871112772711
+75,0,"Digitally Active, Safety Gap",0,educ,-0.019094851715740054
+75,0,"Digitally Active, Safety Gap",0,inc_q,-0.029474917740080063
+75,0,"Digitally Active, Safety Gap",0,emp_in,0.07367710370368168
+75,0,"Digitally Active, Safety Gap",0,urbanicity,0.013455091687786875
+75,0,"Digitally Active, Safety Gap",0,regionwb,0.47080052326660154
+75,0,"Digitally Active, Safety Gap",0,age,-0.29391773082246336
+76,1,Connected and Digitally Included,1,female,0.08368440747123211
+76,1,Connected and Digitally Included,1,educ,0.1301378642354416
+76,1,Connected and Digitally Included,1,inc_q,0.2367823768938033
+76,1,Connected and Digitally Included,1,emp_in,0.14294584367623028
+76,1,Connected and Digitally Included,1,urbanicity,0.17931349762213053
+76,1,Connected and Digitally Included,1,regionwb,0.22653805599013005
+76,1,Connected and Digitally Included,1,age,-0.22847790493184789
+77,4,Access Without Digital Usage,4,female,0.023624955183835443
+77,4,Access Without Digital Usage,4,educ,-0.028611760457831547
+77,4,Access Without Digital Usage,4,inc_q,0.04786344750856149
+77,4,Access Without Digital Usage,4,emp_in,0.08458682424611963
+77,4,Access Without Digital Usage,4,urbanicity,0.03678680796349102
+77,4,Access Without Digital Usage,4,regionwb,0.35820942573443815
+77,4,Access Without Digital Usage,4,age,0.1837900616415419
+78,0,"Digitally Active, Safety Gap",0,female,-0.007377871112772711
+78,0,"Digitally Active, Safety Gap",0,educ,-0.019094851715740054
+78,0,"Digitally Active, Safety Gap",0,inc_q,0.07496050646991345
+78,0,"Digitally Active, Safety Gap",0,emp_in,0.07367710370368168
+78,0,"Digitally Active, Safety Gap",0,urbanicity,0.013455091687786875
+78,0,"Digitally Active, Safety Gap",0,regionwb,0.47080052326660154
+78,0,"Digitally Active, Safety Gap",0,age,0.025806296490239602
+79,0,"Digitally Active, Safety Gap",0,female,0.00708854283384045
+79,0,"Digitally Active, Safety Gap",0,educ,-0.06167934592027732
+79,0,"Digitally Active, Safety Gap",0,inc_q,0.07496050646991345
+79,0,"Digitally Active, Safety Gap",0,emp_in,0.07367710370368168
+79,0,"Digitally Active, Safety Gap",0,urbanicity,-0.026118707393939223
+79,0,"Digitally Active, Safety Gap",0,regionwb,0.47080052326660154
+79,0,"Digitally Active, Safety Gap",0,age,0.4368800458922863
+80,2,"Connected, Financially Excluded",2,female,-0.007954912326523676
+80,2,"Connected, Financially Excluded",2,educ,0.041965907193646186
+80,2,"Connected, Financially Excluded",2,inc_q,0.06063820306122575
+80,2,"Connected, Financially Excluded",2,emp_in,0.23123029296446834
+80,2,"Connected, Financially Excluded",2,urbanicity,0.022992566992032934
+80,2,"Connected, Financially Excluded",2,regionwb,-0.20861234108417887
+80,2,"Connected, Financially Excluded",2,age,0.6290136544800999
+81,3,Multi-Dimensional Inclusion Gap,3,female,-0.07571741893236106
+81,3,Multi-Dimensional Inclusion Gap,3,educ,0.6088303780813835
+81,3,Multi-Dimensional Inclusion Gap,3,inc_q,0.2810184435456011
+81,3,Multi-Dimensional Inclusion Gap,3,emp_in,-0.08127275428965994
+81,3,Multi-Dimensional Inclusion Gap,3,urbanicity,0.05397637605904888
+81,3,Multi-Dimensional Inclusion Gap,3,regionwb,-0.12679193949050738
+81,3,Multi-Dimensional Inclusion Gap,3,age,0.04388169998574226
+82,0,"Digitally Active, Safety Gap",0,female,-0.007377871112772711
+82,0,"Digitally Active, Safety Gap",0,educ,-0.06167934592027732
+82,0,"Digitally Active, Safety Gap",0,inc_q,0.07496050646991345
+82,0,"Digitally Active, Safety Gap",0,emp_in,0.07367710370368168
+82,0,"Digitally Active, Safety Gap",0,urbanicity,-0.026118707393939223
+82,0,"Digitally Active, Safety Gap",0,regionwb,0.47080052326660154
+82,0,"Digitally Active, Safety Gap",0,age,-0.3624300223894711
+83,3,Multi-Dimensional Inclusion Gap,3,female,0.07880792582755947
+83,3,Multi-Dimensional Inclusion Gap,3,educ,0.6088303780813835
+83,3,Multi-Dimensional Inclusion Gap,3,inc_q,0.0864866843780539
+83,3,Multi-Dimensional Inclusion Gap,3,emp_in,-0.08127275428965994
+83,3,Multi-Dimensional Inclusion Gap,3,urbanicity,0.05397637605904888
+83,3,Multi-Dimensional Inclusion Gap,3,regionwb,0.02731566258457338
+83,3,Multi-Dimensional Inclusion Gap,3,age,0.10763235371805548
+84,2,"Connected, Financially Excluded",2,female,0.007642954980385491
+84,2,"Connected, Financially Excluded",2,educ,0.041965907193646186
+84,2,"Connected, Financially Excluded",2,inc_q,0.05436061002703983
+84,2,"Connected, Financially Excluded",2,emp_in,0.23123029296446834
+84,2,"Connected, Financially Excluded",2,urbanicity,0.022992566992032934
+84,2,"Connected, Financially Excluded",2,regionwb,-0.20861234108417887
+84,2,"Connected, Financially Excluded",2,age,0.5023878558932655
+85,1,Connected and Digitally Included,1,female,0.08368440747123211
+85,1,Connected and Digitally Included,1,educ,0.7301750161621958
+85,1,Connected and Digitally Included,1,inc_q,0.2367823768938033
+85,1,Connected and Digitally Included,1,emp_in,0.14294584367623028
+85,1,Connected and Digitally Included,1,urbanicity,-0.09237361998715815
+85,1,Connected and Digitally Included,1,regionwb,0.12090139864188247
+85,1,Connected and Digitally Included,1,age,0.04622109211114747
+86,1,Connected and Digitally Included,1,female,0.08368440747123211
+86,1,Connected and Digitally Included,1,educ,0.1301378642354416
+86,1,Connected and Digitally Included,1,inc_q,0.2367823768938033
+86,1,Connected and Digitally Included,1,emp_in,0.14294584367623028
+86,1,Connected and Digitally Included,1,urbanicity,-0.09237361998715815
+86,1,Connected and Digitally Included,1,regionwb,0.12090139864188247
+86,1,Connected and Digitally Included,1,age,0.21342917726775332
+87,0,"Digitally Active, Safety Gap",0,female,0.00708854283384045
+87,0,"Digitally Active, Safety Gap",0,educ,-0.019094851715740054
+87,0,"Digitally Active, Safety Gap",0,inc_q,-0.0654631273535539
+87,0,"Digitally Active, Safety Gap",0,emp_in,0.07367710370368168
+87,0,"Digitally Active, Safety Gap",0,urbanicity,0.013455091687786875
+87,0,"Digitally Active, Safety Gap",0,regionwb,0.47080052326660154
+87,0,"Digitally Active, Safety Gap",0,age,0.002968865967903677
+88,1,Connected and Digitally Included,1,female,0.08368440747123211
+88,1,Connected and Digitally Included,1,educ,0.1301378642354416
+88,1,Connected and Digitally Included,1,inc_q,-0.10350579197828923
+88,1,Connected and Digitally Included,1,emp_in,0.14294584367623028
+88,1,Connected and Digitally Included,1,urbanicity,-0.09237361998715815
+88,1,Connected and Digitally Included,1,regionwb,0.12090139864188247
+88,1,Connected and Digitally Included,1,age,0.18954230795966676
+89,1,Connected and Digitally Included,1,female,0.08368440747123211
+89,1,Connected and Digitally Included,1,educ,0.1301378642354416
+89,1,Connected and Digitally Included,1,inc_q,-0.29552059324714497
+89,1,Connected and Digitally Included,1,emp_in,0.14294584367623028
+89,1,Connected and Digitally Included,1,urbanicity,0.17931349762213053
+89,1,Connected and Digitally Included,1,regionwb,0.12090139864188247
+89,1,Connected and Digitally Included,1,age,-0.013496081159068904
+90,0,"Digitally Active, Safety Gap",0,female,-0.007377871112772711
+90,0,"Digitally Active, Safety Gap",0,educ,-0.019094851715740054
+90,0,"Digitally Active, Safety Gap",0,inc_q,-0.0654631273535539
+90,0,"Digitally Active, Safety Gap",0,emp_in,-0.17191324197525723
+90,0,"Digitally Active, Safety Gap",0,urbanicity,-0.026118707393939223
+90,0,"Digitally Active, Safety Gap",0,regionwb,0.47080052326660154
+90,0,"Digitally Active, Safety Gap",0,age,0.4368800458922863
+91,4,Access Without Digital Usage,4,female,-0.0226984863530968
+91,4,Access Without Digital Usage,4,educ,-0.028611760457831547
+91,4,Access Without Digital Usage,4,inc_q,0.0030013658518086433
+91,4,Access Without Digital Usage,4,emp_in,-0.03625149610547984
+91,4,Access Without Digital Usage,4,urbanicity,0.03678680796349102
+91,4,Access Without Digital Usage,4,regionwb,0.35820942573443815
+91,4,Access Without Digital Usage,4,age,0.3054381995179072
+92,3,Multi-Dimensional Inclusion Gap,3,female,0.07880792582755947
+92,3,Multi-Dimensional Inclusion Gap,3,educ,0.6088303780813835
+92,3,Multi-Dimensional Inclusion Gap,3,inc_q,0.2810184435456011
+92,3,Multi-Dimensional Inclusion Gap,3,emp_in,0.18963642667587316
+92,3,Multi-Dimensional Inclusion Gap,3,urbanicity,0.05397637605904888
+92,3,Multi-Dimensional Inclusion Gap,3,regionwb,-0.19511328012721202
+92,3,Multi-Dimensional Inclusion Gap,3,age,-0.019868953746570946
+93,1,Connected and Digitally Included,1,female,-0.08710009757209873
+93,1,Connected and Digitally Included,1,educ,0.1301378642354416
+93,1,Connected and Digitally Included,1,inc_q,-0.10350579197828923
+93,1,Connected and Digitally Included,1,emp_in,0.14294584367623028
+93,1,Connected and Digitally Included,1,urbanicity,0.17931349762213053
+93,1,Connected and Digitally Included,1,regionwb,0.12090139864188247
+93,1,Connected and Digitally Included,1,age,0.15371200399753693
+94,0,"Digitally Active, Safety Gap",0,female,-0.007377871112772711
+94,0,"Digitally Active, Safety Gap",0,educ,0.16587194260811797
+94,0,"Digitally Active, Safety Gap",0,inc_q,-0.0654631273535539
+94,0,"Digitally Active, Safety Gap",0,emp_in,0.07367710370368168
+94,0,"Digitally Active, Safety Gap",0,urbanicity,-0.026118707393939223
+94,0,"Digitally Active, Safety Gap",0,regionwb,-0.2847433651466376
+94,0,"Digitally Active, Safety Gap",0,age,0.7109292121603173
+95,1,Connected and Digitally Included,1,female,0.08368440747123211
+95,1,Connected and Digitally Included,1,educ,0.1301378642354416
+95,1,Connected and Digitally Included,1,inc_q,-0.011473258020179747
+95,1,Connected and Digitally Included,1,emp_in,0.14294584367623028
+95,1,Connected and Digitally Included,1,urbanicity,0.17931349762213053
+95,1,Connected and Digitally Included,1,regionwb,-0.15173610469409782
+95,1,Connected and Digitally Included,1,age,0.20148574261371002
+96,2,"Connected, Financially Excluded",2,female,-0.007954912326523676
+96,2,"Connected, Financially Excluded",2,educ,0.06767553888473514
+96,2,"Connected, Financially Excluded",2,inc_q,0.08346286966037417
+96,2,"Connected, Financially Excluded",2,emp_in,-0.09909869698477217
+96,2,"Connected, Financially Excluded",2,urbanicity,0.022992566992032934
+96,2,"Connected, Financially Excluded",2,regionwb,0.9066503212596803
+96,2,"Connected, Financially Excluded",2,age,0.24913625871959666
+97,4,Access Without Digital Usage,4,female,-0.0226984863530968
+97,4,Access Without Digital Usage,4,educ,-0.028611760457831547
+97,4,Access Without Digital Usage,4,inc_q,0.0030013658518086433
+97,4,Access Without Digital Usage,4,emp_in,0.08458682424611963
+97,4,Access Without Digital Usage,4,urbanicity,-0.0714096860467767
+97,4,Access Without Digital Usage,4,regionwb,1.0450620972787295
+97,4,Access Without Digital Usage,4,age,-0.1101929382263409
+98,2,"Connected, Financially Excluded",2,female,-0.007954912326523676
+98,2,"Connected, Financially Excluded",2,educ,0.06767553888473514
+98,2,"Connected, Financially Excluded",2,inc_q,0.08346286966037417
+98,2,"Connected, Financially Excluded",2,emp_in,0.23123029296446834
+98,2,"Connected, Financially Excluded",2,urbanicity,0.022992566992032934
+98,2,"Connected, Financially Excluded",2,regionwb,0.9066503212596803
+98,2,"Connected, Financially Excluded",2,age,0.31244915801301393
+99,0,"Digitally Active, Safety Gap",0,female,0.00708854283384045
+99,0,"Digitally Active, Safety Gap",0,educ,-0.06167934592027732
+99,0,"Digitally Active, Safety Gap",0,inc_q,-0.029474917740080063
+99,0,"Digitally Active, Safety Gap",0,emp_in,0.07367710370368168
+99,0,"Digitally Active, Safety Gap",0,urbanicity,0.013455091687786875
+99,0,"Digitally Active, Safety Gap",0,regionwb,-0.22665597927595796
+99,0,"Digitally Active, Safety Gap",0,age,0.9849783784283485

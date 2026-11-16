@@ -1,0 +1,8 @@
+variable,found,missing_percent,unique_values
+female,True,0.0,2
+age,True,0.0,84
+educ,True,0.31,3
+inc_q,True,1.14,5
+emp_in,True,0.0,2
+urbanicity,True,0.32,2
+regionwb,True,0.0,7

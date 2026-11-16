@@ -1,0 +1,47 @@
+{
+  "theta1": 0.22,
+  "theta2": 0.35,
+  "cooldown_days": 14,
+  "signals": [
+    "mean_psi",
+    "max_psi",
+    "score_js",
+    "entropy_rel_change",
+    "shap_shift"
+  ],
+  "weights": {
+    "mean_psi": -0.7379,
+    "max_psi": -0.6477,
+    "score_js": 1.4797,
+    "entropy_rel_change": -0.5042,
+    "shap_shift": 0.6446
+  },
+  "intercept": -1.293,
+  "standardization_stats": {
+    "mean_psi": {
+      "mean": 0.0035,
+      "std": 0.0055
+    },
+    "max_psi": {
+      "mean": 0.0385,
+      "std": 0.0635
+    },
+    "score_js": {
+      "mean": 0.063,
+      "std": 0.091
+    },
+    "entropy_rel_change": {
+      "mean": 0.175,
+      "std": 0.31
+    },
+    "shap_shift": {
+      "mean": 0.048,
+      "std": 0.068
+    }
+  },
+  "calibration_seeds": [
+    101,
+    102
+  ],
+  "is_locked": true
+}

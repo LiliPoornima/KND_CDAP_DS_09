@@ -1,0 +1,40 @@
+﻿{
+    "inputs":  {
+                   "3D":  {
+                              "input_file":  "data\\financial_inclusion\\processed\\fi_clustering_input_3d.csv",
+                              "respondents":  102954,
+                              "economies":  98,
+                              "features":  [
+                                               "score_connectivity",
+                                               "score_financial_access",
+                                               "score_digital_financial_usage"
+                                           ]
+                          },
+                   "5D":  {
+                              "input_file":  "data\\financial_inclusion\\processed\\fi_clustering_input.csv",
+                              "respondents":  56503,
+                              "economies":  75,
+                              "features":  [
+                                               "score_connectivity",
+                                               "score_financial_access",
+                                               "score_digital_financial_usage",
+                                               "score_digital_safety",
+                                               "score_financial_resilience"
+                                           ]
+                          }
+               },
+    "k_values_tested":  [
+                            2,
+                            3,
+                            4,
+                            5,
+                            6
+                        ],
+    "random_state":  42,
+    "silhouette_sample_size":  5000,
+    "hierarchical_sample_size":  5000,
+    "results_file":  "outputs\\financial_inclusion\\metrics\\fi_clustering_3d_5d_comparison.csv",
+    "final_model_selected":  true,
+    "stability_analysis_completed":  true,
+    "warning":  "Silhouette alone does not select the final model. The selected 5D_k5 candidate balances cluster interpretability, stability, and research relevance. Review cluster sizes, economy representation, and GMM BIC/AIC where applicable. The 3D and 5D candidates use different eligible populations, so compare them cautiously."
+}

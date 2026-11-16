@@ -1,0 +1,18 @@
+{
+  "source_file": "data\\financial_inclusion\\processed\\fi_dimension_dataset.csv",
+  "output_file": "data\\financial_inclusion\\processed\\fi_clustering_input_3d.csv",
+  "source_respondents": 144090,
+  "eligible_respondents": 102954,
+  "excluded_respondents": 41136,
+  "eligible_percent": 71.45,
+  "total_economies_in_source": 140,
+  "economies_in_output": 98,
+  "features": [
+    "score_connectivity",
+    "score_financial_access",
+    "score_digital_financial_usage"
+  ],
+  "missing_feature_values_in_output": 0,
+  "respondent_ids_unique": true,
+  "source_data_modified": false
+}

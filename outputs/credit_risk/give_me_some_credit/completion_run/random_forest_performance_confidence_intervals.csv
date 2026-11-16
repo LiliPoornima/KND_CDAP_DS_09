@@ -1,0 +1,9 @@
+dataset,model,metric,estimate,confidence_level,lower,upper,valid_replicates,n,positive_support,negative_support,threshold,bootstrap_method
+give_me_some_credit,random_forest,accuracy,0.9085666666666666,0.95,0.9056325,0.9114666666666666,1000,30000,2005,27995,0.4,stratified_by_target_class
+give_me_some_credit,random_forest,precision,0.36054421768707484,0.95,0.34554889981338055,0.37595724022565186,1000,30000,2005,27995,0.4,stratified_by_target_class
+give_me_some_credit,random_forest,recall,0.4758104738154613,0.95,0.45536159600997506,0.4967705735660848,1000,30000,2005,27995,0.4,stratified_by_target_class
+give_me_some_credit,random_forest,f1_score,0.41023435820253706,0.95,0.39372253449262945,0.42677683443552883,1000,30000,2005,27995,0.4,stratified_by_target_class
+give_me_some_credit,random_forest,roc_auc,0.8439148422923758,0.95,0.8344484050188868,0.8535547786632721,1000,30000,2005,27995,0.4,stratified_by_target_class
+give_me_some_credit,random_forest,pr_auc_average_precision,0.3461735130563644,0.95,0.328104728897846,0.3678266146984182,1000,30000,2005,27995,0.4,stratified_by_target_class
+give_me_some_credit,random_forest,brier_score,0.059401876335730686,0.95,0.05802642028928027,0.06074116215061116,1000,30000,2005,27995,0.4,stratified_by_target_class
+give_me_some_credit,random_forest,log_loss,0.24059356507737237,0.95,0.22789066566776892,0.2542217876911251,1000,30000,2005,27995,0.4,stratified_by_target_class

@@ -1,0 +1,34 @@
+{
+  "3D_k5": {
+    "k": 5,
+    "adjusted_rand_index_kmeans_vs_gmm": 1.0,
+    "kmeans_clusters": 5,
+    "gmm_clusters": 5,
+    "respondents": 102954,
+    "economies": 98
+  },
+  "5D_k4": {
+    "k": 4,
+    "adjusted_rand_index_kmeans_vs_gmm": 1.0,
+    "kmeans_clusters": 4,
+    "gmm_clusters": 4,
+    "respondents": 56503,
+    "economies": 75
+  },
+  "5D_k5": {
+    "k": 5,
+    "adjusted_rand_index_kmeans_vs_gmm": 1.0,
+    "kmeans_clusters": 5,
+    "gmm_clusters": 5,
+    "respondents": 56503,
+    "economies": 75
+  },
+  "5D_k6": {
+    "k": 6,
+    "adjusted_rand_index_kmeans_vs_gmm": 0.8855155223550539,
+    "kmeans_clusters": 6,
+    "gmm_clusters": 6,
+    "respondents": 56503,
+    "economies": 75
+  }
+}

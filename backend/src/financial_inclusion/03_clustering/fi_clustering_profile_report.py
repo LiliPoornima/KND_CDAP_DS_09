@@ -18,6 +18,16 @@ INPUTS = {
             "score_financial_resilience",
         ],
     },
+        "5D_k5": {
+        "path": ROOT / "outputs/financial_inclusion/metrics/fi_clustering_labels_5D_k5.csv",
+        "features": [
+            "score_connectivity",
+            "score_financial_access",
+            "score_digital_financial_usage",
+            "score_digital_safety",
+            "score_financial_resilience",
+        ],
+    },
     "3D_k5": {
         "path": ROOT / "outputs/financial_inclusion/metrics/fi_clustering_labels_3D_k5.csv",
         "features": [

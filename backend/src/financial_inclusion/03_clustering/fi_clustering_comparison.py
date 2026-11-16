@@ -203,12 +203,13 @@ def main():
         "hierarchical_sample_size": HIERARCHICAL_SAMPLE_SIZE,
         "results_file": str(RESULTS_FILE.relative_to(ROOT)),
         "final_model_selected": False,
-        "stability_analysis_completed": False,
+        "stability_analysis_completed": True,
         "warning": (
             "Silhouette alone does not select the final model. "
             "Review cluster sizes, stability, profile interpretability, "
-            "country coverage, and GMM BIC/AIC. 3D and 5D results use "
-            "different eligible populations, so compare cautiously."
+            "economy representation, and GMM BIC/AIC where applicable. "
+            "The 3D and 5D candidates use different eligible populations, "
+            "so compare them cautiously."
         ),
     }
 

@@ -1,0 +1,4 @@
+candidate,k,respondents,economies,seed_runs,pairwise_comparisons,mean_pairwise_ari,min_pairwise_ari,max_pairwise_ari
+3D_k5,5,102954,98,10,45,1.0,1.0,1.0
+5D_k4,4,56503,75,10,45,1.0,1.0,1.0
+5D_k5,5,56503,75,10,45,1.0,1.0,1.0

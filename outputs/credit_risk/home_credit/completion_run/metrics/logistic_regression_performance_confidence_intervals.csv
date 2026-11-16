@@ -1,0 +1,9 @@
+dataset,model,metric,estimate,confidence_level,lower,upper,valid_replicates,n,positive_support,negative_support,threshold,bootstrap_method
+home_credit,logistic_regression,accuracy,0.7069736435621027,0.95,0.7034604003056761,0.710697039168821,1000,61503,4965,56538,0.5,stratified_by_target_class
+home_credit,logistic_regression,precision,0.1727404882450248,0.95,0.16971990697718367,0.17616303399238012,1000,61503,4965,56538,0.5,stratified_by_target_class
+home_credit,logistic_regression,recall,0.6940584088620343,0.95,0.6807603222557905,0.707356495468278,1000,61503,4965,56538,0.5,stratified_by_target_class
+home_credit,logistic_regression,f1_score,0.27663161274785264,0.95,0.2718467473101444,0.28176353114200015,1000,61503,4965,56538,0.5,stratified_by_target_class
+home_credit,logistic_regression,roc_auc,0.7695205680628954,0.95,0.7626173563916249,0.776599545183756,1000,61503,4965,56538,0.5,stratified_by_target_class
+home_credit,logistic_regression,pr_auc_average_precision,0.25777016689085464,0.95,0.24760142457075873,0.26888229794152374,1000,61503,4965,56538,0.5,stratified_by_target_class
+home_credit,logistic_regression,brier_score,0.19331730106020473,0.95,0.19175749749575344,0.1949366239440123,1000,61503,4965,56538,0.5,stratified_by_target_class
+home_credit,logistic_regression,log_loss,0.5704363842688195,0.95,0.5667991842277598,0.5742771419685796,1000,61503,4965,56538,0.5,stratified_by_target_class

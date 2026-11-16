@@ -1,0 +1,16 @@
+{
+  "total_respondents": 144090,
+  "eligible_respondents": 56503,
+  "overall_eligible_percent": 39.21,
+  "total_economies": 140,
+  "economies_with_eligible_respondents": 75,
+  "economies_with_zero_eligible_respondents": 65,
+  "economies_with_under_10_percent_eligible": 65,
+  "economies_with_under_25_percent_eligible": 65,
+  "economies_with_at_least_50_percent_eligible": 74,
+  "lowest_eligible_percent": 0.0,
+  "median_economy_eligible_percent": 59.685,
+  "highest_eligible_percent": 94.0,
+  "country_report": "outputs\\financial_inclusion\\reports\\fi_clustering_country_coverage.csv",
+  "source_data_modified": false
+}

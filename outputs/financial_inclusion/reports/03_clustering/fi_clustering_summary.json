@@ -1,0 +1,48 @@
+{
+  "input_file": "data\\financial_inclusion\\processed\\fi_clustering_input.csv",
+  "eligible_respondents": 56503,
+  "economies": 75,
+  "features": [
+    "score_connectivity",
+    "score_financial_access",
+    "score_digital_financial_usage",
+    "score_digital_safety",
+    "score_financial_resilience"
+  ],
+  "k_values_tested": [
+    2,
+    3,
+    4,
+    5,
+    6
+  ],
+  "random_state": 42,
+  "full_sample_algorithms": [
+    "KMeans",
+    "GMM"
+  ],
+  "hierarchical_sample_size": 5000,
+  "silhouette_sample_size": 5000,
+  "scaling_comparison": [
+    "raw",
+    "standardised"
+  ],
+  "comparison_file": "outputs\\financial_inclusion\\metrics\\fi_clustering_model_comparison.csv",
+  "provisional_labels_file": "outputs\\financial_inclusion\\metrics\\fi_clustering_sample_labels.csv",
+  "provisional_best_by_silhouette": {
+    "algorithm": "KMeans",
+    "scaling": "raw",
+    "k": 6,
+    "sample_size": 56503,
+    "cluster_count": 6,
+    "silhouette_score": 0.6540567701292325,
+    "davies_bouldin_score": 0.6350344717897419,
+    "calinski_harabasz_score": 79986.62596039897,
+    "bic": NaN,
+    "aic": NaN
+  },
+  "final_model_selected": false,
+  "stability_analysis_completed": false,
+  "input_data_modified": false,
+  "note": "Silhouette is only one selection criterion. Review cluster sizes, metric trade-offs, GMM BIC/AIC, stability, and interpretability before selecting a final solution."
+}

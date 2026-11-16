@@ -1,0 +1,4 @@
+attribute,group,n,positive_support,negative_support,outcome_rate,selection_rate,true_positive_rate,false_positive_rate,precision,sample_sufficient,positive_support_sufficient,negative_support_sufficient,true_positives,false_positives,true_negatives,false_negatives
+CODE_GENDER,F,40561,2836,37725,0.06991938068588052,0.2926949532802446,0.6636107193229901,0.26481113320079525,0.1585242587601078,True,True,True,1882,9990,27735,954
+CODE_GENDER,M,20940,2129,18811,0.10167144221585482,0.3856255969436485,0.7346171911695631,0.3461272659614056,0.1936842105263158,True,True,True,1564,6511,12300,565
+CODE_GENDER,XNA,2,0,2,0.0,1.0,,1.0,0.0,False,False,False,0,2,0,0

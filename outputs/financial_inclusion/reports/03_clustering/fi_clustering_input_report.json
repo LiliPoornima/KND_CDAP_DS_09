@@ -1,0 +1,28 @@
+{
+  "source_file": "data\\financial_inclusion\\processed\\fi_dimension_dataset.csv",
+  "output_file": "data\\financial_inclusion\\processed\\fi_clustering_input.csv",
+  "source_respondents": 144090,
+  "eligible_respondents": 56503,
+  "excluded_for_missing_scores": 87587,
+  "eligible_percent": 39.21,
+  "source_economies": 140,
+  "eligible_economies": 75,
+  "feature_columns": [
+    "score_connectivity",
+    "score_financial_access",
+    "score_digital_financial_usage",
+    "score_digital_safety",
+    "score_financial_resilience"
+  ],
+  "metadata_columns": [
+    "wpid_random",
+    "economy"
+  ],
+  "missing_values_in_features": 0,
+  "all_features_within_zero_one": true,
+  "rows_dropped_from_source": 0,
+  "imputation_performed": false,
+  "source_data_modified": false,
+  "standardisation_applied": false,
+  "note": "This is a separate complete-case clustering input. IDs and economy are metadata only. Standardisation and clustering have not yet been performed."
+}

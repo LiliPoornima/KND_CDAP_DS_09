@@ -1,0 +1,36 @@
+cluster_id,cluster_label,feature,mean_absolute_shap_decision_score
+0,"Digitally Active, Safety Gap",female,0.0072129539937813205
+0,"Digitally Active, Safety Gap",educ,0.05327068258612488
+0,"Digitally Active, Safety Gap",inc_q,0.06772057204455557
+0,"Digitally Active, Safety Gap",emp_in,0.10216558380243859
+0,"Digitally Active, Safety Gap",urbanicity,0.019406991069678484
+0,"Digitally Active, Safety Gap",regionwb,0.42090220061588135
+0,"Digitally Active, Safety Gap",age,0.29353406198968807
+1,Connected and Digitally Included,female,0.08515315421460475
+1,Connected and Digitally Included,educ,0.3870139276364245
+1,Connected and Digitally Included,inc_q,0.1747503961305854
+1,Connected and Digitally Included,emp_in,0.19821823656437265
+1,Connected and Digitally Included,urbanicity,0.13323536247559514
+1,Connected and Digitally Included,regionwb,0.1773901313718235
+1,Connected and Digitally Included,age,0.153511354295349
+2,"Connected, Financially Excluded",female,0.00777709663922491
+2,"Connected, Financially Excluded",educ,0.07914275916627184
+2,"Connected, Financially Excluded",inc_q,0.058231229849139234
+2,"Connected, Financially Excluded",emp_in,0.13741685981888407
+2,"Connected, Financially Excluded",urbanicity,0.017084174019534777
+2,"Connected, Financially Excluded",regionwb,0.2762310626666793
+2,"Connected, Financially Excluded",age,0.40688667859907496
+3,Multi-Dimensional Inclusion Gap,female,0.07704633689729638
+3,Multi-Dimensional Inclusion Gap,educ,0.35208305822159297
+3,Multi-Dimensional Inclusion Gap,inc_q,0.13745096491361564
+3,Multi-Dimensional Inclusion Gap,emp_in,0.1126982192816618
+3,Multi-Dimensional Inclusion Gap,urbanicity,0.0778529847628164
+3,Multi-Dimensional Inclusion Gap,regionwb,0.09810860617667191
+3,Multi-Dimensional Inclusion Gap,age,0.13656665042536134
+4,Access Without Digital Usage,female,0.023096867950314418
+4,Access Without Digital Usage,educ,0.033759532750823294
+4,Access Without Digital Usage,inc_q,0.045754342313011
+4,Access Without Digital Usage,emp_in,0.0502687412662654
+4,Access Without Digital Usage,urbanicity,0.05305956066263529
+4,Access Without Digital Usage,regionwb,0.42399555302728836
+4,Access Without Digital Usage,age,0.13029732047937484
