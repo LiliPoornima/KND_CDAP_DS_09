@@ -1,18 +1,19 @@
-/* Shared banking theme for the research dashboard. */
+/* Shared light banking theme for all Streamlit pages and widgets. */
 
 :root {
     --bank-navy: #0b1f3a;
-    --bank-blue: #123d6a;
-    --bank-teal: #008c95;
+    --bank-blue: #0f5b9a;
+    --bank-teal: #0d9488;
     --bank-teal-light: #e8f6f7;
-    --bank-ink: #1c2b3a;
-    --bank-muted: #607286;
+    --bank-ink: #172b4d;
+    --bank-sidebar: #0b1f3a;
+    --bank-muted: #64748b;
     --bank-surface: #ffffff;
-    --bank-background: #f3f6fa;
-    --bank-border: #dce5ee;
-    --bank-success: #18794e;
-    --bank-warning: #a76400;
-    --bank-danger: #b42318;
+    --bank-background: #f4f7fb;
+    --bank-border: #cbd5e1;
+    --bank-success: #15803d;
+    --bank-warning: #d97706;
+    --bank-danger: #dc2626;
 }
 
 .stApp {
@@ -40,7 +41,7 @@
 }
 
 [data-testid="stSidebar"] {
-    background: var(--bank-navy);
+    background: var(--bank-sidebar);
     border-right: 1px solid rgba(255, 255, 255, 0.12);
 }
 
@@ -59,7 +60,7 @@
 }
 
 h1, h2, h3 {
-    color: var(--bank-navy);
+    color: var(--bank-ink);
     letter-spacing: -0.025em;
     font-weight: 700;
 }
@@ -90,37 +91,188 @@ h2, h3 {
 }
 
 [data-testid="stMetricValue"] {
-    color: var(--bank-navy);
+    color: var(--bank-ink);
     font-weight: 750;
 }
 
-/* Keep input controls consistent and easy to scan. */
+/* Shared controls: scoped to Streamlit widgets so cards and app buttons are untouched. */
 [data-testid="stTextInput"] input,
 [data-testid="stNumberInput"] input,
-[data-testid="stSelectbox"] [data-baseweb="select"],
+[data-testid="stDateInput"] input,
+[data-testid="stTimeInput"] input,
 [data-testid="stTextArea"] textarea {
-    background: var(--bank-surface);
-    color: var(--bank-ink);
-    border-color: var(--bank-border);
-    border-radius: 0.45rem;
+    box-sizing: border-box;
+    min-height: 2.65rem;
+    background-color: var(--bank-surface) !important;
+    color: var(--bank-ink) !important;
+    border: 1px solid var(--bank-border) !important;
+    border-radius: 0.5rem !important;
+    padding: 0.55rem 0.75rem;
+    color-scheme: light;
+    transition: border-color 120ms ease, box-shadow 120ms ease;
+}
+
+[data-testid="stTextArea"] textarea {
+    min-height: 6rem;
+    padding: 0.7rem 0.75rem;
+}
+
+[data-testid="stSelectbox"] [data-baseweb="select"] > div,
+[data-testid="stMultiSelect"] [data-baseweb="select"] > div {
+    box-sizing: border-box;
+    min-height: 2.65rem;
+    background-color: var(--bank-surface) !important;
+    color: var(--bank-ink) !important;
+    border: 1px solid var(--bank-border) !important;
+    border-radius: 0.5rem !important;
+    box-shadow: none;
+}
+
+[data-testid="stSelectbox"] [data-baseweb="select"] [role="combobox"],
+[data-testid="stMultiSelect"] [data-baseweb="select"] [role="combobox"],
+[data-testid="stSelectbox"] [data-baseweb="select"] span,
+[data-testid="stMultiSelect"] [data-baseweb="select"] span {
+    color: var(--bank-ink) !important;
+}
+
+[data-testid="stSelectbox"] svg,
+[data-testid="stMultiSelect"] svg,
+[data-testid="stDateInput"] svg {
+    color: var(--bank-muted) !important;
+    fill: currentColor;
 }
 
 [data-testid="stTextInput"] input::placeholder,
 [data-testid="stNumberInput"] input::placeholder,
+[data-testid="stDateInput"] input::placeholder,
+[data-testid="stTimeInput"] input::placeholder,
 [data-testid="stTextArea"] textarea::placeholder {
-    color: var(--bank-muted);
+    color: var(--bank-muted) !important;
+    opacity: 1;
 }
 
-[data-testid="stSelectbox"] [data-baseweb="select"] *,
+[data-testid="stTextInput"]:hover input,
+[data-testid="stNumberInput"]:hover input,
+[data-testid="stDateInput"]:hover input,
+[data-testid="stTimeInput"]:hover input,
+[data-testid="stTextArea"]:hover textarea,
+[data-testid="stSelectbox"] [data-baseweb="select"]:hover > div,
+[data-testid="stMultiSelect"] [data-baseweb="select"]:hover > div {
+    border-color: #94a3b8 !important;
+}
+
+[data-testid="stTextInput"]:focus-within input,
+[data-testid="stNumberInput"]:focus-within input,
+[data-testid="stDateInput"]:focus-within input,
+[data-testid="stTimeInput"]:focus-within input,
+[data-testid="stTextArea"]:focus-within textarea,
+[data-testid="stSelectbox"]:focus-within [data-baseweb="select"] > div,
+[data-testid="stMultiSelect"]:focus-within [data-baseweb="select"] > div {
+    background-color: var(--bank-surface) !important;
+    border-color: var(--bank-blue) !important;
+    box-shadow: 0 0 0 2px rgba(15, 91, 154, 0.18) !important;
+    outline: none;
+}
+
 [data-testid="stNumberInput"] button {
+    min-height: 2.65rem;
+    background-color: #f8fafc !important;
+    color: var(--bank-ink) !important;
+    border-color: var(--bank-border) !important;
+}
+
+[data-testid="stNumberInput"] button:hover {
+    background-color: #f1f5f9 !important;
+}
+
+/* BaseWeb renders dropdown menus in a popover outside the widget wrapper. */
+[data-baseweb="popover"] [role="listbox"],
+[data-baseweb="popover"] [role="menu"],
+[data-baseweb="popover"] [role="grid"],
+[data-baseweb="menu"],
+[data-testid="stSelectboxVirtualDropdown"],
+[data-testid="stSelectboxVirtualDropdownEmpty"] {
+    background-color: var(--bank-surface) !important;
+    color: var(--bank-ink) !important;
+    border: 1px solid var(--bank-border);
+    box-shadow: 0 8px 24px rgba(23, 43, 77, 0.14);
+}
+
+[data-baseweb="popover"] [role="option"],
+[data-baseweb="menu"] [role="menuitem"],
+[data-baseweb="popover"] [role="grid"] button,
+[data-testid="stSelectboxVirtualDropdown"] *,
+[data-testid="stSelectboxVirtualDropdown"] [role="option"] {
+    background-color: var(--bank-surface) !important;
+    color: var(--bank-ink) !important;
+}
+
+[data-baseweb="popover"] [role="option"]:hover,
+[data-baseweb="popover"] [role="option"][aria-selected="true"],
+[data-baseweb="menu"] [role="menuitem"]:hover {
+    background-color: #eaf2f9 !important;
+    color: var(--bank-ink) !important;
+}
+
+[data-testid="stSelectboxVirtualDropdown"] [aria-selected="true"],
+[data-testid="stSelectboxVirtualDropdown"] [data-highlighted="true"],
+[data-testid="stSelectboxVirtualDropdown"] [role="option"]:hover {
+    background-color: #eaf2f9 !important;
+    color: var(--bank-ink) !important;
+}
+
+[data-baseweb="popover"] [role="grid"] button:hover {
+    background-color: #eaf2f9 !important;
+    color: var(--bank-ink) !important;
+}
+
+[data-baseweb="tag"] {
+    background-color: #eaf2f9 !important;
+    color: var(--bank-ink) !important;
+}
+
+[data-testid="stTextInput"] input:disabled,
+[data-testid="stNumberInput"] input:disabled,
+[data-testid="stDateInput"] input:disabled,
+[data-testid="stTimeInput"] input:disabled,
+[data-testid="stTextArea"] textarea:disabled,
+[data-testid="stSelectbox"] [aria-disabled="true"] > div,
+[data-testid="stMultiSelect"] [aria-disabled="true"] > div {
+    background-color: #f1f5f9 !important;
+    color: var(--bank-muted) !important;
+    border-color: #dbe2ea !important;
+    opacity: 1;
+    cursor: not-allowed;
+}
+
+[data-testid="stTextInput"] input[aria-invalid="true"],
+[data-testid="stNumberInput"] input[aria-invalid="true"],
+[data-testid="stDateInput"] input[aria-invalid="true"],
+[data-testid="stTimeInput"] input[aria-invalid="true"],
+[data-testid="stTextArea"] textarea[aria-invalid="true"],
+[data-testid="stTextInput"] [data-invalid="true"] input,
+[data-testid="stNumberInput"] [data-invalid="true"] input,
+[data-testid="stSelectbox"] [aria-invalid="true"] > div,
+[data-testid="stMultiSelect"] [aria-invalid="true"] > div {
+    border-color: var(--bank-danger) !important;
+    box-shadow: 0 0 0 1px rgba(220, 38, 38, 0.14);
+}
+
+[data-testid="stCheckbox"] input,
+[data-testid="stRadio"] input,
+[data-testid="stToggle"] input,
+[data-testid="stSlider"] [role="slider"] {
+    accent-color: var(--bank-blue);
+}
+
+[data-testid="stCheckbox"] label,
+[data-testid="stRadio"] label,
+[data-testid="stToggle"] label {
     color: var(--bank-ink);
 }
 
-[data-testid="stTextInput"] input:focus,
-[data-testid="stNumberInput"] input:focus,
-[data-testid="stTextArea"] textarea:focus {
-    border-color: var(--bank-teal);
-    box-shadow: 0 0 0 1px var(--bank-teal);
+[data-testid="stDateInput"] input {
+    color-scheme: light;
 }
 
 /* Primary actions use teal; secondary controls use navy. */
