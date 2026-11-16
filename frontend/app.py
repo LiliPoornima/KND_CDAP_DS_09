@@ -23,6 +23,15 @@ if STYLES_PATH.exists():
 
 
 def _render_home() -> None:
+    if st.session_state.get("home_component_view") == "financial_inclusion":
+        if st.button("Back to Home", key="home_back_from_financial_inclusion"):
+            st.session_state.pop("home_component_view", None)
+            st.rerun()
+        from frontend.financial_inclusion.new_dashboard import render_home_assessment
+
+        render_home_assessment()
+        return
+
     st.title("Global Financial Analytics")
     st.subheader("Research and Decision Support Dashboard")
     st.markdown(
@@ -35,20 +44,32 @@ def _render_home() -> None:
     )
     st.divider()
     st.subheader("Research Components")
-    left, right = st.columns(2)
-    with left:
-        st.markdown("### Credit Risk")
-        st.write("Explore credit-risk research findings and evaluation.")
-        st.markdown("### Market Risk")
-        st.write("Explore market-risk research findings and evaluation.")
-    with right:
-        st.markdown("### Fraud Detection")
-        st.write("Explore fraud-detection research findings and evaluation.")
-        st.markdown("### Financial Inclusion")
-        st.write(
-            "Explore saved inclusion profiles, explainable model outputs, "
-            "population gaps, and individual assessment."
-        )
+    component_rows = [
+        (
+            ("01 · Credit Risk", "Credit-risk assessment for thin-file borrowers.", "pages/1_Credit_Risk.py"),
+            ("02 · Financial Inclusion", "Digital financial inclusion assessment and explainable inclusion profiles.", "pages/6_Financial_Inclusion_New_Dashboard.py"),
+        ),
+        (
+            ("03 · Market Risk", "External market-risk analysis and lending insights.", "pages/3_Market_Risk.py"),
+            ("04 · Financial Well-being", "Financial well-being, capabilities, and resilience assessment.", None),
+        ),
+    ]
+    for row in component_rows:
+        columns = st.columns(2)
+        for column, (title, description, page) in zip(columns, row):
+            with column:
+                with st.container(border=True):
+                    st.markdown(f"### {title}")
+                    st.write(description)
+                    if page:
+                        if st.button("Open component", key=f"home_{title}", use_container_width=True):
+                            if "02" in title:
+                                st.session_state["home_component_view"] = "financial_inclusion"
+                                st.rerun()
+                            else:
+                                st.switch_page(page)
+                    elif st.button("Open component", key=f"home_{title}", use_container_width=True):
+                        st.info("A Financial Well-being assessment page is not available in this project.")
     st.info(
         "The components are developed independently. Select a component in "
         "the navigation sidebar to open its dashboard."
@@ -66,7 +87,7 @@ navigation = st.navigation(
         ),
         st.Page(
             "pages/6_Financial_Inclusion_New_Dashboard.py",
-            title="Financial Inclusion – New Dashboard",
+            title="Financial Inclusion",
             icon="💹",
         ),
 

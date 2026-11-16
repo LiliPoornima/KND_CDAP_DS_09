@@ -41,7 +41,7 @@ def _profile_individual():
     return import_module("fi_individual_profiling").profile_individual
 
 
-def _assessment_form() -> tuple[bool, dict[str, Any]]:
+def _assessment_form_redesigned() -> tuple[bool, dict[str, Any]]:
     yes_no_options = {
         "Not available": None,
         "Yes": 1,
@@ -70,31 +70,137 @@ def _assessment_form() -> tuple[bool, dict[str, Any]]:
         "Prefer not to answer": 6,
     }
 
+    with st.form("fi_home_individual_profile_form", border=True):
+        connectivity, access = st.columns(2)
+        with connectivity:
+            with st.container(border=True):
+                st.markdown("### Dimension 01 · Connectivity")
+                mobile_answer = st.selectbox(
+                    "Does the respondent personally own a mobile phone?",
+                    options=list(yes_no_options), index=0,
+                    help="Choose Not available when the answer is unknown or was not collected.",
+                )
+                internet_answer = st.selectbox(
+                    "Has the respondent used the internet recently?",
+                    options=list(binary_options), index=0,
+                    help="Use the validated internet-use response. Yes = 1; No = 0.",
+                )
+        with access:
+            with st.container(border=True):
+                st.markdown("### Dimension 02 · Financial Access")
+                account_answer = st.selectbox(
+                    "Does the respondent have a financial account?",
+                    options=list(binary_options), index=0,
+                    help="Use the validated account response. Yes = 1; No = 0.",
+                )
+
+        usage, safety = st.columns(2)
+        with usage:
+            with st.container(border=True):
+                st.markdown("### Dimension 03 · Digital Financial Usage")
+                payment_answer = st.selectbox(
+                    "Has the respondent made or received digital payments?",
+                    options=list(binary_options), index=0,
+                    help="Use the validated digital-payment response. Yes = 1; No = 0.",
+                )
+        with safety:
+            with st.container(border=True):
+                st.markdown("### Dimension 04 · Digital Safety")
+                protection_answer = st.selectbox(
+                    "Does the respondent use phone security protection?",
+                    options=list(yes_no_options), index=0,
+                    help="The existing coding is Yes = 1 and No = 2.",
+                )
+
+        with st.container(border=True):
+            st.markdown("### Dimension 05 · Financial Resilience")
+            resilience_col1, resilience_col2 = st.columns(2)
+            with resilience_col1:
+                saving_answer = st.selectbox(
+                    "Has the respondent saved money?",
+                    options=list(binary_options), index=0,
+                    help="Use the validated saving response. Yes = 1; No = 0.",
+                )
+                emergency_answer = st.selectbox(
+                    "How difficult would it be to find emergency money within the next 30 days?",
+                    options=list(emergency_options), index=0,
+                    help=(
+                        "Very difficult, Somewhat difficult, or Not difficult at all "
+                        "are substantive responses. Don't know and Prefer not to answer "
+                        "remain distinct from unavailable information."
+                    ),
+                )
+            with resilience_col2:
+                income_loss_answer = st.selectbox(
+                    "If the household lost its main income source, how long could it cover expenses?",
+                    options=list(income_loss_options), index=0,
+                    help="Choose the closest response. Don't know and Prefer not to answer remain separate.",
+                )
+
+        st.info(
+            "Choose 'Not available' if the respondent was not asked a question "
+            "or the answer is unknown. Do not select 'No' as a substitute for "
+            "missing information. 'Don't know' and 'Prefer not to answer' are "
+            "separate responses where provided."
+        )
+        submitted = st.form_submit_button(
+            "Generate Financial Inclusion Assessment",
+            type="primary",
+            use_container_width=True,
+        )
+
+    entries = {
+        "con1": yes_no_options[mobile_answer],
+        "internet_use": binary_options[internet_answer],
+        "account": binary_options[account_answer],
+        "anydigpayment": binary_options[payment_answer],
+        "con18": yes_no_options[protection_answer],
+        "saved": binary_options[saving_answer],
+        "fin24a": emergency_options[emergency_answer],
+        "fin24b": income_loss_options[income_loss_answer],
+    }
+    return submitted, entries
+
+
+def _assessment_form() -> tuple[bool, dict[str, Any]]:
+    """Keep the established form presentation used in the sidebar dashboard."""
+    yes_no_options = {"Not available": None, "Yes": 1, "No": 2}
+    binary_options = {"Not available": None, "Yes": 1, "No": 0}
+    emergency_options = {
+        "Not available": None,
+        "Very difficult": 1,
+        "Somewhat difficult": 2,
+        "Not difficult at all": 3,
+        "Don't know": 4,
+        "Prefer not to answer": 5,
+    }
+    income_loss_options = {
+        "Not available": None,
+        "Less than 2 weeks": 1,
+        "About 1 month": 2,
+        "About 2 months": 3,
+        "More than 2 months": 4,
+        "Don't know": 5,
+        "Prefer not to answer": 6,
+    }
+
     with st.form("fi_individual_profile_form", border=True):
         st.markdown("### 1. Access and connectivity")
-        st.caption(
-            "Tell us about the respondent's access to a phone and the internet."
-        )
+        st.caption("Tell us about the respondent's access to a phone and the internet.")
         col1, col2 = st.columns(2)
         with col1:
             mobile_answer = st.selectbox(
                 "Does the respondent personally own a mobile phone?",
-                options=list(yes_no_options),
-                index=0,
-                help=(
-                    "Choose Yes if the respondent owns a mobile phone, No if "
-                    "they do not, or Not available if this information is unknown."
-                ),
+                options=list(yes_no_options), index=0,
+                help=("Choose Yes if the respondent owns a mobile phone, No if "
+                      "they do not, or Not available if this information is unknown."),
             )
         with col2:
             internet_answer = st.selectbox(
                 "Has the respondent used the internet recently?",
-                options=list(binary_options),
-                index=0,
-                help=(
-                    "Use the validated internet-use indicator from your prepared "
-                    "dataset. Yes means the indicator is 1; No means it is 0."
-                ),
+                options=list(binary_options), index=0,
+                help=("Use the validated internet-use indicator from your prepared "
+                      "dataset. Yes means the indicator is 1; No means it is 0."),
             )
 
         st.divider()
@@ -104,70 +210,47 @@ def _assessment_form() -> tuple[bool, dict[str, Any]]:
         with col3:
             account_answer = st.selectbox(
                 "Does the respondent have a financial account?",
-                options=list(binary_options),
-                index=0,
+                options=list(binary_options), index=0,
                 help="Use the validated account indicator. Yes = 1; No = 0.",
             )
             payment_answer = st.selectbox(
                 "Has the respondent made or received digital payments?",
-                options=list(binary_options),
-                index=0,
-                help=(
-                    "Use the validated digital-payment indicator. Yes = 1; No = 0."
-                ),
+                options=list(binary_options), index=0,
+                help="Use the validated digital-payment indicator. Yes = 1; No = 0.",
             )
         with col4:
             protection_answer = st.selectbox(
                 "Does the respondent use phone security protection?",
-                options=list(yes_no_options),
-                index=0,
-                help="Use the project's validated phone-protection coding: Yes = 1 and No = 2.",
+                options=list(yes_no_options), index=0,
+                help="Use the validated phone-protection coding: Yes = 1; No = 2.",
             )
             saving_answer = st.selectbox(
                 "Has the respondent saved money?",
-                options=list(binary_options),
-                index=0,
+                options=list(binary_options), index=0,
                 help="Use the validated saving indicator. Yes = 1; No = 0.",
             )
 
         st.divider()
         st.markdown("### 3. Financial resilience")
-        st.caption(
-            "These questions help describe how the respondent could manage "
-            "an unexpected expense or loss of income."
-        )
+        st.caption("Describe how the respondent could manage an unexpected expense or loss of income.")
         resilience_col1, resilience_col2 = st.columns(2)
         with resilience_col1:
             st.markdown("**Emergency funds within 30 days**")
-            st.caption(
-                "How difficult would it be to find emergency money within "
-                "the next 30 days?"
-            )
+            st.caption("How difficult would it be to find emergency money within the next 30 days?")
             emergency_answer = st.selectbox(
                 "Ability to find emergency funds",
-                options=list(emergency_options),
-                index=0,
-                help=(
-                    "Very difficult, Somewhat difficult, or Not difficult at all "
-                    "are the three substantive responses. The question may only "
-                    "have been asked of respondents who reported a possible "
-                    "source of emergency funds."
-                ),
+                options=list(emergency_options), index=0,
+                help=("Very difficult, Somewhat difficult, or Not difficult at all are the "
+                      "substantive responses. The question may only have been asked of "
+                      "respondents who reported a possible source of emergency funds."),
             )
         with resilience_col2:
             st.markdown("**Coping with loss of income**")
-            st.caption(
-                "If the household lost its main income source, how long could "
-                "it cover expenses?"
-            )
+            st.caption("If the household lost its main income source, how long could it cover expenses?")
             income_loss_answer = st.selectbox(
                 "How long could expenses be covered?",
-                options=list(income_loss_options),
-                index=0,
-                help=(
-                    "Choose the closest response: less than 2 weeks, about "
-                    "1 month, about 2 months, or more than 2 months."
-                ),
+                options=list(income_loss_options), index=0,
+                help="Choose the closest response: less than 2 weeks, about 1 month, about 2 months, or more than 2 months.",
             )
 
         st.info(
@@ -177,9 +260,7 @@ def _assessment_form() -> tuple[bool, dict[str, Any]]:
             "separate responses where provided."
         )
         submitted = st.form_submit_button(
-            "Calculate inclusion profile",
-            type="primary",
-            use_container_width=True,
+            "Calculate inclusion profile", type="primary", use_container_width=True
         )
 
     entries = {
@@ -714,45 +795,137 @@ def _show_assessment_results(
         key="download_individual_assessment_pdf",
     )
 
-def render() -> None:
-    st.subheader("Individual profile scoring")
-    st.caption(
-        "Assess an individual's financial inclusion characteristics using the "
-        "available information. Review the resulting inclusion profile, "
-        "understand its dimension scores, identify missing information, and "
-        "explore potential areas for further investigation."
+
+def _show_explainable_insights(saved_assessment: dict[str, Any]) -> None:
+    result = saved_assessment["result"]
+    st.subheader("Explainable Insights")
+    profile = result.get("profile") if result.get("status") == "success" else None
+    explanation = result.get("explanation", {})
+
+    if profile:
+        evidence = explanation.get("dimension_evidence", [])
+        if evidence:
+            st.markdown("#### Individual profile assignment evidence")
+            st.caption(
+                "These observed dimension scores and differences from the saved "
+                "profile mean describe the K-Means profile assignment. They are not SHAP values."
+            )
+            evidence_rows = [
+                {
+                    "Dimension": item.get("dimension", "Dimension"),
+                    "Observed score (0 to 1)": item.get("individual_score"),
+                    "Saved profile mean (0 to 1)": item.get("cluster_mean_score"),
+                    "Difference from profile mean": item.get("difference_from_cluster_mean"),
+                    "Observation": item.get("observation", ""),
+                }
+                for item in evidence
+            ]
+            st.dataframe(pd.DataFrame(evidence_rows), hide_index=True, width="stretch")
+
+        st.markdown("#### Global SHAP context")
+        st.caption(
+            "The saved global SHAP output describes a separate supervised model "
+            "that predicts profile labels from demographic and socioeconomic factors. "
+            "It is background context and does not explain this individual's K-Means assignment."
+        )
+        try:
+            global_importance = loader.load_shap_global_importance()
+            profile_class = global_importance.loc[
+                global_importance["cluster_id"] == profile.get("cluster_id")
+            ].copy()
+            if profile_class.empty:
+                st.info("Global SHAP values for this profile are not available.")
+            else:
+                feature_names = {
+                    "female": "Sex",
+                    "educ": "Education",
+                    "inc_q": "Income group",
+                    "emp_in": "Employment",
+                    "urbanicity": "Urbanicity",
+                    "regionwb": "Region",
+                    "age": "Age",
+                }
+                profile_class["Factor"] = profile_class["feature"].map(feature_names).fillna(profile_class["feature"])
+                profile_class = profile_class.sort_values("mean_absolute_shap_decision_score")
+                figure = px.bar(
+                    profile_class,
+                    x="mean_absolute_shap_decision_score",
+                    y="Factor",
+                    orientation="h",
+                    labels={
+                        "mean_absolute_shap_decision_score": "Mean absolute SHAP contribution",
+                        "Factor": "Factor",
+                    },
+                )
+                figure.update_layout(height=300, margin={"l": 8, "r": 18, "t": 15, "b": 20}, showlegend=False)
+                st.plotly_chart(figure, config={"responsive": True})
+                st.caption("Global SHAP values show contribution magnitude; direction is not available in this summary.")
+        except (OSError, ValueError, KeyError) as exc:
+            st.info(f"Saved global SHAP output is unavailable: {exc}")
+
+        st.info(
+            "An individual SHAP explanation is not available for this assessment. "
+            "SHAP describes supervised model contributions, not causes, creditworthiness, "
+            "or loan eligibility."
+        )
+    else:
+        st.info("Explainable profile insights will appear when all five dimension scores are available.")
+
+
+def render(redesigned: bool = False) -> None:
+    assessment_state_key = (
+        "home_individual_assessment" if redesigned else "individual_assessment"
     )
+    if redesigned:
+        st.subheader("Customer Information")
+        st.caption(
+            "Select Not available when information is unknown or was not collected. "
+            "Don't know and Prefer not to answer remain distinct responses."
+        )
+    else:
+        st.subheader("Individual profile scoring")
+        st.caption(
+            "Assess an individual's financial inclusion characteristics using the "
+            "available information. Review the resulting inclusion profile, "
+            "understand its dimension scores, identify missing information, and "
+            "explore potential areas for further investigation."
+        )
     st.info(
         "This is a descriptive financial inclusion assessment, not a credit "
         "score, loan eligibility assessment, or automated policy decision."
     )
-    with st.expander("How to use this assessment"):
-        st.markdown(
-            "1. Enter the respondent's known information.\n"
-            "2. Select **Not available** when an answer is unknown or was not collected.\n"
-            "3. Review the assigned profile and five dimension scores.\n"
-            "4. Use the interpretation to identify areas for further investigation.\n"
-            "5. Download the assessment summary if needed."
-        )
+    if not redesigned:
+        with st.expander("How to use this assessment"):
+            st.markdown(
+                "1. Enter the respondent's known information.\n"
+                "2. Select **Not available** when an answer is unknown or was not collected.\n"
+                "3. Review the assigned profile and five dimension scores.\n"
+                "4. Use the interpretation to identify areas for further investigation.\n"
+                "5. Download the assessment summary if needed."
+            )
 
-    submitted, entries = _assessment_form()
+    form = _assessment_form_redesigned if redesigned else _assessment_form
+    submitted, entries = form()
     if submitted:
         assessment_date = date.today()
         try:
             result = _profile_individual()(entries)
-            st.session_state["individual_assessment"] = {
+            st.session_state[assessment_state_key] = {
                 "result": result,
                 "entries": entries,
                 "assessment_date": assessment_date,
             }
         except (OSError, ValueError, KeyError, TypeError) as exc:
-            st.session_state.pop("individual_assessment", None)
+            st.session_state.pop(assessment_state_key, None)
             st.error(f"The assessment could not be completed: {exc}")
 
-    saved_assessment = st.session_state.get("individual_assessment")
+    saved_assessment = st.session_state.get(assessment_state_key)
     if saved_assessment:
         _show_assessment_results(
             saved_assessment["result"],
             saved_assessment["entries"],
             saved_assessment["assessment_date"],
         )
+        if redesigned:
+            st.divider()
+            _show_explainable_insights(saved_assessment)
