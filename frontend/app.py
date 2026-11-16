@@ -60,6 +60,11 @@ navigation = st.navigation(
         st.Page(_render_home, title="Home", icon="🏠", default=True),
         st.Page("pages/1_Credit_Risk.py", title="Credit Risk", icon="💳"),
         st.Page(
+            "pages/6_Applicant_Credit_Assessment.py",
+            title="Applicant Credit Assessment",
+            icon="📝",
+        ),
+        st.Page(
             "pages/5_Financial_Inclusion_Decision_Support.py",
             title="Financial Inclusion",
             icon="🌐",
