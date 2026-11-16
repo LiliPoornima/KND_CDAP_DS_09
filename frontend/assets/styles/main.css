@@ -105,17 +105,6 @@ h2, h3 {
     border-radius: 0.45rem;
 }
 
-[data-testid="stSelectbox"] [data-baseweb="select"],
-[data-testid="stSelectbox"] [data-baseweb="select"] > div,
-[data-testid="stSelectbox"] [data-baseweb="select"] [role="combobox"] {
-    background: var(--bank-surface) !important;
-    color: var(--bank-ink) !important;
-}
-
-[data-testid="stSelectbox"] [data-baseweb="select"] * {
-    color: var(--bank-ink) !important;
-}
-
 [data-testid="stTextInput"] input::placeholder,
 [data-testid="stNumberInput"] input::placeholder,
 [data-testid="stTextArea"] textarea::placeholder {
@@ -125,25 +114,6 @@ h2, h3 {
 [data-testid="stSelectbox"] [data-baseweb="select"] *,
 [data-testid="stNumberInput"] button {
     color: var(--bank-ink);
-}
-
-[data-testid="stNumberInput"] button {
-    background: var(--bank-surface) !important;
-    border-left: 1px solid var(--bank-border);
-}
-
-[data-testid="stNumberInput"] button:hover {
-    background: var(--bank-teal-light) !important;
-    color: var(--bank-navy) !important;
-}
-
-[data-testid="stCheckbox"] label {
-    color: var(--bank-ink) !important;
-}
-
-[data-testid="stCheckbox"] input:checked + div {
-    background: var(--bank-teal);
-    border-color: var(--bank-teal);
 }
 
 [data-testid="stTextInput"] input:focus,
