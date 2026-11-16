@@ -1,4 +1,4 @@
-"""User-facing credit-risk assessment form."""
+"""User-facing Component 1 credit-risk assessment form."""
 
 from pathlib import Path
 from typing import Any
@@ -61,14 +61,12 @@ def _validate_application(raw: pd.DataFrame) -> tuple[list[str], list[str]]:
     return errors, warnings
 
 
-def _risk_band(probability: float, threshold: float) -> tuple[str, str]:
-    """Classify risk using the model threshold used for the prediction."""
-    if probability >= threshold:
-        return "High", "red"
-    if probability >= threshold / 2:
-        return "Medium", "orange"
-    if probability < threshold / 2:
+def _risk_band(probability: float) -> tuple[str, str]:
+    if probability < 0.20:
         return "Low", "green"
+    if probability < 0.50:
+        return "Medium", "orange"
+    return "High", "red"
 
 
 def _recommended_action(risk_band: str, affordability_reasons: list[str]) -> str:
@@ -481,17 +479,17 @@ def render_credit_risk_assessment() -> None:
     """Render the applicant questionnaire and its research-only result."""
     st.title("Applicant Credit Assessment")
     st.caption(
-        "Enter applicant and requested-credit information to receive a "
-        "payment-difficulty estimate."
+        "Component 1 · Enter applicant and requested-credit information to "
+        "receive a research-only payment-difficulty estimate."
     )
     st.markdown(
         "**Bank decision-support workspace**  \n"
         "Use the model output as one input to structured human review."
     )
     st.warning(
-        "This assessment is not a lender approval, financial advice, or a "
-        "guarantee of repayment. Verify all financial information before making "
-        "a lending decision."
+        "This assessment uses a Home Credit application-only model. It is not "
+        "a lender approval, financial advice, or a guarantee of repayment. "
+        "Use the amount units represented in the source dataset."
     )
 
     prepared_dir = OUTPUT_ROOT / "home_credit" / "completion_run" / "prepared"
@@ -727,7 +725,7 @@ def render_credit_risk_assessment() -> None:
         st.error(f"Could not assess this application: {exc}")
         return
 
-    band, band_color = _risk_band(probability, bundle["threshold"])
+    band, band_color = _risk_band(probability)
     decision = (
         "Higher payment-difficulty likelihood"
         if probability >= bundle["threshold"]
@@ -872,8 +870,9 @@ def render_credit_risk_assessment() -> None:
                 "terms will produce the same result in practice."
             )
     st.caption(
-        "This estimate does not replace a bank's affordability checks, policy "
-        "rules, or human decision-making."
+        "This estimate reflects patterns in the Home Credit research dataset. "
+        "It does not replace a bank's affordability checks, policy rules, or "
+        "human decision-making."
     )
     st.info(
         "Responsible use: do not use this estimate as the sole basis to approve, "
