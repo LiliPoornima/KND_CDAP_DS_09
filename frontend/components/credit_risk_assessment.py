@@ -63,37 +63,29 @@ def _validate_application(raw: pd.DataFrame) -> tuple[list[str], list[str]]:
 
 def _risk_band(
     probability: float,
-    raw: pd.DataFrame | None = None,
+    model_threshold: float,
 ) -> tuple[str, str]:
-    """Return a presentation band using model risk plus affordability stress."""
-    affordability_high = False
-    affordability_elevated = False
-    if raw is not None:
-        row = raw.iloc[0]
-        income = float(row["AMT_INCOME_TOTAL"])
-        monthly_income = income / 12 if income > 0 else 0.0
-        installment = float(row["AMT_ANNUITY"])
-        loan_to_income = (
-            float(row["AMT_CREDIT"]) / income if income > 0 else np.inf
-        )
-        affordability_high = monthly_income == 0 or installment > monthly_income or loan_to_income >= 5
-        affordability_elevated = installment >= monthly_income * 0.4 or loan_to_income >= 2
-
-    if probability >= 0.50 or affordability_high:
+    """Return a probability-only presentation band around the model cutoff."""
+    lower_cutoff = min(float(model_threshold), 0.50)
+    upper_cutoff = max(float(model_threshold), 0.50)
+    if probability >= upper_cutoff:
         return "High", "red"
-    if probability >= 0.20 or affordability_elevated:
+    if probability >= lower_cutoff:
         return "Medium", "orange"
-    if probability < 0.20:
-        return "Low", "green"
-    return "High", "red"
+    return "Low", "green"
 
 
-def _recommended_action(risk_band: str, affordability_reasons: list[str]) -> str:
-    if risk_band == "High":
-        return "Manual review required"
-    if risk_band == "Medium" or affordability_reasons:
-        return "Request additional information"
-    return "Proceed to standard assessment"
+def _research_recommendation(probability: float, model_threshold: float) -> str:
+    """Translate the model's validation cutoff into a cautious next step."""
+    if probability >= model_threshold:
+        return "Do not recommend granting the loan without manual review"
+    return "Recommend considering the applicant for further loan assessment"
+
+
+def _affordability_follow_up(affordability_reasons: list[str]) -> str:
+    if affordability_reasons:
+        return "Review the affordability notes and verify income, expenses, and existing debts"
+    return "No extreme affordability flag was found; complete the lender's normal affordability checks"
 
 
 def _build_summary(
@@ -101,6 +93,8 @@ def _build_summary(
     applicant: pd.DataFrame,
     probability: float,
     decision: str,
+    risk_band: str,
+    model_threshold: float,
     applicant_reference: str,
     additional_information: dict[str, Any],
 ) -> pd.DataFrame:
@@ -108,7 +102,9 @@ def _build_summary(
     return pd.DataFrame(
         [
             {"Item": "Applicant reference", "Value": applicant_reference},
-            {"Item": "Research-only assessment", "Value": decision},
+            {"Item": "Research-only recommendation", "Value": decision},
+            {"Item": "Model probability band", "Value": risk_band},
+            {"Item": "Validation-selected research cutoff", "Value": f"{model_threshold:.1%}"},
             {"Item": "Estimated payment-difficulty likelihood", "Value": f"{probability:.1%}"},
             {"Item": "Annual income", "Value": raw.loc[0, "AMT_INCOME_TOTAL"]},
             {"Item": "Requested loan amount", "Value": raw.loc[0, "AMT_CREDIT"]},
@@ -243,27 +239,30 @@ def _render_affordability_summary(
         "Loan-to-purchase ratio", f"{row['CREDIT_TO_GOODS_RATIO']:.1%}"
     )
 
-    reasons: list[str] = []
+    concerns: list[str] = []
+    positive_indicators: list[str] = []
     if income <= 0:
-        reasons.append("Annual income is zero or missing, so affordability cannot be assessed reliably.")
+        concerns.append("Annual income is zero or missing, so affordability cannot be assessed reliably.")
     elif monthly_installment_ratio >= 0.4:
-        reasons.append(
+        concerns.append(
             "The proposed installment is a relatively large share of the estimated monthly income."
         )
     elif monthly_installment_ratio <= 0.2:
-        reasons.append(
+        positive_indicators.append(
             "The proposed installment is a relatively small share of the estimated monthly income."
         )
     if row["CREDIT_TO_INCOME_RATIO"] >= 5:
-        reasons.append("The requested loan is large compared with the entered annual income.")
+        concerns.append("The requested loan is large compared with the entered annual income.")
     elif row["CREDIT_TO_INCOME_RATIO"] <= 2:
-        reasons.append("The requested loan is comparatively moderate relative to the entered annual income.")
+        positive_indicators.append("The requested loan is comparatively moderate relative to the entered annual income.")
     if goods_price > 0 and row["CREDIT_TO_GOODS_RATIO"] > 1:
-        reasons.append("The requested loan exceeds the entered purchase-price value.")
-    if reasons:
-        st.warning(f"Affordability warning: {reasons[0]}")
+        concerns.append("The requested loan exceeds the entered purchase-price value.")
+    if concerns:
+        st.warning(f"Affordability concern: {concerns[0]}")
     else:
-        st.success("No extreme affordability indicator was identified from the entered values.")
+        st.success("No high-stress affordability indicator was identified from the entered values.")
+    if positive_indicators:
+        st.caption("Positive screening indicators: " + " ".join(positive_indicators))
     st.info(
         f"Estimated monthly income: {monthly_income:,.2f} source units · "
         f"Installment share of estimated monthly income: "
@@ -275,7 +274,7 @@ def _render_affordability_summary(
         "form. They are not bank affordability rules and do not account for every "
         "household expense or existing obligation."
     )
-    return reasons
+    return concerns
 
 
 def _render_next_steps(
@@ -770,24 +769,30 @@ def render_credit_risk_assessment() -> None:
         st.error(f"Could not assess this application: {exc}")
         return
 
-    band, band_color = _risk_band(probability, raw)
-    decision = (
-        "Higher payment-difficulty likelihood"
-        if probability >= bundle["threshold"]
-        else "Lower payment-difficulty likelihood"
+    band, band_color = _risk_band(probability, bundle["threshold"])
+    research_recommendation = _research_recommendation(
+        probability, bundle["threshold"]
     )
     st.subheader("1. Credit Risk Assessment – Main Output")
     result_cols = st.columns(4)
     result_cols[0].metric("Applicant", applicant_reference)
     result_cols[1].metric("Predicted payment-difficulty probability", f"{probability:.1%}")
-    result_cols[2].metric("Risk category", band)
-    result_cols[3].metric("Assessment status", "Completed")
-    st.markdown(f"**Model threshold comparison:** {decision}")
+    result_cols[2].metric("Model probability band", band)
+    result_cols[3].metric("Research recommendation", "Manual review" if probability >= bundle["threshold"] else "Further assessment")
+    st.markdown(f"**Research recommendation:** {research_recommendation}.")
     st.caption(
-        "The probability and threshold comparison come from the trained model. "
-        "The risk category is a screening band that combines the model probability "
-        "with affordability stress from the values entered in this form. It is not "
-        "a lender approval or rejection and is not a confidence score."
+        f"The model cutoff is {bundle['threshold']:.1%}, selected to maximize F1 on "
+        f"Home Credit validation data. The probability band is Low below "
+        f"{min(bundle['threshold'], 0.50):.1%}, Medium from that cutoff to "
+        f"{max(bundle['threshold'], 0.50):.1%}, and High at or above "
+        f"{max(bundle['threshold'], 0.50):.1%}. These bands are presentation rules, "
+        "not lender-validated risk categories."
+    )
+    st.caption(
+        "This is a research-only recommendation, not a final approval or rejection. "
+        "It does not account for lending costs, a lender's policy, or local law. "
+        "Answers about previous credit history and missed payments are recorded as "
+        "additional review information and are not inputs to this model's probability."
     )
     band_messages = {
         "green": st.success,
@@ -798,7 +803,12 @@ def render_credit_risk_assessment() -> None:
         f"Risk category: **{band}**. This category is for research decision support only."
     )
     if alternative_probability is not None:
-        alternative_band, _ = _risk_band(alternative_probability, alternative_raw)
+        alternative_band, _ = _risk_band(
+            alternative_probability, bundle["threshold"]
+        )
+        alternative_recommendation = _research_recommendation(
+            alternative_probability, bundle["threshold"]
+        )
         st.subheader("Alternative scenario comparison")
         comparison = pd.DataFrame(
             [
@@ -808,6 +818,7 @@ def render_credit_risk_assessment() -> None:
                     "Installment": annuity,
                     "Payment-difficulty probability": f"{probability:.1%}",
                     "Risk category": band,
+                    "Research recommendation": research_recommendation,
                 },
                 {
                     "Scenario": "Alternative",
@@ -815,6 +826,7 @@ def render_credit_risk_assessment() -> None:
                     "Installment": alternative_annuity,
                     "Payment-difficulty probability": f"{alternative_probability:.1%}",
                     "Risk category": alternative_band,
+                    "Research recommendation": alternative_recommendation,
                 },
             ]
         )
@@ -824,9 +836,9 @@ def render_credit_risk_assessment() -> None:
         for warning in validation_warnings:
             st.write(f"- {warning}")
     affordability_reasons = _render_affordability_summary(raw, applicant)
-    recommended_action = _recommended_action(band, affordability_reasons)
-    st.subheader("Recommended bank action")
-    st.info(recommended_action)
+    affordability_follow_up = _affordability_follow_up(affordability_reasons)
+    st.subheader("Separate affordability follow-up")
+    st.info(affordability_follow_up)
     with st.expander("Detailed review", expanded=False):
         shap_factors = _render_shap_explanation(prepared_dir, bundle, applicant)
         _render_applicant_profile(raw, applicant)
@@ -844,7 +856,9 @@ def render_credit_risk_assessment() -> None:
             raw,
             applicant,
             probability,
-            decision,
+            research_recommendation,
+            band,
+            bundle["threshold"],
             applicant_reference,
             additional_information,
         )

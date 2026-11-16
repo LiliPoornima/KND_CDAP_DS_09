@@ -21,6 +21,7 @@ from backend.src.credit_risk.home_credit.training import (
 )
 from backend.src.credit_risk.fairness.cr_fairness import (
     cr_analyze_group_fairness,
+    cr_bootstrap_group_fairness,
     cr_bin_age_groups,
 )
 
@@ -148,6 +149,7 @@ def cr_fit_home_credit_application_model(
     )
     test_prediction = (test_probability >= threshold).astype(int)
     fairness_results = {}
+    fairness_uncertainty = {}
     for attribute, groups in (
         ("gender", test_groups["CODE_GENDER"]),
         ("age", cr_bin_age_groups(test_groups["AGE_YEARS"])),
@@ -155,6 +157,10 @@ def cr_fit_home_credit_application_model(
         fairness_results[attribute] = cr_analyze_group_fairness(
             test[TARGET_COLUMN], test_prediction, groups,
             attribute_name=attribute,
+        )
+        fairness_uncertainty[attribute] = cr_bootstrap_group_fairness(
+            test[TARGET_COLUMN], test_prediction, groups,
+            attribute_name=attribute, n_bootstrap=1000, random_state=42,
         )
 
     no_history = test[LINKED_HISTORY_COLUMNS].fillna(0).eq(0).all(axis=1)
@@ -175,6 +181,7 @@ def cr_fit_home_credit_application_model(
         "validation_f1": float(selected["F1-score"]),
         "test_metrics": test_metrics,
         "fairness_results": fairness_results,
+        "fairness_uncertainty": fairness_uncertainty,
         "test_rows": len(test),
         "no_history_rows": len(no_history_frame),
         "no_history_events": int(no_history_frame[TARGET_COLUMN].sum()),

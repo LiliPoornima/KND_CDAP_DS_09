@@ -296,20 +296,31 @@ def _render_borrower_prediction() -> None:
     st.caption(
         "Age and gender are audit-only fields: neither is requested in the form nor "
         "used as a model predictor. These held-out subgroup rates are not individual "
-        "fairness guarantees, and this prototype's interactive audit does not yet "
-        "include bootstrap confidence intervals."
+        "fairness guarantees. Gap intervals use 1,000 bootstrap samples and condition "
+        "on this fitted model, its threshold, and the observed subgroup outcome counts."
     )
     for attribute, result in bundle["fairness_results"].items():
         st.markdown(f"**{attribute.title()} groups**")
         st.dataframe(result["group_metrics"], hide_index=True, width="stretch")
-        gap = result["disparities"]
-        gap_frame = pd.DataFrame([{
-            "Selection-rate gap": gap["selection_rate_difference"],
-            "TPR gap": gap["true_positive_rate_difference"],
-            "FPR gap": gap["false_positive_rate_difference"],
-            "Equalized-odds gap": gap["equalized_odds_difference"],
-        }])
-        st.dataframe(gap_frame.style.format("{:.3f}"), hide_index=True, width="stretch")
+        gap_intervals = bundle["fairness_uncertainty"][attribute][
+            "disparity_confidence_intervals"
+        ].copy()
+        gap_intervals["metric"] = gap_intervals["metric"].replace({
+            "selection_rate_difference": "Selection-rate gap",
+            "true_positive_rate_difference": "TPR gap",
+            "false_positive_rate_difference": "FPR gap",
+            "equalized_odds_difference": "Equalized-odds gap",
+        })
+        st.dataframe(
+            gap_intervals[["metric", "estimate", "lower", "upper", "valid_replicates"]]
+            .rename(columns={
+                "metric": "Metric", "estimate": "Gap", "lower": "95% lower",
+                "upper": "95% upper", "valid_replicates": "Valid bootstrap samples",
+            })
+            .style.format({"Gap": "{:.3f}", "95% lower": "{:.3f}", "95% upper": "{:.3f}"}),
+            hide_index=True,
+            width="stretch",
+        )
     age_tpr_gap = bundle["fairness_results"]["age"]["disparities"][
         "true_positive_rate_difference"
     ]
