@@ -61,39 +61,97 @@ def _validate_application(raw: pd.DataFrame) -> tuple[list[str], list[str]]:
     return errors, warnings
 
 
-def _risk_band(
+def _research_recommendation(
     probability: float,
-    raw: pd.DataFrame | None = None,
+    model_threshold: float,
 ) -> tuple[str, str]:
-    """Return a presentation band using model risk plus affordability stress."""
-    affordability_high = False
-    affordability_elevated = False
-    if raw is not None:
-        row = raw.iloc[0]
-        income = float(row["AMT_INCOME_TOTAL"])
-        monthly_income = income / 12 if income > 0 else 0.0
-        installment = float(row["AMT_ANNUITY"])
-        loan_to_income = (
-            float(row["AMT_CREDIT"]) / income if income > 0 else np.inf
+    """Return a binary research recommendation and its explanation."""
+    if probability >= model_threshold:
+        return (
+            "NO",
+            f"Estimated payment-difficulty risk ({probability:.1%}) is at or above "
+            f"the {model_threshold:.1%} research cutoff. Do not recommend offering "
+            "this loan under the current details; complete manual review.",
         )
-        affordability_high = monthly_income == 0 or installment > monthly_income or loan_to_income >= 5
-        affordability_elevated = installment >= monthly_income * 0.4 or loan_to_income >= 2
-
-    if probability >= 0.50 or affordability_high:
-        return "High", "red"
-    if probability >= 0.20 or affordability_elevated:
-        return "Medium", "orange"
-    if probability < 0.20:
-        return "Low", "green"
-    return "High", "red"
+    return (
+        "YES",
+        f"Estimated payment-difficulty risk ({probability:.1%}) is below the "
+        f"{model_threshold:.1%} research cutoff. The model supports offering this "
+        "loan for bank approval review, subject to affordability and policy checks.",
+    )
 
 
-def _recommended_action(risk_band: str, affordability_reasons: list[str]) -> str:
-    if risk_band == "High":
-        return "Manual review required"
-    if risk_band == "Medium" or affordability_reasons:
-        return "Request additional information"
-    return "Proceed to standard assessment"
+def _find_yes_what_if(
+    raw: pd.DataFrame,
+    bundle: dict[str, Any],
+    current_probability: float,
+) -> dict[str, Any] | None:
+    """Find the smallest tested reduction in amount/installment that crosses the cutoff."""
+    threshold = float(bundle["threshold"])
+    if current_probability < threshold:
+        return None
+
+    current_credit = float(raw.loc[0, "AMT_CREDIT"])
+    current_annuity = float(raw.loc[0, "AMT_ANNUITY"])
+    if current_credit <= 0 or current_annuity <= 0:
+        return None
+
+    factors = [1.0, *[round(value, 2) for value in np.arange(0.95, 0.09, -0.05)]]
+    scenarios = [
+        (current_credit * credit_factor, current_annuity * annuity_factor)
+        for credit_factor in factors
+        for annuity_factor in factors
+        if credit_factor != 1.0 or annuity_factor != 1.0
+    ]
+    prepared_scenarios = []
+    for credit, annuity in scenarios:
+        scenario_raw = raw.copy()
+        scenario_raw.loc[0, "AMT_CREDIT"] = credit
+        scenario_raw.loc[0, "AMT_ANNUITY"] = annuity
+        prepared_scenarios.append(
+            cr_prepare_home_credit_application(scenario_raw)
+        )
+
+    candidate_features = pd.concat(prepared_scenarios, ignore_index=True)
+    raw_probabilities = bundle["model"].predict_proba(candidate_features)[:, 1]
+    clipped_probabilities = np.clip(raw_probabilities, 1e-6, 1 - 1e-6)
+    candidate_log_odds = np.log(
+        clipped_probabilities / (1 - clipped_probabilities)
+    ).reshape(-1, 1)
+    scenario_probabilities = bundle["calibrator"].predict_proba(
+        candidate_log_odds
+    )[:, 1]
+
+    candidates: list[dict[str, Any]] = []
+    for (credit, annuity), scenario_probability in zip(
+        scenarios, scenario_probabilities, strict=True
+    ):
+        if scenario_probability < threshold:
+            credit_reduction = 1 - credit / current_credit
+            annuity_reduction = 1 - annuity / current_annuity
+            candidates.append(
+                {
+                    "loan_amount": credit,
+                    "installment": annuity,
+                    "probability": scenario_probability,
+                    "total_reduction": credit_reduction + annuity_reduction,
+                    "changed_parameters": int(credit_reduction > 0)
+                    + int(annuity_reduction > 0),
+                }
+            )
+
+    if not candidates:
+        return None
+    return min(
+        candidates,
+        key=lambda item: (item["total_reduction"], item["changed_parameters"]),
+    )
+
+
+def _affordability_follow_up(affordability_reasons: list[str]) -> str:
+    if affordability_reasons:
+        return "Review the affordability notes and verify income, expenses, and existing debts"
+    return "No extreme affordability flag was found; complete the lender's normal affordability checks"
 
 
 def _build_summary(
@@ -101,6 +159,7 @@ def _build_summary(
     applicant: pd.DataFrame,
     probability: float,
     decision: str,
+    model_threshold: float,
     applicant_reference: str,
     additional_information: dict[str, Any],
 ) -> pd.DataFrame:
@@ -108,7 +167,8 @@ def _build_summary(
     return pd.DataFrame(
         [
             {"Item": "Applicant reference", "Value": applicant_reference},
-            {"Item": "Research-only assessment", "Value": decision},
+            {"Item": "Research-only recommendation", "Value": decision},
+            {"Item": "Validation-selected research cutoff", "Value": f"{model_threshold:.1%}"},
             {"Item": "Estimated payment-difficulty likelihood", "Value": f"{probability:.1%}"},
             {"Item": "Annual income", "Value": raw.loc[0, "AMT_INCOME_TOTAL"]},
             {"Item": "Requested loan amount", "Value": raw.loc[0, "AMT_CREDIT"]},
@@ -243,27 +303,30 @@ def _render_affordability_summary(
         "Loan-to-purchase ratio", f"{row['CREDIT_TO_GOODS_RATIO']:.1%}"
     )
 
-    reasons: list[str] = []
+    concerns: list[str] = []
+    positive_indicators: list[str] = []
     if income <= 0:
-        reasons.append("Annual income is zero or missing, so affordability cannot be assessed reliably.")
+        concerns.append("Annual income is zero or missing, so affordability cannot be assessed reliably.")
     elif monthly_installment_ratio >= 0.4:
-        reasons.append(
+        concerns.append(
             "The proposed installment is a relatively large share of the estimated monthly income."
         )
     elif monthly_installment_ratio <= 0.2:
-        reasons.append(
+        positive_indicators.append(
             "The proposed installment is a relatively small share of the estimated monthly income."
         )
     if row["CREDIT_TO_INCOME_RATIO"] >= 5:
-        reasons.append("The requested loan is large compared with the entered annual income.")
+        concerns.append("The requested loan is large compared with the entered annual income.")
     elif row["CREDIT_TO_INCOME_RATIO"] <= 2:
-        reasons.append("The requested loan is comparatively moderate relative to the entered annual income.")
+        positive_indicators.append("The requested loan is comparatively moderate relative to the entered annual income.")
     if goods_price > 0 and row["CREDIT_TO_GOODS_RATIO"] > 1:
-        reasons.append("The requested loan exceeds the entered purchase-price value.")
-    if reasons:
-        st.warning(f"Affordability warning: {reasons[0]}")
+        concerns.append("The requested loan exceeds the entered purchase-price value.")
+    if concerns:
+        st.warning(f"Affordability concern: {concerns[0]}")
     else:
-        st.success("No extreme affordability indicator was identified from the entered values.")
+        st.success("No high-stress affordability indicator was identified from the entered values.")
+    if positive_indicators:
+        st.caption("Positive screening indicators: " + " ".join(positive_indicators))
     st.info(
         f"Estimated monthly income: {monthly_income:,.2f} source units · "
         f"Installment share of estimated monthly income: "
@@ -275,7 +338,7 @@ def _render_affordability_summary(
         "form. They are not bank affordability rules and do not account for every "
         "household expense or existing obligation."
     )
-    return reasons
+    return concerns
 
 
 def _render_next_steps(
@@ -770,35 +833,69 @@ def render_credit_risk_assessment() -> None:
         st.error(f"Could not assess this application: {exc}")
         return
 
-    band, band_color = _risk_band(probability, raw)
-    decision = (
-        "Higher payment-difficulty likelihood"
-        if probability >= bundle["threshold"]
-        else "Lower payment-difficulty likelihood"
+    research_decision, research_recommendation = _research_recommendation(
+        probability, bundle["threshold"]
     )
+    what_if = _find_yes_what_if(raw, bundle, probability)
     st.subheader("1. Credit Risk Assessment – Main Output")
     result_cols = st.columns(4)
     result_cols[0].metric("Applicant", applicant_reference)
     result_cols[1].metric("Predicted payment-difficulty probability", f"{probability:.1%}")
-    result_cols[2].metric("Risk category", band)
-    result_cols[3].metric("Assessment status", "Completed")
-    st.markdown(f"**Model threshold comparison:** {decision}")
+    result_cols[2].metric("Loan recommendation", research_decision)
+    result_cols[3].metric("Model cutoff", f"{bundle['threshold']:.1%}")
+    if research_decision == "YES":
+        st.success(f"**YES — {research_recommendation}")
+    else:
+        st.error(f"**NO — {research_recommendation}")
     st.caption(
-        "The probability and threshold comparison come from the trained model. "
-        "The risk category is a screening band that combines the model probability "
-        "with affordability stress from the values entered in this form. It is not "
-        "a lender approval or rejection and is not a confidence score."
+        f"The model cutoff is {bundle['threshold']:.1%}, selected to maximize F1 on "
+        "Home Credit validation data. Below the cutoff the research recommendation is "
+        "YES; at or above it the recommendation is NO."
     )
-    band_messages = {
-        "green": st.success,
-        "orange": st.warning,
-        "red": st.error,
-    }
-    band_messages[band_color](
-        f"Risk category: **{band}**. This category is for research decision support only."
+    st.caption(
+        "This is a research-only signal, not a final bank approval or rejection. "
+        "The bank must still check affordability, identity, lending costs, policy, "
+        "and local law. "
+        "Answers about previous credit history and missed payments are recorded as "
+        "additional review information and are not inputs to this model's probability."
     )
+    if research_decision == "NO":
+        st.subheader("What could change the NO? — Model what-if scenarios")
+        if what_if is None:
+            st.info(
+                "No tested reduction in the requested amount or installment brought "
+                "the model estimate below its cutoff. Verify application details and "
+                "use manual review; do not change personal information just to alter the score."
+            )
+        else:
+            changed = []
+            if what_if["loan_amount"] < requested_credit:
+                changed.append(
+                    f"loan amount to {what_if['loan_amount']:,.0f} "
+                    f"({(1 - what_if['loan_amount'] / requested_credit):.0%} lower)"
+                )
+            if what_if["installment"] < annuity:
+                changed.append(
+                    f"installment to {what_if['installment']:,.0f} "
+                    f"({(1 - what_if['installment'] / annuity):.0%} lower)"
+                )
+            st.info(
+                "The smallest tested model scenario that changed the result to YES "
+                f"uses a {' and '.join(changed)}. Its estimated payment-difficulty "
+                f"probability falls from {probability:.1%} to "
+                f"{what_if['probability']:.1%}, below the {bundle['threshold']:.1%} "
+                "research cutoff. This is a what-if "
+                "calculation, not a promise of approval; only consider terms the "
+                "applicant and lender can genuinely agree to."
+            )
+        st.caption(
+            "The what-if search changes only the requested loan amount and estimated "
+            "installment. It does not alter personal or protected characteristics."
+        )
     if alternative_probability is not None:
-        alternative_band, _ = _risk_band(alternative_probability, alternative_raw)
+        alternative_decision, _ = _research_recommendation(
+            alternative_probability, bundle["threshold"]
+        )
         st.subheader("Alternative scenario comparison")
         comparison = pd.DataFrame(
             [
@@ -807,14 +904,14 @@ def render_credit_risk_assessment() -> None:
                     "Loan amount": requested_credit,
                     "Installment": annuity,
                     "Payment-difficulty probability": f"{probability:.1%}",
-                    "Risk category": band,
+                    "Loan recommendation": research_decision,
                 },
                 {
                     "Scenario": "Alternative",
                     "Loan amount": alternative_credit,
                     "Installment": alternative_annuity,
                     "Payment-difficulty probability": f"{alternative_probability:.1%}",
-                    "Risk category": alternative_band,
+                    "Loan recommendation": alternative_decision,
                 },
             ]
         )
@@ -824,9 +921,9 @@ def render_credit_risk_assessment() -> None:
         for warning in validation_warnings:
             st.write(f"- {warning}")
     affordability_reasons = _render_affordability_summary(raw, applicant)
-    recommended_action = _recommended_action(band, affordability_reasons)
-    st.subheader("Recommended bank action")
-    st.info(recommended_action)
+    affordability_follow_up = _affordability_follow_up(affordability_reasons)
+    st.subheader("Separate affordability follow-up")
+    st.info(affordability_follow_up)
     with st.expander("Detailed review", expanded=False):
         shap_factors = _render_shap_explanation(prepared_dir, bundle, applicant)
         _render_applicant_profile(raw, applicant)
@@ -844,7 +941,8 @@ def render_credit_risk_assessment() -> None:
             raw,
             applicant,
             probability,
-            decision,
+            f"{research_decision} — {research_recommendation}",
+            bundle["threshold"],
             applicant_reference,
             additional_information,
         )
