@@ -1,19 +1,526 @@
-/* Shared frontend styles. */
+/* Shared light banking theme for all Streamlit pages and widgets. */
 
+:root {
+    --bank-navy: #102a43;
+    --bank-blue: #1769aa;
+    --bank-teal: #0d9488;
+    --bank-teal-light: #e8f6f7;
+    --bank-ink: #172b4d;
+    --bank-sidebar: #0b1f3a;
+    --bank-muted: #64748b;
+    --bank-surface: #ffffff;
+    --bank-background: #ffffff;
+    --bank-border: #cbd5e1;
+    --bank-success: #15803d;
+    --bank-warning: #d97706;
+    --bank-danger: #dc2626;
+}
 
-/* Shared styles for the research dashboard */
+.stApp {
+    background: var(--bank-background);
+    color: var(--bank-ink);
+}
+
+[data-testid="stAppViewContainer"] {
+    background: var(--bank-background);
+}
+
+[data-testid="stAppViewContainer"] [data-testid="stMarkdownContainer"] p,
+[data-testid="stAppViewContainer"] [data-testid="stWidgetLabel"] *,
+[data-testid="stAppViewContainer"] label,
+[data-testid="stAppViewContainer"] [data-testid="stCaptionContainer"] {
+    color: var(--bank-ink);
+}
+
+[data-testid="stAppViewContainer"] [data-testid="stCaptionContainer"] {
+    color: var(--bank-muted);
+}
+
+[data-testid="stHeader"] {
+    background: transparent;
+}
+
+[data-testid="stSidebar"] {
+    background: var(--bank-sidebar);
+    border-right: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+[data-testid="stSidebar"] * {
+    color: #f5f8fc;
+}
+
+[data-testid="stSidebar"] [data-testid="stMarkdownContainer"] p {
+    color: #d7e5f2;
+}
 
 .block-container {
-    padding-top: 2rem;
-    padding-bottom: 3rem;
+    max-width: 1440px;
+    padding-top: 2.25rem;
+    padding-bottom: 3.5rem;
 }
 
 h1, h2, h3 {
-    letter-spacing: -0.02em;
+    color: var(--bank-ink);
+    letter-spacing: -0.025em;
+    font-weight: 700;
 }
 
+h1 {
+    border-left: 5px solid var(--bank-teal);
+    padding-left: 0.8rem;
+}
+
+h2, h3 {
+    margin-top: 1.4rem;
+}
+
+/* Metric cards are the primary decision-support visual. */
 [data-testid="stMetric"] {
-    border: 1px solid rgba(128, 128, 128, 0.25);
-    padding: 1rem;
-    border-radius: 0.75rem;
+    background: var(--bank-surface);
+    border: 1px solid var(--bank-border);
+    border-top: 4px solid var(--bank-teal);
+    padding: 1rem 1.1rem;
+    min-height: 7rem;
+    border-radius: 0.65rem;
+    box-shadow: 0 3px 12px rgba(11, 31, 58, 0.06);
+}
+
+[data-testid="stMetricLabel"] {
+    color: var(--bank-muted);
+    font-weight: 600;
+}
+
+[data-testid="stMetricValue"] {
+    color: var(--bank-ink);
+    font-weight: 750;
+}
+
+/* Shared controls: scoped to Streamlit widgets so cards and app buttons are untouched. */
+[data-testid="stTextInput"] input,
+[data-testid="stNumberInput"] input,
+[data-testid="stDateInput"] input,
+[data-testid="stTimeInput"] input,
+[data-testid="stTextArea"] textarea {
+    box-sizing: border-box;
+    min-height: 2.65rem;
+    background-color: var(--bank-surface) !important;
+    color: var(--bank-ink) !important;
+    border: 1px solid var(--bank-border) !important;
+    border-radius: 0.5rem !important;
+    padding: 0.55rem 0.75rem;
+    color-scheme: light;
+    transition: border-color 120ms ease, box-shadow 120ms ease;
+}
+
+[data-testid="stTextArea"] textarea {
+    min-height: 6rem;
+    padding: 0.7rem 0.75rem;
+}
+
+[data-testid="stSelectbox"] [data-baseweb="select"] > div,
+[data-testid="stMultiSelect"] [data-baseweb="select"] > div {
+    box-sizing: border-box;
+    min-height: 2.65rem;
+    background-color: var(--bank-surface) !important;
+    color: var(--bank-ink) !important;
+    border: 1px solid var(--bank-border) !important;
+    border-radius: 0.5rem !important;
+    box-shadow: none;
+}
+
+[data-testid="stSelectbox"] [data-baseweb="select"] [role="combobox"],
+[data-testid="stMultiSelect"] [data-baseweb="select"] [role="combobox"],
+[data-testid="stSelectbox"] [data-baseweb="select"] span,
+[data-testid="stMultiSelect"] [data-baseweb="select"] span {
+    color: var(--bank-ink) !important;
+}
+
+[data-testid="stSelectbox"] svg,
+[data-testid="stMultiSelect"] svg,
+[data-testid="stDateInput"] svg {
+    color: var(--bank-muted) !important;
+    fill: currentColor;
+}
+
+[data-testid="stTextInput"] input::placeholder,
+[data-testid="stNumberInput"] input::placeholder,
+[data-testid="stDateInput"] input::placeholder,
+[data-testid="stTimeInput"] input::placeholder,
+[data-testid="stTextArea"] textarea::placeholder {
+    color: var(--bank-muted) !important;
+    opacity: 1;
+}
+
+[data-testid="stTextInput"]:hover input,
+[data-testid="stNumberInput"]:hover input,
+[data-testid="stDateInput"]:hover input,
+[data-testid="stTimeInput"]:hover input,
+[data-testid="stTextArea"]:hover textarea,
+[data-testid="stSelectbox"] [data-baseweb="select"]:hover > div,
+[data-testid="stMultiSelect"] [data-baseweb="select"]:hover > div {
+    border-color: #94a3b8 !important;
+}
+
+[data-testid="stTextInput"]:focus-within input,
+[data-testid="stNumberInput"]:focus-within input,
+[data-testid="stDateInput"]:focus-within input,
+[data-testid="stTimeInput"]:focus-within input,
+[data-testid="stTextArea"]:focus-within textarea,
+[data-testid="stSelectbox"]:focus-within [data-baseweb="select"] > div,
+[data-testid="stMultiSelect"]:focus-within [data-baseweb="select"] > div {
+    background-color: var(--bank-surface) !important;
+    border-color: var(--bank-blue) !important;
+    box-shadow: 0 0 0 2px rgba(15, 91, 154, 0.18) !important;
+    outline: none;
+}
+
+[data-testid="stNumberInput"] button {
+    min-height: 2.65rem;
+    background-color: #f8fafc !important;
+    color: var(--bank-ink) !important;
+    border-color: var(--bank-border) !important;
+}
+
+[data-testid="stNumberInput"] button:hover {
+    background-color: #f1f5f9 !important;
+}
+
+/* BaseWeb renders dropdown menus in a popover outside the widget wrapper. */
+[data-baseweb="popover"] [role="listbox"],
+[data-baseweb="popover"] [role="menu"],
+[data-baseweb="popover"] [role="grid"],
+[data-baseweb="menu"],
+[data-testid="stSelectboxVirtualDropdown"],
+[data-testid="stSelectboxVirtualDropdownEmpty"] {
+    background-color: var(--bank-surface) !important;
+    color: var(--bank-ink) !important;
+    border: 1px solid var(--bank-border);
+    box-shadow: 0 8px 24px rgba(23, 43, 77, 0.14);
+}
+
+[data-baseweb="popover"] [role="option"],
+[data-baseweb="menu"] [role="menuitem"],
+[data-baseweb="popover"] [role="grid"] button,
+[data-testid="stSelectboxVirtualDropdown"] *,
+[data-testid="stSelectboxVirtualDropdown"] [role="option"] {
+    background-color: var(--bank-surface) !important;
+    color: var(--bank-ink) !important;
+}
+
+[data-baseweb="popover"] [role="option"]:hover,
+[data-baseweb="popover"] [role="option"][aria-selected="true"],
+[data-baseweb="menu"] [role="menuitem"]:hover {
+    background-color: #eaf2f9 !important;
+    color: var(--bank-ink) !important;
+}
+
+[data-testid="stSelectboxVirtualDropdown"] [aria-selected="true"],
+[data-testid="stSelectboxVirtualDropdown"] [data-highlighted="true"],
+[data-testid="stSelectboxVirtualDropdown"] [role="option"]:hover {
+    background-color: #eaf2f9 !important;
+    color: var(--bank-ink) !important;
+}
+
+[data-baseweb="popover"] [role="grid"] button:hover {
+    background-color: #eaf2f9 !important;
+    color: var(--bank-ink) !important;
+}
+
+[data-baseweb="tag"] {
+    background-color: #eaf2f9 !important;
+    color: var(--bank-ink) !important;
+}
+
+[data-testid="stTextInput"] input:disabled,
+[data-testid="stNumberInput"] input:disabled,
+[data-testid="stDateInput"] input:disabled,
+[data-testid="stTimeInput"] input:disabled,
+[data-testid="stTextArea"] textarea:disabled,
+[data-testid="stSelectbox"] [aria-disabled="true"] > div,
+[data-testid="stMultiSelect"] [aria-disabled="true"] > div {
+    background-color: #f1f5f9 !important;
+    color: var(--bank-muted) !important;
+    border-color: #dbe2ea !important;
+    opacity: 1;
+    cursor: not-allowed;
+}
+
+[data-testid="stTextInput"] input[aria-invalid="true"],
+[data-testid="stNumberInput"] input[aria-invalid="true"],
+[data-testid="stDateInput"] input[aria-invalid="true"],
+[data-testid="stTimeInput"] input[aria-invalid="true"],
+[data-testid="stTextArea"] textarea[aria-invalid="true"],
+[data-testid="stTextInput"] [data-invalid="true"] input,
+[data-testid="stNumberInput"] [data-invalid="true"] input,
+[data-testid="stSelectbox"] [aria-invalid="true"] > div,
+[data-testid="stMultiSelect"] [aria-invalid="true"] > div {
+    border-color: var(--bank-danger) !important;
+    box-shadow: 0 0 0 1px rgba(220, 38, 38, 0.14);
+}
+
+[data-testid="stCheckbox"] input,
+[data-testid="stRadio"] input,
+[data-testid="stToggle"] input,
+[data-testid="stSlider"] [role="slider"] {
+    accent-color: var(--bank-blue);
+}
+
+[data-testid="stCheckbox"] label,
+[data-testid="stRadio"] label,
+[data-testid="stToggle"] label {
+    color: var(--bank-ink);
+}
+
+[data-testid="stDateInput"] input {
+    color-scheme: light;
+}
+
+/* Primary actions use teal; secondary controls use navy. */
+button[kind="primary"],
+[data-testid="stFormSubmitButton"] button {
+    background: var(--bank-teal);
+    border: 1px solid var(--bank-teal);
+    color: #ffffff;
+    font-weight: 700;
+    border-radius: 0.45rem;
+}
+
+button[kind="primary"]:hover,
+[data-testid="stFormSubmitButton"] button:hover {
+    background: #00747b;
+    border-color: #00747b;
+}
+
+[data-testid="stDownloadButton"] button {
+    background: var(--bank-navy);
+    border: 1px solid var(--bank-navy);
+    color: #ffffff;
+    font-weight: 650;
+    border-radius: 0.45rem;
+}
+
+[data-testid="stDownloadButton"] button:hover {
+    background: var(--bank-blue);
+    border-color: var(--bank-blue);
+}
+
+/* Sections and tables use quiet surfaces rather than heavy decoration. */
+[data-testid="stExpander"] {
+    background: var(--bank-surface);
+    border: 1px solid var(--bank-border);
+    border-radius: 0.65rem;
+    box-shadow: 0 2px 8px rgba(11, 31, 58, 0.04);
+}
+
+[data-testid="stDataFrame"] {
+    border: 1px solid var(--bank-border);
+    border-radius: 0.45rem;
+}
+
+[data-testid="stAlert"] {
+    border-radius: 0.55rem;
+    border-left-width: 4px;
+}
+
+[data-testid="stAlert"] p,
+[data-testid="stAlert"] li {
+    color: var(--bank-ink);
+}
+
+[data-testid="stAlert"][kind="warning"] {
+    background: #fff7e6;
+    border-left-color: var(--bank-warning);
+}
+
+[data-testid="stAlert"][kind="success"] {
+    background: #eaf7ef;
+    border-left-color: var(--bank-success);
+}
+
+[data-testid="stAlert"][kind="error"] {
+    background: #fff0ef;
+    border-left-color: var(--bank-danger);
+}
+
+hr {
+    border-color: var(--bank-border);
+}
+
+small, [data-testid="stCaptionContainer"] {
+    color: var(--bank-muted);
+}
+
+/* FinSight home hero and component navigation. */
+.st-key-home_hero {
+    background: #ffffff;
+    border: 1px solid var(--bank-border);
+    border-radius: 1rem;
+    box-shadow: 0 8px 26px rgba(16, 42, 67, 0.07);
+    padding: 1.4rem 1.5rem;
+}
+
+.st-key-home_hero h1 {
+    border: 0;
+    padding: 0;
+    margin: 0.2rem 0 0.7rem;
+    color: var(--bank-navy);
+    font-size: clamp(2rem, 3.2vw, 3rem);
+    font-weight: 760;
+    letter-spacing: -0.035em;
+    line-height: 1.08;
+    max-width: 18ch;
+}
+
+.st-key-home_hero .home-hero-eyebrow {
+    color: var(--bank-teal);
+    font-size: 0.78rem;
+    font-weight: 650;
+    letter-spacing: 0.045em;
+    line-height: 1.45;
+}
+
+.st-key-home_hero .home-hero-copy {
+    color: var(--bank-muted);
+    font-size: 1.02rem;
+    line-height: 1.65;
+    max-width: 52rem;
+}
+
+.st-key-home_hero_visual [data-testid="stImage"] img {
+    display: block;
+    width: 100%;
+    height: clamp(15rem, 25vw, 22rem);
+    object-fit: cover;
+    object-position: center;
+    border: 1px solid rgba(16, 42, 67, 0.1);
+    border-radius: 0.85rem;
+}
+
+.st-key-home_hero_visual [data-testid="stCaptionContainer"] {
+    margin-top: 0.35rem;
+    text-align: right;
+    font-size: 0.72rem;
+}
+
+[class*="st-key-home_nav_"] button[kind="secondary"] {
+    width: 100%;
+    min-height: 3.1rem;
+    color: var(--bank-ink) !important;
+    background: #ffffff !important;
+    border: 1px solid var(--bank-border) !important;
+    border-radius: 0.65rem !important;
+    font-weight: 650;
+    transition: background-color 120ms ease, border-color 120ms ease, color 120ms ease;
+}
+
+[class*="st-key-home_nav_"] button[kind="secondary"]:hover {
+    color: var(--bank-navy) !important;
+    background: #f4f7fb !important;
+    border-color: var(--bank-blue) !important;
+}
+
+[class*="st-key-home_nav_credit"] button[kind="primary"],
+[class*="st-key-home_nav_inclusion"] button[kind="primary"],
+[class*="st-key-home_nav_market"] button[kind="primary"],
+[class*="st-key-home_nav_wellbeing"] button[kind="primary"] {
+    width: 100%;
+    min-height: 3.1rem;
+    color: var(--bank-navy) !important;
+    background: var(--bank-teal-light) !important;
+    border: 1px solid var(--bank-teal) !important;
+    border-radius: 0.65rem !important;
+    font-weight: 700;
+    box-shadow: inset 0 -2px 0 var(--bank-teal);
+}
+
+[class*="st-key-home_nav_"] button[kind="secondary"]:active,
+[class*="st-key-home_nav_"] button[kind="primary"]:active {
+    color: var(--bank-navy) !important;
+    background: #d9f0ee !important;
+    border-color: var(--bank-teal) !important;
+}
+
+[class*="st-key-home_nav_"] button[kind="primary"]:hover {
+    color: var(--bank-navy) !important;
+    background: #d9f0ee !important;
+    border-color: var(--bank-teal) !important;
+}
+
+.st-key-home_return_to_overview button {
+    color: var(--bank-navy) !important;
+    background: #ffffff !important;
+    border: 1px solid var(--bank-border) !important;
+    border-radius: 0.65rem !important;
+    font-weight: 650;
+}
+
+.st-key-home_return_to_overview button:hover,
+.st-key-home_return_to_overview button:active {
+    color: var(--bank-navy) !important;
+    background: #edf7f7 !important;
+    border-color: var(--bank-teal) !important;
+}
+
+[class*="st-key-home_nav_"] button:focus-visible {
+    outline: 3px solid rgba(23, 105, 170, 0.32);
+    outline-offset: 2px;
+}
+
+.st-key-home_return_to_overview button:focus-visible {
+    outline: 3px solid rgba(13, 148, 136, 0.3);
+    outline-offset: 2px;
+}
+
+@media (max-width: 900px) {
+    [data-testid="stHorizontalBlock"]:has([class*="st-key-home_nav_"]) {
+        flex-wrap: wrap !important;
+    }
+
+    [data-testid="stHorizontalBlock"]:has([class*="st-key-home_nav_"]) [data-testid="column"] {
+        flex: 1 1 calc(50% - 0.5rem) !important;
+        min-width: 11rem;
+    }
+}
+
+@media (max-width: 560px) {
+    [data-testid="stHorizontalBlock"]:has([class*="st-key-home_nav_"]) [data-testid="column"] {
+        flex-basis: 100% !important;
+    }
+}
+
+[class*="st-key-home_component_card_"] [data-testid="stVerticalBlockBorderWrapper"],
+[class*="st-key-home_workflow_step_"] [data-testid="stVerticalBlockBorderWrapper"],
+[class*="st-key-home_value_card_"] [data-testid="stVerticalBlockBorderWrapper"] {
+    height: 100%;
+    background: #ffffff;
+    border: 1px solid var(--bank-border);
+    border-radius: 0.85rem;
+    box-shadow: 0 4px 15px rgba(16, 42, 67, 0.055);
+}
+
+[class*="st-key-home_component_card_"] [data-testid="stVerticalBlockBorderWrapper"] {
+    min-height: 17rem;
+}
+
+.home-component-icon {
+    color: var(--bank-teal);
+    font-size: 1.55rem;
+}
+
+.home-feature-list {
+    color: var(--bank-muted);
+    line-height: 1.55;
+    padding-left: 1.15rem;
+}
+
+.home-disclaimer {
+    border-left: 4px solid var(--bank-teal);
+    background: #f4f7fb;
+    border-radius: 0.4rem;
+    color: var(--bank-ink);
+    padding: 0.9rem 1rem;
+}
+
+@media (max-width: 900px) {
+    .st-key-home_hero { padding: 1rem; }
 }
