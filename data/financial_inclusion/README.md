@@ -17,7 +17,7 @@ Profile definitions, KMeans metadata, pipeline scripts, and several reviewed rep
 ### Run with the existing saved results
 
 1. Ask the project data owner for the approved Component 02 runtime-artifact bundle and confirm that its redistribution to the team is permitted. Do not commit or upload Global Findex microdata, respondent-level derived files, or model artifacts until their licenses and project rules explicitly allow it.
-2. Copy the bundle into this repository while retaining the paths listed above. Include the SHAP CSV/JSON files if the SHAP research panel is required. The dashboard reports the expected path when a required result is unavailable; it does not substitute example values.
+2. Copy the approved runtime bundle into this repository while retaining its repository-relative paths. The global SHAP summary is safe to share as an aggregate and is included in the explicit `.gitignore` allowlist. Local SHAP contributions, saved respondent predictions, analytical datasets, labels, and trained model binaries remain in the private bundle. The global SHAP chart displays without the local example files; the detailed local-example panel requires them. The dashboard reports the expected path when a required private artifact is unavailable; it does not substitute example values.
 3. From the repository root, create/activate a Python environment, install `requirements.txt`, and run `streamlit run frontend/app.py`.
 
 ### Rebuild artifacts from authorized source data

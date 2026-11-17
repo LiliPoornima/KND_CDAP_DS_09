@@ -1,0 +1,7 @@
+cluster,score_connectivity,score_financial_access,score_digital_financial_usage,score_digital_safety,score_financial_resilience
+0,0.7653,1.0,1.0,0.0,0.534
+1,0.9522,1.0,1.0,1.0,0.5928
+2,0.9094,0.0,0.0,1.0,0.4299
+3,0.7035,0.0,0.0,0.0,0.386
+4,0.7341,1.0,0.0,0.0,0.4285
+5,0.9216,1.0,0.0,1.0,0.4549

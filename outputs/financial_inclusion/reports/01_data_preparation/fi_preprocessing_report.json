@@ -1,0 +1,24 @@
+{
+  "source_file": "findex_microdata_2025_labelled_update112425.csv",
+  "row_count": 144090,
+  "column_count": 199,
+  "duplicate_column_count": 0,
+  "duplicate_wpid_random_count": 0,
+  "missing_wpid_random_count": 0,
+  "required_columns": [
+    "year",
+    "economy",
+    "economycode",
+    "wpid_random",
+    "wgt",
+    "account_fin",
+    "internet_use",
+    "con1"
+  ],
+  "missing_cells_total": 18562961,
+  "missing_value_report": "outputs\\financial_inclusion\\reports\\fi_missing_value_report.csv",
+  "processed_file": "data\\financial_inclusion\\processed\\fi_microdata_preprocessed.csv",
+  "response_codes_changed": false,
+  "rows_dropped": 0,
+  "missing_values_imputed": false
+}

@@ -427,9 +427,11 @@ def _shap_research() -> None:
     local_path = SHAP_REPORTS / "fi_shap_local_explanations.csv"
     predictions_path = SHAP_REPORTS / "fi_shap_predictions.csv"
     validation_path = SHAP_REPORTS / "fi_shap_validation_summary.json"
-    global_imp, local, predictions = map(_read_csv, [global_path, local_path, predictions_path])
+    global_imp = _read_csv(global_path)
+    local = _read_csv(local_path)
+    predictions = _read_csv(predictions_path)
     validation = _read_json(validation_path)
-    if global_imp is None or local is None or predictions is None:
+    if global_imp is None:
         _missing_artifact(global_path)
         return
     cluster_id = st.selectbox("Profile class to explain", CLUSTER_IDS,
@@ -441,6 +443,12 @@ def _shap_research() -> None:
                    color="mean_absolute_shap_decision_score", color_continuous_scale=["#cbd5e1", "#0f766e"])
     chart.update_layout(height=350, coloraxis_showscale=False, xaxis_title="Mean absolute contribution to decision score", yaxis_title="")
     st.plotly_chart(chart, use_container_width=True)
+    if local is None or predictions is None:
+        if predictions is None:
+            _missing_artifact(predictions_path)
+        if local is None:
+            _missing_artifact(local_path)
+        return
     options = predictions["row_index"].astype(int).tolist()
     row_index = st.selectbox("Saved validation example", options, format_func=lambda row: f"Example {row + 1}", key="new_fi_shap_example")
     row = predictions.loc[predictions.row_index == row_index].iloc[0]

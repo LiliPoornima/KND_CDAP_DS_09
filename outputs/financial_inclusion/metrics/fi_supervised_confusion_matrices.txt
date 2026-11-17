@@ -1,0 +1,27 @@
+
+=== Logistic Regression ===
+Rows = actual clusters; columns = predicted clusters
+Cluster order: [0, 1, 2, 3, 4]
+[[ 547  560  172  440  303]
+ [ 677 2274  802  386  576]
+ [ 168  361  728  331  213]
+ [ 328  203  302  646  277]
+ [  85  147  202  204  369]]
+
+=== Random Forest ===
+Rows = actual clusters; columns = predicted clusters
+Cluster order: [0, 1, 2, 3, 4]
+[[ 496  646  251  406  223]
+ [ 829 2226  663  513  484]
+ [ 235  488  522  360  196]
+ [ 366  313  298  526  253]
+ [ 166  264  154  188  235]]
+
+=== XGBoost ===
+Rows = actual clusters; columns = predicted clusters
+Cluster order: [0, 1, 2, 3, 4]
+[[ 306 1257   33  338   88]
+ [ 232 3913  179  324   67]
+ [  61  988  407  317   28]
+ [ 244  706  140  596   70]
+ [  86  520   74  205  122]]
