@@ -70,7 +70,12 @@ def _read_json(path: Path) -> dict:
 
 
 def _missing_artifact(path: Path) -> None:
-    st.info(f"Saved result is not available: {path.relative_to(ROOT)}")
+    st.info(
+        f"Saved Component 02 result is missing: {path.relative_to(ROOT)}. "
+        "Restore the approved runtime artifact at this repository-relative "
+        "path or follow data/financial_inclusion/README.md to rebuild it "
+        "from authorized source data."
+    )
 
 
 def _inject_styles() -> None:

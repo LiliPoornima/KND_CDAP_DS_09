@@ -34,7 +34,12 @@ def load_profile_artifacts():
     """Load and validate the saved model and its metadata."""
     for path in [MODEL_FILE, METADATA_FILE, PROFILE_FILE]:
         if not path.exists():
-            raise FileNotFoundError(f"Required artifact not found: {path}")
+            raise FileNotFoundError(
+                f"Required Component 02 profile artifact not found: {path}. "
+                "Copy the approved artifact bundle to its repository-relative "
+                "location or follow data/financial_inclusion/README.md to "
+                "rebuild it from authorized source data."
+            )
 
     metadata = json.loads(METADATA_FILE.read_text(encoding="utf-8"))
     profile_metadata = json.loads(
