@@ -1,11 +1,15 @@
 """Global financial analytics application and explicit component navigation."""
 
 from pathlib import Path
+import sys
 
 import streamlit as st
 
 
 FRONTEND_DIR = Path(__file__).resolve().parent
+PROJECT_ROOT = FRONTEND_DIR.parent
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
 STYLES_PATH = FRONTEND_DIR / "assets" / "styles" / "main.css"
 
 st.set_page_config(
@@ -141,31 +145,12 @@ def _render_selected_component(selected: str) -> None:
             "The existing sidebar destination remains available, but its page currently contains no rendered interface."
         )
     else:
-        st.title("Component 04 · Financial Well-being Assessment")
-        st.info(
-            "A Financial Well-being assessment interface is not available in this project yet. "
-            "The separate Fraud Detection component remains available in the existing sidebar. No placeholder results are shown."
-    st.divider()
-    st.subheader("Research Components")
-    left, right = st.columns(2)
-    with left:
-        st.markdown("### Credit Risk")
-        st.write("Explore credit-risk research findings and evaluation.")
-        st.markdown("### Financial Inclusion")
-        st.write(
-            "Explore saved inclusion profiles, explainable model outputs, "
-            "population gaps, and individual assessment."
+        from frontend.financial_capability.sections.individual_assessment import (
+            render_home_assessment as render_wellbeing_home_assessment,
         )
-        st.markdown("### Market Risk")
-        st.write("Explore market-risk research findings and evaluation.")
-    with right:
-        st.markdown("### Fraud Detection")
-        st.write("Explore fraud-detection research findings and evaluation.")
-        st.markdown("### Component 04 – Financial Well-being Assessment")
-        st.write(
-            "Independent Explainable Financial Well-being Assessment System for "
-            "Bank Loan Decision Support (Saving, Budgeting, Knowledge, Goal Planning, SHAP & Report)."
-        )
+
+        render_wellbeing_home_assessment()
+
 
 
 def _render_home() -> None:

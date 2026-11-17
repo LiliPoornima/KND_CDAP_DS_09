@@ -129,8 +129,11 @@ def explain_individual(pipeline, one_row: pd.DataFrame, class_index: Optional[in
 def describe_local_explanation(result: Dict[str, Any], top_n: int = 5) -> List[str]:
     """Plain-language sentences that match the sign of each SHAP value."""
     cls = result["class_name"]
+    table = result["table"]
+    answered_table = table[table["answer"] != "Not answered"]
+    source_table = answered_table if not answered_table.empty else table
     sentences = []
-    for _, r in result["table"].head(top_n).iterrows():
+    for _, r in source_table.head(top_n).iterrows():
         if r["shap_value"] == 0:
             continue
         verb = "pushed the model toward" if r["shap_value"] > 0 else "pushed the model away from"

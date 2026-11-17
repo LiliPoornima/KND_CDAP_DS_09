@@ -143,6 +143,82 @@ FINTECH_CSS = """
     background-color: #F1F5F9;
     color: #64748B;
 }
+
+/* Fix dark-mode button, expander, and form-submit contrast in FinSight AI */
+[data-testid="stButton"] button[kind="secondary"] {
+    background-color: #F8FAFC !important;
+    color: #0F172A !important;
+    border: 1px solid #CBD5E1 !important;
+    border-radius: 8px !important;
+    font-weight: 600 !important;
+}
+[data-testid="stButton"] button[kind="secondary"] p,
+[data-testid="stButton"] button[kind="secondary"] span {
+    color: #0F172A !important;
+}
+[data-testid="stButton"] button[kind="secondary"]:hover {
+    background-color: #EFF6FF !important;
+    border-color: #2563EB !important;
+    color: #1E3A8A !important;
+}
+
+[data-testid="stButton"] button[kind="primary"],
+[data-testid="stFormSubmitButton"] button {
+    background-color: #0D9488 !important;
+    border: 1px solid #0D9488 !important;
+    color: #FFFFFF !important;
+    border-radius: 8px !important;
+    font-weight: 700 !important;
+    min-height: 2.75rem !important;
+}
+[data-testid="stButton"] button[kind="primary"] p,
+[data-testid="stButton"] button[kind="primary"] span,
+[data-testid="stFormSubmitButton"] button p,
+[data-testid="stFormSubmitButton"] button span {
+    color: #FFFFFF !important;
+}
+[data-testid="stButton"] button[kind="primary"]:hover,
+[data-testid="stFormSubmitButton"] button:hover {
+    background-color: #0F766E !important;
+    border-color: #0F766E !important;
+}
+
+[data-testid="stDownloadButton"] button {
+    background-color: #102A43 !important;
+    border: 1px solid #102A43 !important;
+    color: #FFFFFF !important;
+    border-radius: 8px !important;
+    font-weight: 600 !important;
+}
+[data-testid="stDownloadButton"] button p,
+[data-testid="stDownloadButton"] button span {
+    color: #FFFFFF !important;
+}
+
+[data-testid="stExpander"],
+[data-testid="stExpander"] details {
+    background-color: #FFFFFF !important;
+    border: 1px solid #CBD5E1 !important;
+    border-radius: 10px !important;
+    color: #0F172A !important;
+}
+[data-testid="stExpander"] summary {
+    background-color: #F8FAFC !important;
+    color: #0F172A !important;
+    border-radius: 10px !important;
+    padding: 0.65rem 0.9rem !important;
+}
+[data-testid="stExpander"] summary p,
+[data-testid="stExpander"] summary span,
+[data-testid="stExpander"] summary svg {
+    color: #0F172A !important;
+    fill: #0F172A !important;
+    font-weight: 600 !important;
+}
+[data-testid="stExpanderDetails"] {
+    background-color: #FFFFFF !important;
+    color: #0F172A !important;
+}
 </style>
 """
 
