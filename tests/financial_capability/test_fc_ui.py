@@ -61,7 +61,10 @@ def test_assessment_flow_end_to_end():
 
     at.radio[0].set_value("Individual Assessment").run()
     next(b for b in at.button if b.label == "Use example answers").click().run()
-    next(b for b in at.button if b.label == "Run assessment").click().run()
+    next(
+        b for b in at.button
+        if b.label in {"Run assessment", "Generate Financial Well-being Assessment"}
+    ).click().run()
     assert not at.exception
     metrics = {m.label: m.value for m in at.metric}
     assert metrics["Predicted financial well-being category"] in {"Low", "Medium", "High"}

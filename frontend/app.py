@@ -145,50 +145,11 @@ def _render_selected_component(selected: str) -> None:
             "The existing sidebar destination remains available, but its page currently contains no rendered interface."
         )
     else:
-        from frontend.financial_capability.constants import (
-            BANK_LOAN_NOTICE,
-            COMPONENT_SUBTITLE,
-            SECTIONS,
+        from frontend.financial_capability.sections.individual_assessment import (
+            render_home_assessment as render_wellbeing_home_assessment,
         )
-        from frontend.financial_capability.sections import (
-            capability_gaps,
-            data_quality,
-            individual_assessment,
-            methodology,
-            model_performance,
-            overview,
-            shap_explanation,
-            what_if,
-        )
-        from frontend.financial_capability.styles import inject_fintech_styles
 
-        inject_fintech_styles()
-        st.title("Component 04 · Financial Well-being Assessment")
-        st.caption(COMPONENT_SUBTITLE)
-
-        renderers = {
-            SECTIONS[0]: overview.render,
-            SECTIONS[1]: data_quality.render,
-            SECTIONS[2]: model_performance.render,
-            SECTIONS[3]: individual_assessment.render,
-            SECTIONS[4]: shap_explanation.render,
-            SECTIONS[5]: capability_gaps.render,
-            SECTIONS[6]: what_if.render,
-            SECTIONS[7]: methodology.render,
-        }
-        selected_tab = st.radio(
-            "Component 04 section",
-            SECTIONS,
-            index=3,
-            horizontal=True,
-            key="home_fc_section_radio",
-        )
-        st.divider()
-        renderers[selected_tab]()
-        st.divider()
-        st.caption(
-            f"Component 04 | {BANK_LOAN_NOTICE} | Trained on CFPB NFWBS 2016 public survey data."
-        )
+        render_wellbeing_home_assessment()
 
 
 
