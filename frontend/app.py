@@ -1,11 +1,15 @@
 """Global financial analytics application and explicit component navigation."""
 
 from pathlib import Path
+import sys
 
 import streamlit as st
 
 
 FRONTEND_DIR = Path(__file__).resolve().parent
+PROJECT_ROOT = FRONTEND_DIR.parent
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
 STYLES_PATH = FRONTEND_DIR / "assets" / "styles" / "main.css"
 
 st.set_page_config(
@@ -141,11 +145,12 @@ def _render_selected_component(selected: str) -> None:
             "The existing sidebar destination remains available, but its page currently contains no rendered interface."
         )
     else:
-        st.title("Component 04 · Financial Well-being Assessment")
-        st.info(
-            "A Financial Well-being assessment interface is not available in this project yet. "
-            "The separate Fraud Detection component remains available in the existing sidebar. No placeholder results are shown."
+        from frontend.financial_capability.sections.individual_assessment import (
+            render_home_assessment as render_wellbeing_home_assessment,
         )
+
+        render_wellbeing_home_assessment()
+
 
 
 def _render_home() -> None:
@@ -222,6 +227,10 @@ navigation = st.navigation(
 
 
 
+        st.Page("pages/4_Fraud_Detection.py",
+                title="Fraud Detection", icon="🛡️"),
+        st.Page("pages/7_Financial_Capability.py",
+                title="Financial Well-being (Component 04)", icon="🏦"),
         # The new comparison page is separate; the original Financial Inclusion
         # destination above keeps its existing page and behavior.
 
