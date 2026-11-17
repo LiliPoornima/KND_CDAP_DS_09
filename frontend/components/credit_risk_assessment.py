@@ -746,6 +746,7 @@ def _render_counterfactual_recourse(
                     st.button(
                         "Apply target to applicant form",
                         key=f"apply_counterfactual_{idx}",
+                        type="primary",
                         use_container_width=True,
                         on_click=_apply_counterfactual_target,
                         args=(
@@ -969,19 +970,15 @@ def render_credit_risk_assessment() -> None:
         _show_missing(split_paths[0])
         return
 
-    # Initialise session-state defaults for the three financial inputs so that
-    # "Apply this value" buttons in the counterfactual section can pre-populate them.
-    if "cr_income" not in st.session_state:
-        st.session_state["cr_income"] = 150000.0
-    if "cr_credit" not in st.session_state:
-        st.session_state["cr_credit"] = 500000.0
-    if "cr_annuity" not in st.session_state:
-        st.session_state["cr_annuity"] = 25000.0
+    if "cr_empty_form_initialized" not in st.session_state:
+        for key in ("cr_income", "cr_credit", "cr_annuity"):
+            st.session_state.pop(key, None)
+        st.session_state["cr_empty_form_initialized"] = True
 
     with st.form("applicant_credit_assessment"):
         applicant_reference = st.text_input(
             "Applicant reference",
-            value="Applicant 001",
+            value="",
             help="Application or borrower identifier for tracking and reporting.",
         )
         st.subheader("Requested credit")
@@ -989,14 +986,14 @@ def render_credit_risk_assessment() -> None:
         income = amount_cols[0].number_input(
             "Annual income",
             min_value=0.0,
-            value=float(st.session_state["cr_income"]),
+            value=None,
             step=10000.0,
             key="cr_income",
         )
         requested_credit = amount_cols[1].number_input(
             "Requested loan amount",
             min_value=0.0,
-            value=float(st.session_state["cr_credit"]),
+            value=None,
             step=10000.0,
             key="cr_credit",
         )
@@ -1004,7 +1001,7 @@ def render_credit_risk_assessment() -> None:
         annuity = amount_cols[0].number_input(
             "Estimated installment amount",
             min_value=0.0,
-            value=float(st.session_state["cr_annuity"]),
+            value=None,
             step=1000.0,
             help="Enter the proposed monthly installment amount.",
             key="cr_annuity",
@@ -1065,24 +1062,24 @@ def render_credit_risk_assessment() -> None:
             "IT staff",
         ]
         left, right = st.columns(2)
-        contract = left.selectbox("Loan product type", ["Cash loans", "Revolving loans"])
-        income_type = right.selectbox("Employment / income category", employment_options)
-        education = left.selectbox("Education category", education_options)
-        family = right.selectbox("Family status", family_options)
-        housing = left.selectbox("Housing category", housing_options)
-        occupation = right.selectbox("Occupation", occupation_options)
-        car = left.selectbox("Own a car", ["No", "Yes"])
-        property_owner = right.selectbox("Own property", ["No", "Yes"])
+        contract = left.selectbox("Loan product type", ["Select loan type", "Cash loans", "Revolving loans"])
+        income_type = right.selectbox("Employment / income category", ["Select category", *employment_options])
+        education = left.selectbox("Education category", ["Select category", *education_options])
+        family = right.selectbox("Family status", ["Select status", *family_options])
+        housing = left.selectbox("Housing category", ["Select category", *housing_options])
+        occupation = right.selectbox("Occupation", ["Select occupation", *occupation_options])
+        car = left.selectbox("Own a car", ["Select answer", "No", "Yes"])
+        property_owner = right.selectbox("Own property", ["Select answer", "No", "Yes"])
 
         detail_cols = st.columns(3)
         children = detail_cols[0].number_input(
-            "Number of children", min_value=0, value=0, step=1
+            "Number of children", min_value=0, value=None, step=1
         )
         household = detail_cols[1].number_input(
-            "Household size", min_value=1, value=2, step=1
+            "Household size", min_value=1, value=None, step=1
         )
         years_employed = detail_cols[2].number_input(
-            "Years employed", min_value=0.0, value=5.0, step=1.0
+            "Years employed", min_value=0.0, value=None, step=1.0
         )
         st.markdown("**Existing Obligations & Credit Bureau Context (Optional)**")
         additional_information_provided = st.checkbox(
@@ -1101,31 +1098,31 @@ def render_credit_risk_assessment() -> None:
             additional_information["monthly_debt"] = additional_cols[0].number_input(
                 "Existing monthly debt repayments",
                 min_value=0.0,
-                value=0.0,
+                value=None,
                 step=1000.0,
             )
             additional_information["outstanding_balance"] = additional_cols[1].number_input(
                 "Outstanding loan balances",
                 min_value=0.0,
-                value=0.0,
+                value=None,
                 step=10000.0,
             )
             additional_cols = st.columns(3)
             additional_information["missed_payments"] = additional_cols[0].number_input(
                 "Previous missed payments",
                 min_value=0,
-                value=0,
+                value=None,
                 step=1,
             )
             additional_information["credit_history"] = additional_cols[1].selectbox(
                 "Previous credit history",
-                ["No known adverse history", "Adverse history", "Unknown / not reported"],
+                ["Select history", "No known adverse history", "Adverse history", "Unknown / not reported"],
             )
             additional_information["credit_utilisation"] = additional_cols[2].number_input(
                 "Credit utilisation (%)",
                 min_value=0.0,
                 max_value=100.0,
-                value=0.0,
+                value=None,
                 step=1.0,
             )
         submitted = st.form_submit_button(
@@ -1134,6 +1131,41 @@ def render_credit_risk_assessment() -> None:
 
     if not submitted:
         st.info("Complete the applicant information above and select **Run Credit Assessment**.")
+        return
+
+    missing_values = []
+    required_inputs = {
+        "Annual income": income,
+        "Requested loan amount": requested_credit,
+        "Estimated installment amount": annuity,
+        "Number of children": children,
+        "Household size": household,
+        "Years employed": years_employed,
+    }
+    missing_values.extend(label for label, value in required_inputs.items() if value is None)
+    required_choices = {
+        "Loan product type": contract,
+        "Employment / income category": income_type,
+        "Education category": education,
+        "Family status": family,
+        "Housing category": housing,
+        "Occupation": occupation,
+        "Own a car": car,
+        "Own property": property_owner,
+    }
+    missing_values.extend(
+        label for label, value in required_choices.items() if value.startswith("Select ")
+    )
+    if missing_values:
+        st.error("Complete the required applicant fields before running the assessment.")
+        st.write("Missing: " + ", ".join(missing_values))
+        return
+
+    if additional_information_provided and any(
+        additional_information[key] is None
+        for key in ("monthly_debt", "outstanding_balance", "missed_payments", "credit_utilisation")
+    ):
+        st.error("Complete the optional debt and credit-history fields, or uncheck that section.")
         return
 
     signature = tuple(path.stat().st_mtime_ns for path in split_paths)

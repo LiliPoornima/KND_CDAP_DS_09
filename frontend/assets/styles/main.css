@@ -304,6 +304,24 @@ button[kind="primary"]:hover,
     border-color: var(--bank-blue);
 }
 
+/* Keep Component 1 recourse actions readable on both light and dark themes. */
+[data-testid="stAppViewContainer"] [class*="st-key-apply_counterfactual_"] button {
+    background-color: var(--bank-teal) !important;
+    border: 1px solid var(--bank-teal) !important;
+    color: #ffffff !important;
+    font-weight: 700 !important;
+    min-height: 2.75rem;
+}
+
+[data-testid="stAppViewContainer"] [class*="st-key-apply_counterfactual_"] button * {
+    color: #ffffff !important;
+}
+
+[data-testid="stAppViewContainer"] [class*="st-key-apply_counterfactual_"] button:hover:not(:disabled) {
+    background-color: #00747b !important;
+    border-color: #00747b !important;
+}
+
 /* Sections and tables use quiet surfaces rather than heavy decoration. */
 [data-testid="stExpander"] {
     background: var(--bank-surface);
