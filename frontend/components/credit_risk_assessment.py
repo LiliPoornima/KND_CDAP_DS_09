@@ -68,6 +68,8 @@ def _out_of_training_range(raw: pd.DataFrame, bundle: dict[str, Any]) -> list[st
     warnings = []
     for column in APPLICATION_AMOUNT_COLUMNS:
         value = float(raw.loc[0, column])
+        if pd.isna(value):
+            continue
         observed = bundle["training_amount_ranges"][column]
         if value < observed["lower_supported"]:
             warnings.append(
@@ -96,11 +98,6 @@ def _validate_application(raw: pd.DataFrame) -> tuple[list[str], list[str]]:
             "The installment is higher than the entered monthly income; "
             "the affordability estimate may indicate higher payment difficulty."
         )
-    if row["AMT_CREDIT"] > row["AMT_GOODS_PRICE"] > 0:
-        warnings.append(
-            "The requested loan is greater than the purchase-price value. "
-            "This may be valid for cash loans, refinancing, fees, or additional expenses."
-        )
     if row["CNT_FAM_MEMBERS"] < row["CNT_CHILDREN"] + 1:
         errors.append("Household size must be at least the number of children plus one.")
     return errors, warnings
@@ -110,23 +107,21 @@ def _research_recommendation(
     probability: float,
     model_threshold: float,
 ) -> tuple[str, str]:
-    """Return a binary research recommendation and its explanation."""
-    if probability >= model_threshold:
-        margin_pp = (probability - model_threshold) * 100
+    """Apply the project's requested probability-to-label mapping."""
+    if probability < model_threshold:
         return (
             "NO",
-            f"Estimated payment-difficulty risk is {probability:.1%}, "
-            f"{margin_pp:.1f} percentage points above the {model_threshold:.1%} "
-            "research cutoff. Under this screening rule the result is NO and needs "
-            "manual review; this is not a final bank rejection.",
+            f"Under the requested project rule, NO means do not offer the loan: "
+            f"payment-difficulty probability {probability:.1%} is below the "
+            f"{model_threshold:.1%} cutoff. Affordability and other bank checks "
+            "must still be reviewed separately.",
         )
-    margin_pp = (model_threshold - probability) * 100
     return (
         "YES",
-        f"Estimated payment-difficulty risk is {probability:.1%}, "
-        f"{margin_pp:.1f} percentage points below the {model_threshold:.1%} "
-        "research cutoff. The model signal supports proceeding to affordability "
-        "and collateral review; it is not a final approval.",
+        f"Under the requested project rule, YES means offer the loan: payment-difficulty "
+        f"probability {probability:.1%} is at or above the {model_threshold:.1%} cutoff. "
+        "This is a project-defined label, not a bank approval; review affordability "
+        "and other lending checks separately.",
     )
 
 
@@ -196,10 +191,8 @@ def _build_summary(
             {"Item": "Annual income", "Value": raw.loc[0, "AMT_INCOME_TOTAL"]},
             {"Item": "Requested loan amount", "Value": raw.loc[0, "AMT_CREDIT"]},
             {"Item": "Estimated installment", "Value": raw.loc[0, "AMT_ANNUITY"]},
-            {"Item": "Purchase price / goods value", "Value": raw.loc[0, "AMT_GOODS_PRICE"]},
             {"Item": "Loan-to-income ratio", "Value": f"{row['CREDIT_TO_INCOME_RATIO']:.2f}x"},
             {"Item": "Installment-to-income ratio", "Value": f"{row['ANNUITY_TO_INCOME_RATIO']:.1%}"},
-            {"Item": "Loan-to-purchase ratio", "Value": f"{row['CREDIT_TO_GOODS_RATIO']:.1%}"},
             {"Item": "Employment / income category", "Value": raw.loc[0, "NAME_INCOME_TYPE"]},
             {"Item": "Education category", "Value": raw.loc[0, "NAME_EDUCATION_TYPE"]},
             {"Item": "Family status", "Value": raw.loc[0, "NAME_FAMILY_STATUS"]},
@@ -304,10 +297,8 @@ def _render_affordability_summary(
     row = applicant.iloc[0]
     income = float(raw.loc[0, "AMT_INCOME_TOTAL"])
     annuity = float(raw.loc[0, "AMT_ANNUITY"])
-    goods_price = float(raw.loc[0, "AMT_GOODS_PRICE"])
-
     st.subheader("2. Financial Affordability Analysis")
-    summary_cols = st.columns(3)
+    summary_cols = st.columns(2)
     summary_cols[0].metric(
         "Loan-to-income ratio", f"{row['CREDIT_TO_INCOME_RATIO']:.2f}x"
     )
@@ -321,9 +312,6 @@ def _render_affordability_summary(
             "is monthly and income is annual in the source data, use the monthly "
             "income indicator below for affordability review."
         ),
-    )
-    summary_cols[2].metric(
-        "Loan-to-purchase ratio", f"{row['CREDIT_TO_GOODS_RATIO']:.1%}"
     )
 
     concerns: list[str] = []
@@ -342,8 +330,6 @@ def _render_affordability_summary(
         concerns.append("The requested loan is large compared with the entered annual income.")
     elif row["CREDIT_TO_INCOME_RATIO"] <= 2:
         positive_indicators.append("The requested loan is comparatively moderate relative to the entered annual income.")
-    if goods_price > 0 and row["CREDIT_TO_GOODS_RATIO"] > 1:
-        concerns.append("The requested loan exceeds the entered purchase-price value.")
     if concerns:
         st.warning(f"Affordability concern: {concerns[0]}")
     else:
@@ -661,12 +647,6 @@ def render_credit_risk_assessment() -> None:
             step=1000.0,
             help="Enter the proposed installment amount.",
         )
-        goods_price = amount_cols[1].number_input(
-            "Purchase price / goods value (source data units)",
-            min_value=0.0,
-            value=450000.0,
-            step=10000.0,
-        )
         st.subheader("Personal, household, and employment details")
         employment_options = [
             "Working",
@@ -805,7 +785,7 @@ def render_credit_risk_assessment() -> None:
                 "AMT_INCOME_TOTAL": income,
                 "AMT_CREDIT": requested_credit,
                 "AMT_ANNUITY": annuity,
-                "AMT_GOODS_PRICE": goods_price,
+                "AMT_GOODS_PRICE": np.nan,
                 "NAME_INCOME_TYPE": income_type,
                 "NAME_EDUCATION_TYPE": education,
                 "NAME_FAMILY_STATUS": family,
@@ -847,9 +827,16 @@ def render_credit_risk_assessment() -> None:
     else:
         st.error(f"**NO — {research_recommendation}")
     st.caption(
-        f"The model cutoff is {bundle['threshold']:.1%}, selected to maximize F1 on "
-        "Home Credit validation data. Below the cutoff the research recommendation is "
-        "YES; at or above it the recommendation is NO."
+        f"The Home Credit model cutoff is {bundle['threshold']:.1%}, selected on "
+        "validation data. The requested project rule maps below-cutoff probability to "
+        "NO and at-or-above-cutoff probability to YES. This is opposite to the meaning "
+        "of payment-difficulty risk (higher probability means greater estimated "
+        "difficulty repaying), so treat this mapping as a project demonstration only, "
+        "not a real lending rule. Affordability warnings are displayed separately."
+    )
+    st.caption(
+        "Purchase price is not collected in this form. The trained model includes that "
+        "feature, so its missing value and derived ratio are imputed from training data."
     )
     st.caption(
         "This is a research-only signal, not a final bank approval or rejection. "

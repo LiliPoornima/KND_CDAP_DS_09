@@ -114,6 +114,10 @@ environment:
 
 ```powershell
 python -m streamlit run frontend/app.py
+
+
+Set-Location "C:\Users\Poornima Liyanage\Documents\GitHub\KND_CDAP_DS_09"
+.\.venv\Scripts\python.exe -m streamlit run frontend/app.py
 ```
 
 Streamlit will print a local URL, normally
