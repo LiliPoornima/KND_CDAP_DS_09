@@ -145,6 +145,26 @@ def _render_selected_component(selected: str) -> None:
         st.info(
             "A Financial Well-being assessment interface is not available in this project yet. "
             "The separate Fraud Detection component remains available in the existing sidebar. No placeholder results are shown."
+    st.divider()
+    st.subheader("Research Components")
+    left, right = st.columns(2)
+    with left:
+        st.markdown("### Credit Risk")
+        st.write("Explore credit-risk research findings and evaluation.")
+        st.markdown("### Financial Inclusion")
+        st.write(
+            "Explore saved inclusion profiles, explainable model outputs, "
+            "population gaps, and individual assessment."
+        )
+        st.markdown("### Market Risk")
+        st.write("Explore market-risk research findings and evaluation.")
+    with right:
+        st.markdown("### Fraud Detection")
+        st.write("Explore fraud-detection research findings and evaluation.")
+        st.markdown("### Component 04 – Financial Well-being Assessment")
+        st.write(
+            "Independent Explainable Financial Well-being Assessment System for "
+            "Bank Loan Decision Support (Saving, Budgeting, Knowledge, Goal Planning, SHAP & Report)."
         )
 
 
@@ -222,6 +242,10 @@ navigation = st.navigation(
 
 
 
+        st.Page("pages/4_Fraud_Detection.py",
+                title="Fraud Detection", icon="🛡️"),
+        st.Page("pages/7_Financial_Capability.py",
+                title="Financial Well-being (Component 04)", icon="🏦"),
         # The new comparison page is separate; the original Financial Inclusion
         # destination above keeps its existing page and behavior.
 

@@ -293,3 +293,48 @@ def test_home_credit_baselines_select_validation_threshold_and_save_outputs(tmp_
     assert (tmp_path / "results" / "model_comparison.csv").is_file()
     assert (tmp_path / "results" / "training_diagnostics.csv").is_file()
     assert (tmp_path / "results" / "random_forest_calibration_bins.csv").is_file()
+
+
+def test_home_credit_application_prediction_and_counterfactuals():
+    from backend.src.credit_risk.home_credit.prediction import (
+        cr_fit_home_credit_application_model,
+        cr_prepare_home_credit_application,
+        cr_predict_home_credit_application,
+        cr_compute_home_credit_counterfactuals,
+    )
+    from pathlib import Path
+
+    prepared_dir = Path("outputs/credit_risk/home_credit/completion_run/prepared")
+    if not (prepared_dir / "train_processed.csv").is_file():
+        pytest.skip("Home credit prepared files not available in workspace")
+
+    bundle = cr_fit_home_credit_application_model(prepared_dir)
+    raw = pd.DataFrame([{
+        "NAME_CONTRACT_TYPE": "Cash loans",
+        "FLAG_OWN_CAR": "N",
+        "FLAG_OWN_REALTY": "N",
+        "CNT_CHILDREN": 0,
+        "AMT_INCOME_TOTAL": 150000.0,
+        "AMT_CREDIT": 500000.0,
+        "AMT_ANNUITY": 25000.0,
+        "AMT_GOODS_PRICE": np.nan,
+        "NAME_INCOME_TYPE": "Working",
+        "NAME_EDUCATION_TYPE": "Secondary / secondary special",
+        "NAME_FAMILY_STATUS": "Married",
+        "NAME_HOUSING_TYPE": "House / apartment",
+        "DAYS_EMPLOYED": -5 * 365.25,
+        "OCCUPATION_TYPE": "Laborers",
+        "CNT_FAM_MEMBERS": 2,
+    }])
+    applicant = cr_prepare_home_credit_application(raw)
+    prob = cr_predict_home_credit_application(bundle, applicant)
+    assert 0.0 <= prob <= 1.0
+
+    counterfactuals = cr_compute_home_credit_counterfactuals(bundle, raw)
+    assert isinstance(counterfactuals, list)
+    if prob >= bundle["threshold"]:
+        assert len(counterfactuals) > 0
+        for cf in counterfactuals:
+            assert cf["new_probability"] < bundle["threshold"]
+            assert cf["new_decision"] == "YES"
+
