@@ -1,0 +1,4 @@
+feature_set,n_features,accuracy,macro_f1
+Capability questions only,24,0.661189358372457,0.6315918984249195
+Background (context) only,7,0.5571205007824727,0.5181025348824485
+All approved features,31,0.662754303599374,0.632569023788082
