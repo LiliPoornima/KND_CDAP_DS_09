@@ -515,8 +515,12 @@ def load_final_dataset() -> pd.DataFrame:
     """Load and validate the final respondent-level analytical dataset."""
     if not DATASET_PATH.is_file():
         raise FileNotFoundError(
-            f"Final analytical dataset not found: {DATASET_PATH}. "
-            "Run the Component 02 final dataset preparation script first."
+            f"Required Component 02 dataset is missing: {DATASET_PATH}\n"
+            "Place the approved fi_final_analytical_dataset.csv artifact at "
+            "data/financial_inclusion/processed/ (see "
+            "data/financial_inclusion/README.md). If rebuilding from source, "
+            "first obtain the permitted Global Findex source file and run the "
+            "documented Component 02 preprocessing pipeline."
         )
 
     df = pd.read_csv(DATASET_PATH, low_memory=False)
