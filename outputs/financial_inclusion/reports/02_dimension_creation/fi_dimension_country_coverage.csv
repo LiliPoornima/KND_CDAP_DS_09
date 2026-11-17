@@ -1,0 +1,16 @@
+dimension,variable,economies_total,economies_with_data,economies_with_80pct_or_more_missing,non_missing_n,missing_n,missing_percent
+Connectivity,dim_connect_phone,140,140,0,143988,102,0.07
+Connectivity,dim_connect_internet,140,140,0,144090,0,0.0
+Connectivity,score_connectivity,140,140,0,144090,0,0.0
+Financial Access,dim_access_account,140,140,0,144090,0,0.0
+Financial Access,dim_access_financial_institution,140,140,0,144090,0,0.0
+Financial Access,score_financial_access,140,140,0,144090,0,0.0
+Digital Financial Usage,dim_usage_any_digital_payment,140,98,42,102954,41136,28.55
+Digital Financial Usage,score_digital_financial_usage,140,98,42,102954,41136,28.55
+Digital Safety,dim_safety_phone_protection,140,75,65,64297,79793,55.38
+Digital Safety,risk_scam_exposure,140,75,65,64509,79581,55.23
+Digital Safety,score_digital_safety,140,75,65,64297,79793,55.38
+Financial Resilience,dim_resilience_saved,140,98,42,102954,41136,28.55
+Financial Resilience,dim_resilience_emergency_ease,140,98,42,92602,51488,35.73
+Financial Resilience,dim_resilience_income_buffer,140,98,42,94421,49669,34.47
+Financial Resilience,score_financial_resilience,140,98,42,87684,56406,39.15
