@@ -109,22 +109,27 @@ python -m pip install -r requirements.txt
 
 ## Run the dashboard
 
-Run this command from the repository root:
+Run this command from the repository root after activating the virtual
+environment:
 
-```bash
-streamlit run frontend/app.py
+```powershell
+python -m streamlit run frontend/app.py
 ```
 
 Streamlit will print a local URL, normally
 `http://localhost:8501`. Open that URL in a browser. Keep the terminal
 running while using the dashboard.
 
-If the `streamlit` command is not found, activate the virtual environment or
-run:
+On Windows, if the environment is not activated, run the project interpreter
+explicitly:
 
-```bash
-python -m streamlit run frontend/app.py
+```powershell
+.\.venv\Scripts\python.exe -m streamlit run frontend/app.py
 ```
+
+If the dashboard still shows `No module named 'plotly'`, stop any older
+Streamlit process and restart it with the command above. The dashboard must
+be launched by the project `.venv` interpreter, where Plotly is installed.
 
 ## Run the financial-inclusion processing stages
 

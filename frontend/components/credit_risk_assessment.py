@@ -6,8 +6,6 @@ from io import BytesIO
 
 import numpy as np
 import pandas as pd
-import plotly.express as px
-import plotly.graph_objects as go
 import streamlit as st
 
 from backend.src.credit_risk.home_credit.prediction import (
@@ -20,6 +18,19 @@ from backend.src.credit_risk.home_credit.prediction import (
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 OUTPUT_ROOT = PROJECT_ROOT / "outputs" / "credit_risk"
 
+APPLICATION_AMOUNT_COLUMNS = (
+    "AMT_INCOME_TOTAL",
+    "AMT_CREDIT",
+    "AMT_ANNUITY",
+    "AMT_GOODS_PRICE",
+)
+APPLICATION_AMOUNT_LABELS = {
+    "AMT_INCOME_TOTAL": "Annual income",
+    "AMT_CREDIT": "Requested loan amount",
+    "AMT_ANNUITY": "Estimated installment",
+    "AMT_GOODS_PRICE": "Purchase price / goods value",
+}
+
 
 @st.cache_resource(show_spinner="Preparing the credit-risk assessment model…")
 def _load_application_only_model(
@@ -31,12 +42,46 @@ def _load_application_only_model(
         cr_fit_home_credit_application_model,
     )
 
-    return cr_fit_home_credit_application_model(prepared_dir)
+    bundle = cr_fit_home_credit_application_model(prepared_dir)
+    if "training_amount_ranges" not in bundle:
+        train = pd.read_csv(
+            Path(prepared_dir) / "train_processed.csv",
+            usecols=list(APPLICATION_AMOUNT_COLUMNS),
+        )
+        bundle["training_amount_ranges"] = {
+            column: {
+                "lower_supported": float(train[column].quantile(0.01)),
+                "upper_supported": float(train[column].quantile(0.99)),
+            }
+            for column in APPLICATION_AMOUNT_COLUMNS
+        }
+    return bundle
 
 
 def _show_missing(path: Path) -> None:
     st.error("The assessment model data is not available.")
     st.info(f"Expected prepared data at `{path.relative_to(PROJECT_ROOT)}`.")
+
+
+def _out_of_training_range(raw: pd.DataFrame, bundle: dict[str, Any]) -> list[str]:
+    """Flag monetary inputs in the outer 1% tails of the training distribution."""
+    warnings = []
+    for column in APPLICATION_AMOUNT_COLUMNS:
+        value = float(raw.loc[0, column])
+        observed = bundle["training_amount_ranges"][column]
+        if value < observed["lower_supported"]:
+            warnings.append(
+                f"{APPLICATION_AMOUNT_LABELS[column]} ({value:,.0f}) is below the "
+                f"1st percentile of Home Credit training values "
+                f"({observed['lower_supported']:,.0f})."
+            )
+        elif value > observed["upper_supported"]:
+            warnings.append(
+                f"{APPLICATION_AMOUNT_LABELS[column]} ({value:,.0f}) is above the "
+                f"99th percentile of Home Credit training values "
+                f"({observed['upper_supported']:,.0f})."
+            )
+    return warnings
 
 
 def _validate_application(raw: pd.DataFrame) -> tuple[list[str], list[str]]:
@@ -67,84 +112,21 @@ def _research_recommendation(
 ) -> tuple[str, str]:
     """Return a binary research recommendation and its explanation."""
     if probability >= model_threshold:
+        margin_pp = (probability - model_threshold) * 100
         return (
             "NO",
-            f"Estimated payment-difficulty risk ({probability:.1%}) is at or above "
-            f"the {model_threshold:.1%} research cutoff. Do not recommend offering "
-            "this loan under the current details; complete manual review.",
+            f"Estimated payment-difficulty risk is {probability:.1%}, "
+            f"{margin_pp:.1f} percentage points above the {model_threshold:.1%} "
+            "research cutoff. Under this screening rule the result is NO and needs "
+            "manual review; this is not a final bank rejection.",
         )
+    margin_pp = (model_threshold - probability) * 100
     return (
         "YES",
-        f"Estimated payment-difficulty risk ({probability:.1%}) is below the "
-        f"{model_threshold:.1%} research cutoff. The model supports offering this "
-        "loan for bank approval review, subject to affordability and policy checks.",
-    )
-
-
-def _find_yes_what_if(
-    raw: pd.DataFrame,
-    bundle: dict[str, Any],
-    current_probability: float,
-) -> dict[str, Any] | None:
-    """Find the smallest tested reduction in amount/installment that crosses the cutoff."""
-    threshold = float(bundle["threshold"])
-    if current_probability < threshold:
-        return None
-
-    current_credit = float(raw.loc[0, "AMT_CREDIT"])
-    current_annuity = float(raw.loc[0, "AMT_ANNUITY"])
-    if current_credit <= 0 or current_annuity <= 0:
-        return None
-
-    factors = [1.0, *[round(value, 2) for value in np.arange(0.95, 0.09, -0.05)]]
-    scenarios = [
-        (current_credit * credit_factor, current_annuity * annuity_factor)
-        for credit_factor in factors
-        for annuity_factor in factors
-        if credit_factor != 1.0 or annuity_factor != 1.0
-    ]
-    prepared_scenarios = []
-    for credit, annuity in scenarios:
-        scenario_raw = raw.copy()
-        scenario_raw.loc[0, "AMT_CREDIT"] = credit
-        scenario_raw.loc[0, "AMT_ANNUITY"] = annuity
-        prepared_scenarios.append(
-            cr_prepare_home_credit_application(scenario_raw)
-        )
-
-    candidate_features = pd.concat(prepared_scenarios, ignore_index=True)
-    raw_probabilities = bundle["model"].predict_proba(candidate_features)[:, 1]
-    clipped_probabilities = np.clip(raw_probabilities, 1e-6, 1 - 1e-6)
-    candidate_log_odds = np.log(
-        clipped_probabilities / (1 - clipped_probabilities)
-    ).reshape(-1, 1)
-    scenario_probabilities = bundle["calibrator"].predict_proba(
-        candidate_log_odds
-    )[:, 1]
-
-    candidates: list[dict[str, Any]] = []
-    for (credit, annuity), scenario_probability in zip(
-        scenarios, scenario_probabilities, strict=True
-    ):
-        if scenario_probability < threshold:
-            credit_reduction = 1 - credit / current_credit
-            annuity_reduction = 1 - annuity / current_annuity
-            candidates.append(
-                {
-                    "loan_amount": credit,
-                    "installment": annuity,
-                    "probability": scenario_probability,
-                    "total_reduction": credit_reduction + annuity_reduction,
-                    "changed_parameters": int(credit_reduction > 0)
-                    + int(annuity_reduction > 0),
-                }
-            )
-
-    if not candidates:
-        return None
-    return min(
-        candidates,
-        key=lambda item: (item["total_reduction"], item["changed_parameters"]),
+        f"Estimated payment-difficulty risk is {probability:.1%}, "
+        f"{margin_pp:.1f} percentage points below the {model_threshold:.1%} "
+        "research cutoff. The model signal supports proceeding to affordability "
+        "and collateral review; it is not a final approval.",
     )
 
 
@@ -152,6 +134,47 @@ def _affordability_follow_up(affordability_reasons: list[str]) -> str:
     if affordability_reasons:
         return "Review the affordability notes and verify income, expenses, and existing debts"
     return "No extreme affordability flag was found; complete the lender's normal affordability checks"
+
+
+def _render_collateral_review(raw: pd.DataFrame) -> None:
+    """Show asset ownership cues without treating them as verified collateral."""
+    row = raw.iloc[0]
+    property_status = "Applicant reports property ownership" if row["FLAG_OWN_REALTY"] == "Y" else "No property ownership reported"
+    car_status = "Applicant reports car ownership" if row["FLAG_OWN_CAR"] == "Y" else "No car ownership reported"
+    business_status = (
+        "Businessman income category selected"
+        if row["NAME_INCOME_TYPE"] == "Businessman"
+        else f"Income category: {row['NAME_INCOME_TYPE']}"
+    )
+    st.subheader("Collateral and asset checks")
+    st.dataframe(
+        pd.DataFrame(
+            [
+                {
+                    "Asset / cue": "Property",
+                    "Information available": property_status,
+                    "Bank verification": "Verify title, valuation, existing liens, and whether the property is eligible collateral.",
+                },
+                {
+                    "Asset / cue": "Vehicle",
+                    "Information available": car_status,
+                    "Bank verification": "Verify ownership, current value, liens, and whether the vehicle is eligible collateral.",
+                },
+                {
+                    "Asset / cue": "Business",
+                    "Information available": business_status,
+                    "Bank verification": "The dataset records an income category, not business ownership, business value, or pledgeable security.",
+                },
+            ]
+        ),
+        hide_index=True,
+        use_container_width=True,
+    )
+    st.caption(
+        "The model uses the recorded car/property ownership flags and income category "
+        "as predictors. It does not verify ownership or estimate collateral value, "
+        "so these cues must not independently produce a YES."
+    )
 
 
 def _build_summary(
@@ -523,6 +546,18 @@ def _render_shap_explanation(
                 hide_index=True,
                 use_container_width=True,
             )
+            try:
+                import plotly.express as px
+                import plotly.graph_objects as go
+            except ImportError:
+                st.info(
+                    "Plotly is not installed in this Python environment. The model "
+                    "result and SHAP contribution table are available; the charts "
+                    "are hidden. Start the app with the project .venv or install "
+                    "the dependencies from requirements.txt to enable charts."
+                )
+                return local
+
             figure = px.bar(
                 top_factors.sort_values("Contribution"),
                 x="Contribution",
@@ -632,27 +667,6 @@ def render_credit_risk_assessment() -> None:
             value=450000.0,
             step=10000.0,
         )
-        compare_scenario = st.checkbox(
-            "Compare with an alternative loan amount or installment",
-            help="The alternative is scored using the same entered applicant details.",
-        )
-        alternative_credit = requested_credit
-        alternative_annuity = annuity
-        if compare_scenario:
-            compare_cols = st.columns(2)
-            alternative_credit = compare_cols[0].number_input(
-                "Alternative loan amount",
-                min_value=0.0,
-                value=float(requested_credit),
-                step=10000.0,
-            )
-            alternative_annuity = compare_cols[1].number_input(
-                "Alternative installment",
-                min_value=0.0,
-                value=float(annuity),
-                step=1000.0,
-            )
-
         st.subheader("Personal, household, and employment details")
         employment_options = [
             "Working",
@@ -812,23 +826,9 @@ def render_credit_risk_assessment() -> None:
         return
     try:
         bundle = _load_application_only_model(str(prepared_dir), signature)
+        range_warnings = _out_of_training_range(raw, bundle)
         applicant = cr_prepare_home_credit_application(raw)
         probability = cr_predict_home_credit_application(bundle, applicant)
-        alternative_probability = None
-        if compare_scenario:
-            alternative_raw = raw.copy()
-            alternative_raw.loc[0, "AMT_CREDIT"] = alternative_credit
-            alternative_raw.loc[0, "AMT_ANNUITY"] = alternative_annuity
-            alternative_errors, _ = _validate_application(alternative_raw)
-            if alternative_errors:
-                st.error("The alternative scenario cannot be assessed:")
-                for error in alternative_errors:
-                    st.write(f"- {error}")
-                return
-            alternative = cr_prepare_home_credit_application(alternative_raw)
-            alternative_probability = cr_predict_home_credit_application(
-                bundle, alternative
-            )
     except (ValueError, KeyError, OSError) as exc:
         st.error(f"Could not assess this application: {exc}")
         return
@@ -836,7 +836,6 @@ def render_credit_risk_assessment() -> None:
     research_decision, research_recommendation = _research_recommendation(
         probability, bundle["threshold"]
     )
-    what_if = _find_yes_what_if(raw, bundle, probability)
     st.subheader("1. Credit Risk Assessment – Main Output")
     result_cols = st.columns(4)
     result_cols[0].metric("Applicant", applicant_reference)
@@ -859,63 +858,29 @@ def render_credit_risk_assessment() -> None:
         "Answers about previous credit history and missed payments are recorded as "
         "additional review information and are not inputs to this model's probability."
     )
-    if research_decision == "NO":
-        st.subheader("What could change the NO? — Model what-if scenarios")
-        if what_if is None:
-            st.info(
-                "No tested reduction in the requested amount or installment brought "
-                "the model estimate below its cutoff. Verify application details and "
-                "use manual review; do not change personal information just to alter the score."
-            )
-        else:
-            changed = []
-            if what_if["loan_amount"] < requested_credit:
-                changed.append(
-                    f"loan amount to {what_if['loan_amount']:,.0f} "
-                    f"({(1 - what_if['loan_amount'] / requested_credit):.0%} lower)"
-                )
-            if what_if["installment"] < annuity:
-                changed.append(
-                    f"installment to {what_if['installment']:,.0f} "
-                    f"({(1 - what_if['installment'] / annuity):.0%} lower)"
-                )
-            st.info(
-                "The smallest tested model scenario that changed the result to YES "
-                f"uses a {' and '.join(changed)}. Its estimated payment-difficulty "
-                f"probability falls from {probability:.1%} to "
-                f"{what_if['probability']:.1%}, below the {bundle['threshold']:.1%} "
-                "research cutoff. This is a what-if "
-                "calculation, not a promise of approval; only consider terms the "
-                "applicant and lender can genuinely agree to."
-            )
+    if range_warnings:
+        st.warning(
+            "The model is still showing a first-line YES/NO estimate, but at least "
+            "one financial input is beyond the 1st–99th percentile range of its "
+            "training data. This means the value is uncommon, not that the applicant "
+            "is high risk or has been rejected. Treat the estimate cautiously."
+        )
+        for warning in range_warnings:
+            st.write(f"- {warning}")
         st.caption(
-            "The what-if search changes only the requested loan amount and estimated "
-            "installment. It does not alter personal or protected characteristics."
+            "Use Home Credit source units. If you entered LKR, verify the scale; "
+            "no currency conversion has been validated."
         )
-    if alternative_probability is not None:
-        alternative_decision, _ = _research_recommendation(
-            alternative_probability, bundle["threshold"]
-        )
-        st.subheader("Alternative scenario comparison")
-        comparison = pd.DataFrame(
-            [
-                {
-                    "Scenario": "Current application",
-                    "Loan amount": requested_credit,
-                    "Installment": annuity,
-                    "Payment-difficulty probability": f"{probability:.1%}",
-                    "Loan recommendation": research_decision,
-                },
-                {
-                    "Scenario": "Alternative",
-                    "Loan amount": alternative_credit,
-                    "Installment": alternative_annuity,
-                    "Payment-difficulty probability": f"{alternative_probability:.1%}",
-                    "Loan recommendation": alternative_decision,
-                },
-            ]
-        )
-        st.dataframe(comparison, hide_index=True, use_container_width=True)
+    monthly_income = income / 12 if income > 0 else 0.0
+    ratio_cols = st.columns(2)
+    ratio_cols[0].metric(
+        "Loan amount / annual income",
+        f"{requested_credit / income:.1%}" if income > 0 else "Unavailable",
+    )
+    ratio_cols[1].metric(
+        "Installment / monthly income",
+        f"{annuity / monthly_income:.1%}" if monthly_income > 0 else "Unavailable",
+    )
     if validation_warnings:
         st.warning("Please review these affordability notes:")
         for warning in validation_warnings:
@@ -924,6 +889,7 @@ def render_credit_risk_assessment() -> None:
     affordability_follow_up = _affordability_follow_up(affordability_reasons)
     st.subheader("Separate affordability follow-up")
     st.info(affordability_follow_up)
+    _render_collateral_review(raw)
     with st.expander("Detailed review", expanded=False):
         shap_factors = _render_shap_explanation(prepared_dir, bundle, applicant)
         _render_applicant_profile(raw, applicant)
@@ -989,52 +955,6 @@ def render_credit_risk_assessment() -> None:
             hide_index=True,
             use_container_width=True,
         )
-    if compare_scenario and (
-        alternative_credit != requested_credit or alternative_annuity != annuity
-    ):
-        alternative_raw = raw.copy()
-        alternative_raw.loc[0, "AMT_CREDIT"] = alternative_credit
-        alternative_raw.loc[0, "AMT_ANNUITY"] = alternative_annuity
-        alternative_errors, alternative_warnings = _validate_application(alternative_raw)
-        if alternative_errors:
-            st.warning("The alternative scenario cannot be scored:")
-            for error in alternative_errors:
-                st.write(f"- {error}")
-        else:
-            if alternative_warnings:
-                st.warning("The alternative scenario includes these affordability notes:")
-                for warning in alternative_warnings:
-                    st.write(f"- {warning}")
-            alternative_applicant = cr_prepare_home_credit_application(alternative_raw)
-            alternative_probability = cr_predict_home_credit_application(
-                bundle, alternative_applicant
-            )
-            comparison = pd.DataFrame(
-                {
-                    "Scenario": ["Current application", "Alternative scenario"],
-                    "Loan amount": [requested_credit, alternative_credit],
-                    "Installment": [annuity, alternative_annuity],
-                    "Estimated likelihood": [probability, alternative_probability],
-                }
-            )
-            st.subheader("Current vs alternative scenario")
-            st.dataframe(
-                comparison.style.format(
-                    {
-                        "Loan amount": "{:,.2f}",
-                        "Installment": "{:,.2f}",
-                        "Estimated likelihood": "{:.1%}",
-                    }
-                ),
-                hide_index=True,
-                use_container_width=True,
-            )
-            change = alternative_probability - probability
-            st.info(
-                f"The alternative changes the estimated likelihood by {change:+.1%}. "
-                "This is a model comparison, not a guarantee that changing loan "
-                "terms will produce the same result in practice."
-            )
     st.caption(
         "This estimate reflects patterns in the Home Credit research dataset. "
         "It does not replace a bank's affordability checks, policy rules, or "

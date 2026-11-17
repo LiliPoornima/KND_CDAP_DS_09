@@ -59,6 +59,13 @@ LINKED_HISTORY_COLUMNS = [
     "CREDIT_CARD_MONTH_COUNT",
 ]
 
+APPLICATION_AMOUNT_COLUMNS = [
+    "AMT_INCOME_TOTAL",
+    "AMT_CREDIT",
+    "AMT_ANNUITY",
+    "AMT_GOODS_PRICE",
+]
+
 
 def cr_prepare_home_credit_application(raw_input: pd.DataFrame) -> pd.DataFrame:
     """Create the model's application-time features from questionnaire answers."""
@@ -110,6 +117,13 @@ def cr_fit_home_credit_application_model(
         train[APPLICATION_FEATURES + [TARGET_COLUMN]],
         target_column=TARGET_COLUMN,
     )
+    training_amount_ranges = {
+        column: {
+            "lower_supported": float(train[column].quantile(0.01)),
+            "upper_supported": float(train[column].quantile(0.99)),
+        }
+        for column in APPLICATION_AMOUNT_COLUMNS
+    }
     calibration_features, threshold_features, calibration_target, threshold_target = (
         train_test_split(
             validation[APPLICATION_FEATURES],
@@ -182,6 +196,7 @@ def cr_fit_home_credit_application_model(
         "test_metrics": test_metrics,
         "fairness_results": fairness_results,
         "fairness_uncertainty": fairness_uncertainty,
+        "training_amount_ranges": training_amount_ranges,
         "test_rows": len(test),
         "no_history_rows": len(no_history_frame),
         "no_history_events": int(no_history_frame[TARGET_COLUMN].sum()),
