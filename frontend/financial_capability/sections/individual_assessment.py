@@ -580,7 +580,11 @@ def render() -> None:
                     with cols[i % 2]:
                         _question(spec)
 
-        submitted = st.form_submit_button("Run assessment", type="primary")
+        submitted = st.form_submit_button(
+            "Run assessment",
+            type="primary",
+            use_container_width=True,
+        )
 
     if submitted:
         response = {

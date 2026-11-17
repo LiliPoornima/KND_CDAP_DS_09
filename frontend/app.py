@@ -1,11 +1,15 @@
 """Global financial analytics application and explicit component navigation."""
 
 from pathlib import Path
+import sys
 
 import streamlit as st
 
 
 FRONTEND_DIR = Path(__file__).resolve().parent
+PROJECT_ROOT = FRONTEND_DIR.parent
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
 STYLES_PATH = FRONTEND_DIR / "assets" / "styles" / "main.css"
 
 st.set_page_config(
@@ -141,31 +145,51 @@ def _render_selected_component(selected: str) -> None:
             "The existing sidebar destination remains available, but its page currently contains no rendered interface."
         )
     else:
+        from frontend.financial_capability.constants import (
+            BANK_LOAN_NOTICE,
+            COMPONENT_SUBTITLE,
+            SECTIONS,
+        )
+        from frontend.financial_capability.sections import (
+            capability_gaps,
+            data_quality,
+            individual_assessment,
+            methodology,
+            model_performance,
+            overview,
+            shap_explanation,
+            what_if,
+        )
+        from frontend.financial_capability.styles import inject_fintech_styles
+
+        inject_fintech_styles()
         st.title("Component 04 · Financial Well-being Assessment")
-        st.info(
-            "A Financial Well-being assessment interface is not available in this project yet. "
-            "The separate Fraud Detection component remains available in the existing sidebar. No placeholder results are shown."
-    st.divider()
-    st.subheader("Research Components")
-    left, right = st.columns(2)
-    with left:
-        st.markdown("### Credit Risk")
-        st.write("Explore credit-risk research findings and evaluation.")
-        st.markdown("### Financial Inclusion")
-        st.write(
-            "Explore saved inclusion profiles, explainable model outputs, "
-            "population gaps, and individual assessment."
+        st.caption(COMPONENT_SUBTITLE)
+
+        renderers = {
+            SECTIONS[0]: overview.render,
+            SECTIONS[1]: data_quality.render,
+            SECTIONS[2]: model_performance.render,
+            SECTIONS[3]: individual_assessment.render,
+            SECTIONS[4]: shap_explanation.render,
+            SECTIONS[5]: capability_gaps.render,
+            SECTIONS[6]: what_if.render,
+            SECTIONS[7]: methodology.render,
+        }
+        selected_tab = st.radio(
+            "Component 04 section",
+            SECTIONS,
+            index=3,
+            horizontal=True,
+            key="home_fc_section_radio",
         )
-        st.markdown("### Market Risk")
-        st.write("Explore market-risk research findings and evaluation.")
-    with right:
-        st.markdown("### Fraud Detection")
-        st.write("Explore fraud-detection research findings and evaluation.")
-        st.markdown("### Component 04 – Financial Well-being Assessment")
-        st.write(
-            "Independent Explainable Financial Well-being Assessment System for "
-            "Bank Loan Decision Support (Saving, Budgeting, Knowledge, Goal Planning, SHAP & Report)."
+        st.divider()
+        renderers[selected_tab]()
+        st.divider()
+        st.caption(
+            f"Component 04 | {BANK_LOAN_NOTICE} | Trained on CFPB NFWBS 2016 public survey data."
         )
+
 
 
 def _render_home() -> None:
