@@ -39,11 +39,10 @@ data/credit_risk/home_credit/features/*.parquet
 
 # Component 02: generated analysis outputs
 
-# Ignore generated reports by default; allow reviewed research findings
+# Ignore generated reports by default. Narrow, reviewed Component 02
+# aggregate exceptions are listed at the end of this file.
 /outputs/financial_inclusion/reports/*
 !/outputs/financial_inclusion/reports/.gitkeep
-!/outputs/financial_inclusion/reports/03_clustering/
-!/outputs/financial_inclusion/reports/04_supervised_learning/
 
 /outputs/financial_inclusion/figures/*
 !/outputs/financial_inclusion/figures/.gitkeep
@@ -64,6 +63,54 @@ models/**/*.pkl
 # Generated plots and JSON outputs
 outputs/**/*.png
 outputs/**/*.json
+
+# Component 02 respondent-level outputs already present in the working tree.
+# Keep these local; .gitignore does not stop tracking until removed from the index.
+/outputs/financial_inclusion/reports/04_supervised_learning/fi_supervised_dataset_audit.csv
+/outputs/financial_inclusion/experiments/supervised_tuning/shap/local_explanations.csv
+/outputs/financial_inclusion/experiments/supervised_tuning/shap/predictions.csv
+
+# Reviewed Component 02 aggregate allowlist.
+# Unignore each ignored parent, then ignore its contents and allow only named files.
+!/outputs/financial_inclusion/metrics/
+/outputs/financial_inclusion/metrics/*
+!/outputs/financial_inclusion/metrics/fi_clustering_3d_5d_comparison.csv
+!/outputs/financial_inclusion/metrics/fi_clustering_candidate_cluster_sizes.csv
+!/outputs/financial_inclusion/metrics/fi_clustering_k_sensitivity_sizes.csv
+!/outputs/financial_inclusion/metrics/fi_clustering_model_comparison.csv
+!/outputs/financial_inclusion/metrics/fi_cluster_profile_means.csv
+!/outputs/financial_inclusion/metrics/fi_cluster_sizes.csv
+!/outputs/financial_inclusion/metrics/fi_supervised_baseline_metrics.csv
+!/outputs/financial_inclusion/metrics/fi_supervised_classification_reports.txt
+!/outputs/financial_inclusion/metrics/fi_supervised_confusion_matrices.txt
+
+!/outputs/financial_inclusion/reports/01_data_preparation/
+/outputs/financial_inclusion/reports/01_data_preparation/*
+!/outputs/financial_inclusion/reports/01_data_preparation/fi_preprocessing_report.json
+!/outputs/financial_inclusion/reports/01_data_preparation/fi_codebook_verification_register.csv
+!/outputs/financial_inclusion/reports/01_data_preparation/fi_missingness_by_variable.csv
+
+!/outputs/financial_inclusion/reports/02_dimension_creation/
+/outputs/financial_inclusion/reports/02_dimension_creation/*
+!/outputs/financial_inclusion/reports/02_dimension_creation/fi_dimension_country_coverage.csv
+
+!/outputs/financial_inclusion/reports/03_clustering/
+/outputs/financial_inclusion/reports/03_clustering/*
+!/outputs/financial_inclusion/reports/03_clustering/fi_clustering_candidate_selection_decision.md
+!/outputs/financial_inclusion/reports/03_clustering/fi_clustering_candidate_selection_matrix.csv
+!/outputs/financial_inclusion/reports/03_clustering/fi_clustering_stability_summary.csv
+!/outputs/financial_inclusion/reports/03_clustering/fi_clustering_algorithm_agreement.json
+!/outputs/financial_inclusion/reports/03_clustering/fi_clustering_summary.json
+!/outputs/financial_inclusion/reports/03_clustering/fi_clustering_profile_labels_5D_k5.json
+
+!/outputs/financial_inclusion/reports/04_supervised_learning/
+/outputs/financial_inclusion/reports/04_supervised_learning/*
+!/outputs/financial_inclusion/reports/04_supervised_learning/fi_supervised_target_audit.csv
+
+!/outputs/financial_inclusion/reports/05_shap_explainability/
+/outputs/financial_inclusion/reports/05_shap_explainability/*
+!/outputs/financial_inclusion/reports/05_shap_explainability/fi_shap_global_importance.csv
+!/outputs/financial_inclusion/reports/05_shap_explainability/fi_shap_validation_summary.json
 
 # Python test coverage
 .coverage

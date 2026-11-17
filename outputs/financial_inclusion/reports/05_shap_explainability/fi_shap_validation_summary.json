@@ -1,0 +1,59 @@
+{
+  "analysis": "Saved Logistic Regression pipeline SHAP explanations",
+  "shap_version": "0.54.1",
+  "model_artifact": "models/financial_inclusion/logistic_regression.joblib",
+  "target": "cluster_id",
+  "explained_output": "Logistic Regression decision scores (logits)",
+  "random_state": 42,
+  "background_rows": 100,
+  "explained_rows": 100,
+  "train_rows_in_reconstructed_split": 45202,
+  "test_rows_in_reconstructed_split": 11301,
+  "class_ids": [
+    0,
+    1,
+    2,
+    3,
+    4
+  ],
+  "original_predictors": [
+    "female",
+    "educ",
+    "inc_q",
+    "emp_in",
+    "urbanicity",
+    "regionwb",
+    "age"
+  ],
+  "encoded_feature_count": 22,
+  "raw_shap_shape": [
+    100,
+    22,
+    5
+  ],
+  "grouped_shap_shape": [
+    100,
+    7,
+    5
+  ],
+  "global_importance_rows": 35,
+  "local_explanation_rows": 700,
+  "prediction_rows": 100,
+  "max_additivity_error": 6.661338147750939e-16,
+  "max_grouped_sum_error": 8.881784197001252e-16,
+  "checks_passed": {
+    "shapes": true,
+    "finite_shap_values": true,
+    "additivity": true,
+    "grouped_contribution_conservation": true,
+    "all_five_classes": true
+  },
+  "interpretation_limit": "SHAP values explain Logistic Regression decision scores, not probabilities or causal reasons for financial exclusion. Global rankings are based on this sampled test subset.",
+  "split_provenance_note": "The split indices were reconstructed from the saved audit CSV using the documented seed and stratification. Exact equivalence to the original split requires matching source row order and pre-split filtering.",
+  "outputs": [
+    "outputs\\financial_inclusion\\reports\\05_shap_explainability\\fi_shap_global_importance.csv",
+    "outputs\\financial_inclusion\\reports\\05_shap_explainability\\fi_shap_local_explanations.csv",
+    "outputs\\financial_inclusion\\reports\\05_shap_explainability\\fi_shap_predictions.csv",
+    "outputs\\financial_inclusion\\reports\\05_shap_explainability\\fi_shap_validation_summary.json"
+  ]
+}

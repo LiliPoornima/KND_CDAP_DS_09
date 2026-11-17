@@ -1,0 +1,36 @@
+cluster_id,cluster_label,feature,mean_absolute_shap_decision_score,rank_within_cluster
+0,"Digitally Active, Safety Gap",female,0.0063998859523542555,7
+0,"Digitally Active, Safety Gap",educ,0.07447442369552251,4
+0,"Digitally Active, Safety Gap",inc_q,0.06979179145631316,5
+0,"Digitally Active, Safety Gap",emp_in,0.10483951291022134,3
+0,"Digitally Active, Safety Gap",urbanicity,0.016211528341018768,6
+0,"Digitally Active, Safety Gap",regionwb,0.45251229371355306,1
+0,"Digitally Active, Safety Gap",age,0.30328979933581857,2
+1,Connected and Digitally Included,female,0.08620787503897037,7
+1,Connected and Digitally Included,educ,0.4138699317114895,1
+1,Connected and Digitally Included,inc_q,0.17898065951572928,4
+1,Connected and Digitally Included,emp_in,0.20396446183123737,2
+1,Connected and Digitally Included,urbanicity,0.13574626300205378,6
+1,Connected and Digitally Included,regionwb,0.1985077189527554,3
+1,Connected and Digitally Included,age,0.15444231908623848,5
+2,"Connected, Financially Excluded",female,0.009151243727638361,7
+2,"Connected, Financially Excluded",educ,0.08604745877874877,4
+2,"Connected, Financially Excluded",inc_q,0.0586746341835286,5
+2,"Connected, Financially Excluded",emp_in,0.1414084920895579,3
+2,"Connected, Financially Excluded",urbanicity,0.014409243250432064,6
+2,"Connected, Financially Excluded",regionwb,0.30165401046827534,2
+2,"Connected, Financially Excluded",age,0.41795639104804116,1
+3,Multi-Dimensional Inclusion Gap,female,0.0775178634101512,6
+3,Multi-Dimensional Inclusion Gap,educ,0.37667680474200493,1
+3,Multi-Dimensional Inclusion Gap,inc_q,0.14142271707847912,2
+3,Multi-Dimensional Inclusion Gap,emp_in,0.11595741101342293,4
+3,Multi-Dimensional Inclusion Gap,urbanicity,0.07748330117794915,7
+3,Multi-Dimensional Inclusion Gap,regionwb,0.10705537683144473,5
+3,Multi-Dimensional Inclusion Gap,age,0.13704343774644048,3
+4,Access Without Digital Usage,female,0.024241141308811408,7
+4,Access Without Digital Usage,educ,0.04034475235149095,6
+4,Access Without Digital Usage,inc_q,0.04789750265822429,5
+4,Access Without Digital Usage,emp_in,0.05143807163847741,4
+4,Access Without Digital Usage,urbanicity,0.05646067673351736,3
+4,Access Without Digital Usage,regionwb,0.4534053275783914,1
+4,Access Without Digital Usage,age,0.1320654730520192,2
