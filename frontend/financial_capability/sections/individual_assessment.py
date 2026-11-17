@@ -50,15 +50,18 @@ from frontend.financial_capability.pdf_report import (
 )
 
 
+CAPABILITY_SPECS = tuple(s for s in FEATURE_SPECS if s.group != GROUP_CONTEXT)
+
+
 def _fill_example() -> None:
     """Callback: fill illustrative loan applicant answers into form widgets."""
-    for name, value in EXAMPLE_RESPONSE.items():
-        st.session_state[WIDGET_PREFIX + name] = value
+    for spec in CAPABILITY_SPECS:
+        st.session_state[WIDGET_PREFIX + spec.name] = EXAMPLE_RESPONSE.get(spec.name)
 
 
 def _clear_answers() -> None:
     """Callback: reset all form widgets and session results."""
-    for spec in FEATURE_SPECS:
+    for spec in CAPABILITY_SPECS:
         st.session_state[WIDGET_PREFIX + spec.name] = None
     st.session_state.pop(SESSION_RESPONSE_KEY, None)
 
@@ -158,7 +161,7 @@ def _render_section_2_wellbeing_result(result: dict, response: dict, total_count
 
     missing_count = total_count - len(response)
     if missing_count == 0:
-        st.success("✅ **Complete Questionnaire**: All 31 approved indicator questions were answered directly.")
+        st.success(f"✅ **Complete Questionnaire**: All {total_count} financial capability indicator questions were answered directly.")
     else:
         st.warning(
             f"⚠️ **Completeness Notice**: {missing_count} of {total_count} questions were left unanswered. "
@@ -283,13 +286,17 @@ def _render_section_4_shap_explanation(bundle, response: dict, result: dict) -> 
     with col_global:
         with st.container(border=True):
             st.markdown("**Top Global Model Drivers (Across All Survey Respondents)**")
-            imp = pd.DataFrame(bundle.metadata.get("global_importance", [])).head(5)
+            imp_all = pd.DataFrame(bundle.metadata.get("global_importance", []))
+            if not imp_all.empty and "group" in imp_all.columns:
+                imp = imp_all[imp_all["group"] != GROUP_CONTEXT].head(5)
+            else:
+                imp = imp_all.head(5)
             if not imp.empty:
                 for _, row_imp in imp.iterrows():
                     st.markdown(
                         f"• **{row_imp['label']}** (*{row_imp['group']}*) — Mean |SHAP|: `{row_imp['mean_abs_shap']:.3f}`"
                     )
-            st.caption("Open the **SHAP Explanation** tab above for full interactive local and global charts.")
+            st.caption("Open the **SHAP Explanation** tab for full interactive local and global charts.")
 
     return shap_reasons
 
@@ -528,7 +535,7 @@ def _dimension_overview_cards() -> None:
     """Render the four Financial Capability dimension overview cards (matching FinSight AI Home style)."""
     st.subheader("Four core financial capability dimensions")
     st.caption(
-        "Component 04 evaluates these four behavioral dimensions alongside background context to "
+        "Component 04 evaluates these four financial capability dimensions to "
         "predict financial well-being and support the bank officer's loan review."
     )
     dims = (
@@ -581,12 +588,12 @@ def render(redesigned: bool = False) -> None:
     if bundle is None:
         return
 
-    # Count answered questions
+    # Count answered questions across the 4 financial capability dimensions
     answered_count = sum(
-        1 for s in FEATURE_SPECS
+        1 for s in CAPABILITY_SPECS
         if st.session_state.get(WIDGET_PREFIX + s.name) is not None
     )
-    total_count = len(FEATURE_SPECS)
+    total_count = len(CAPABILITY_SPECS)
     progress_val = min(1.0, max(0.0, answered_count / total_count))
 
     # Completion Progress Bar
@@ -600,18 +607,17 @@ def render(redesigned: bool = False) -> None:
     b1.button("Use example answers", on_click=_fill_example, type="primary")
     b2.button("Clear answers", on_click=_clear_answers, type="primary")
 
-    # Form with 5 clean bordered Dimension sections (matching FinSight AI Component 02 style)
+    # Form with 4 clean bordered Dimension sections
     with st.form("fc_assessment_form", border=True):
         groups = [
             (GROUP_SAVING, "Dimension 01 · Saving Indicators"),
             (GROUP_BUDGETING, "Dimension 02 · Budgeting & Bill Management"),
             (GROUP_KNOWLEDGE, "Dimension 03 · Basic Financial Knowledge"),
             (GROUP_GOALS, "Dimension 04 · Financial Goal Planning"),
-            (GROUP_CONTEXT, "Dimension 05 · Applicant Background Context"),
         ]
 
         for grp_id, title in groups:
-            specs = [s for s in FEATURE_SPECS if s.group == grp_id]
+            specs = [s for s in CAPABILITY_SPECS if s.group == grp_id]
             with st.container(border=True):
                 st.markdown(f"### {title}")
                 cols = st.columns(2)
@@ -631,7 +637,7 @@ def render(redesigned: bool = False) -> None:
     if submitted:
         response = {
             s.name: st.session_state.get(WIDGET_PREFIX + s.name)
-            for s in FEATURE_SPECS
+            for s in CAPABILITY_SPECS
             if st.session_state.get(WIDGET_PREFIX + s.name) is not None
         }
         try:

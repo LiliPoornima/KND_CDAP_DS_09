@@ -189,7 +189,7 @@ def build_capability_assessment_pdf(
         f"<b>Class Probability Distribution:</b> {probs_str}<br/>"
         f"<b>Executive Capability Scorecard:</b> <b>{n_gaps} of {len(gaps)}</b> capability dimensions flagged for attention | "
         f"Resilience Indicators: <b>{n_supportive} Supportive</b>, <b>{n_watch} Watch</b><br/>"
-        f"<b>Questionnaire Completeness:</b> {len(response)} of 31 approved indicator questions answered directly."
+        f"<b>Questionnaire Completeness:</b> {len(response)} of 24 financial capability indicator questions answered directly."
     )
     story.append(Paragraph(summary_text, body_style))
     story.append(Spacer(1, 6))
@@ -407,7 +407,7 @@ def build_capability_assessment_txt(
         f"- Model Prediction Probability (Top Class): {conf:.1%} (Model prediction probability for financial well-being — NOT loan repayment or default probability)",
         f"- Class Probability Distribution: {probs_str}",
         f"- Executive Capability Scorecard: {n_gaps} of {len(gaps)} capability dimensions flagged for attention | Resilience Indicators: {n_supportive} Supportive, {n_watch} Watch",
-        f"- Questionnaire Completeness: {len(response)} of 31 questions answered directly",
+        f"- Questionnaire Completeness: {len(response)} of 24 financial capability indicator questions answered directly",
         "",
         "## 2. Key SHAP Explanation Factors",
     ]
